@@ -709,8 +709,6 @@ namespace GridProxy
             byte[] respBuf = null;
             string consoleMsg = String.Empty;
 
-            string orig = string.Empty;
-
             bool reqrange = false;
             bool resprange = false;
 
@@ -863,8 +861,6 @@ namespace GridProxy
                         capReq.RawResponse = respBuf;
 
                     }
-
-                    orig = Encoding.UTF8.GetString(respBuf);
 
                     consoleMsg += "[" + reqNo + "] Response from " + uri + "\nStatus: " + (int)resp.StatusCode + " " + resp.StatusDescription + "\n";
 
