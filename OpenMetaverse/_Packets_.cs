@@ -628,6 +628,7 @@ namespace OpenMetaverse.Packets
         ChildAgentPositionUpdate = 196635,
         SoundTrigger = 196637,
         ObjectAnimation = 196638,
+        GenericStreamingMessage = 196639,
     }
 
     public abstract partial class Packet
@@ -1046,6 +1047,7 @@ namespace OpenMetaverse.Packets
                         case 27: return PacketType.ChildAgentPositionUpdate;
                         case 29: return PacketType.SoundTrigger;
                         case 30: return PacketType.ObjectAnimation;
+                        case 31: return PacketType.GenericStreamingMessage;
                     }
                     break;
             }
@@ -1084,6 +1086,7 @@ namespace OpenMetaverse.Packets
               case PacketType.ChildAgentPositionUpdate: return new ChildAgentPositionUpdatePacket();
               case PacketType.SoundTrigger: return new SoundTriggerPacket();
               case PacketType.ObjectAnimation: return new ObjectAnimationPacket();
+              case PacketType.GenericStreamingMessage: return new GenericStreamingMessagePacket();
               case PacketType.ObjectAdd: return new ObjectAddPacket();
               case PacketType.MultipleObjectUpdate: return new MultipleObjectUpdatePacket();
               case PacketType.RequestMultipleObjects: return new RequestMultipleObjectsPacket();
@@ -1866,6 +1869,7 @@ namespace OpenMetaverse.Packets
                         case 27: return new ChildAgentPositionUpdatePacket(header, bytes, ref i);
                         case 29: return new SoundTriggerPacket(header, bytes, ref i);
                         case 30: return new ObjectAnimationPacket(header, bytes, ref i);
+                        case 31: return new GenericStreamingMessagePacket(header, bytes, ref i);
 
                     }
                     break;
@@ -79519,6 +79523,168 @@ namespace OpenMetaverse.Packets
                 AnimationListStart < AnimationList.Length);
 
             return packets.ToArray();
+        }
+    }
+
+    /// <exclude/>
+    public sealed class GenericStreamingMessagePacket : Packet
+    {
+        /// <exclude/>
+        public sealed class MethodDataBlock : PacketBlock
+        {
+            public ushort Method;
+
+            public override int Length
+            {
+                get
+                {
+                    return 2;
+                }
+            }
+
+            public MethodDataBlock() { }
+            public MethodDataBlock(byte[] bytes, ref int i)
+            {
+                FromBytes(bytes, ref i);
+            }
+
+            public override void FromBytes(byte[] bytes, ref int i)
+            {
+                try
+                {
+                    Method = Utils.BytesToUInt16(bytes, i); i+=2;
+                }
+                catch (Exception)
+                {
+                    throw new MalformedDataException();
+                }
+            }
+
+            public override void ToBytes(byte[] bytes, ref int i)
+            {
+                Utils.UInt16ToBytes(Method, bytes, i); i += 2;
+            }
+
+        }
+
+        /// <exclude/>
+        public sealed class DataBlockBlock : PacketBlock
+        {
+            public byte[] Data;
+
+            public override int Length
+            {
+                get
+                {
+                    int length = 2;
+                    if (Data != null) { length += Data.Length; }
+                    return length;
+                }
+            }
+
+            public DataBlockBlock() { }
+            public DataBlockBlock(byte[] bytes, ref int i)
+            {
+                FromBytes(bytes, ref i);
+            }
+
+            public override void FromBytes(byte[] bytes, ref int i)
+            {
+                int length;
+                try
+                {
+                    length = (bytes[i++] + (bytes[i++] << 8));
+                    Data = new byte[length];
+                    Buffer.BlockCopy(bytes, i, Data, 0, length); i += length;
+                }
+                catch (Exception)
+                {
+                    throw new MalformedDataException();
+                }
+            }
+
+            public override void ToBytes(byte[] bytes, ref int i)
+            {
+                bytes[i++] = (byte)(Data.Length % 256);
+                bytes[i++] = (byte)((Data.Length >> 8) % 256);
+                Buffer.BlockCopy(Data, 0, bytes, i, Data.Length); i += Data.Length;
+            }
+
+        }
+
+        public override int Length
+        {
+            get
+            {
+                int length = 7;
+                length += MethodData.Length;
+                length += DataBlock.Length;
+                return length;
+            }
+        }
+        public MethodDataBlock MethodData;
+        public DataBlockBlock DataBlock;
+
+        public GenericStreamingMessagePacket()
+        {
+            HasVariableBlocks = false;
+            Type = PacketType.GenericStreamingMessage;
+            Header = new Header();
+            Header.Frequency = PacketFrequency.High;
+            Header.ID = 31;
+            Header.Reliable = true;
+            MethodData = new MethodDataBlock();
+            DataBlock = new DataBlockBlock();
+        }
+
+        public GenericStreamingMessagePacket(byte[] bytes, ref int i) : this()
+        {
+            int packetEnd = bytes.Length - 1;
+            FromBytes(bytes, ref i, ref packetEnd, null);
+        }
+
+        override public void FromBytes(byte[] bytes, ref int i, ref int packetEnd, byte[] zeroBuffer)
+        {
+            Header.FromBytes(bytes, ref i, ref packetEnd);
+            if (Header.Zerocoded && zeroBuffer != null)
+            {
+                packetEnd = Helpers.ZeroDecode(bytes, packetEnd + 1, zeroBuffer) - 1;
+                bytes = zeroBuffer;
+            }
+            MethodData.FromBytes(bytes, ref i);
+            DataBlock.FromBytes(bytes, ref i);
+        }
+
+        public GenericStreamingMessagePacket(Header head, byte[] bytes, ref int i): this()
+        {
+            FromBytes(head, bytes, ref i);
+        }
+
+        override public void FromBytes(Header header, byte[] bytes, ref int i)
+        {
+            Header = header;
+            MethodData.FromBytes(bytes, ref i);
+            DataBlock.FromBytes(bytes, ref i);
+        }
+
+        public override byte[] ToBytes()
+        {
+            int length = 7;
+            length += MethodData.Length;
+            length += DataBlock.Length;
+            if (Header.AckList != null && Header.AckList.Length > 0) { length += Header.AckList.Length * 4 + 1; }
+            byte[] bytes = new byte[length];
+            int i = 0;
+            Header.ToBytes(bytes, ref i);
+            MethodData.ToBytes(bytes, ref i);
+            DataBlock.ToBytes(bytes, ref i);
+            if (Header.AckList != null && Header.AckList.Length > 0) { Header.AcksToBytes(bytes, ref i); }
+            return bytes;
+        }
+
+        public override byte[][] ToBytesMultiple()
+        {
+            return new byte[][] { ToBytes() };
         }
     }
 
