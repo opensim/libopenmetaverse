@@ -357,7 +357,7 @@ namespace OpenMetaverse
 
         public static  Matrix3x3 CreateFromQuaternion(Quaternion rot)
         {
-             float x2 = rot.X + rot.X;
+            float x2 = rot.X + rot.X;
             float y2 = rot.Y + rot.Y;
             float z2 = rot.Z + rot.Z;
 

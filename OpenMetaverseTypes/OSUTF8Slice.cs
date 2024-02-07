@@ -54,7 +54,7 @@ namespace OpenMetaverse
 
         public osUTF8Slice()
         {
-            m_data = new byte[0];
+            m_data = Array.Empty<byte>();
             m_offset = 0;
             m_len = 0;
         }
@@ -131,10 +131,10 @@ namespace OpenMetaverse
                 if (i >= m_len)
                     i = m_len - 1;
                 i += m_offset;
-                if (i < 0)
-                    i = 0;
-                else if (i >= m_data.Length)
+                if (i >= m_data.Length)
                     i = m_data.Length - 1;
+                if (i <= 0)
+                    return Unsafe.As<byte, byte>(ref MemoryMarshal.GetArrayDataReference(m_data));
                 return Unsafe.As<byte, byte>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(m_data), i));
             }
             set
@@ -712,7 +712,7 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool checkAny(byte b, byte[] bytes)
+        private static bool checkAny(byte b, byte[] bytes)
         {
             for (int i = 0; i < bytes.Length; ++i)
             {
@@ -723,7 +723,7 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool checkAny(byte b, char[] chars)
+        private static bool checkAny(byte b, char[] chars)
         {
             for (int i = 0; i < chars.Length; ++i)
             {
@@ -1078,7 +1078,7 @@ namespace OpenMetaverse
         {
             if (b < 0x80)
                 return IndexOf((byte)b);
-            string s = new string(new char[] { b });
+            string s = new(new char[] { b });
             return IndexOf(s);
         }
 
@@ -1159,7 +1159,7 @@ namespace OpenMetaverse
         {
             if (string.IsNullOrEmpty(s))
                 return -1;
-            osUTF8 o = new osUTF8(s);
+            osUTF8 o = new(s);
             return IndexOf(o);
         }
 
@@ -1279,14 +1279,14 @@ namespace OpenMetaverse
             if (b < 0x80)
                 return Split((byte)b, ignoreEmpty);
 
-            return new osUTF8Slice[0];
+            return Array.Empty<osUTF8Slice>();
         }
 
         public unsafe bool ReadLine(out osUTF8Slice line)
         {
             if (m_len == 0)
             {
-                line = new osUTF8Slice(new byte[0], 0, 0);
+                line = new osUTF8Slice();
                 return false;
             }
 

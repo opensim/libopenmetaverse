@@ -470,6 +470,9 @@ namespace OpenMetaverse.StructuredData
                     EscapeCharacter(osd.AsString(), singleQuotesNotationMarker, writer);
                     writer.Write(singleQuotesNotationMarker);
                     break;
+                case OSDType.LLSDxml:
+                    writer.Write(osd.AsString());
+                    break;
                 case OSDType.Binary:
                     writer.Write(binaryNotationMarker);
                     writer.Write("64");
@@ -607,6 +610,9 @@ namespace OpenMetaverse.StructuredData
                     writer.Write(singleQuotesNotationMarker);
                     EscapeCharacter(osd.AsString(), singleQuotesNotationMarker, writer);
                     writer.Write(singleQuotesNotationMarker);
+                    break;
+                case OSDType.LLSDxml:
+                    writer.Write(osd.AsString());
                     break;
                 case OSDType.Binary:
                     writer.Write(binaryNotationMarker);

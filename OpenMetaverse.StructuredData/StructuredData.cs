@@ -389,7 +389,7 @@ namespace OpenMetaverse.StructuredData
                 case OSDType.Integer:
                     return ((OSDInteger)this).value.ToString();
                 case OSDType.Real:
-                    return ((OSDReal)this).value.ToString("r", Utils.EnUsCulture);
+                    return ((OSDReal)this).value.ToString("g", Utils.EnUsCulture);
                 case OSDType.String:
                     return ((OSDString)this).value;
                 case OSDType.OSDUTF8:
@@ -695,7 +695,7 @@ namespace OpenMetaverse.StructuredData
                 case OSDType.Integer:
                     return ((OSDInteger)this).value.ToString();
                 case OSDType.Real:
-                    return ((OSDReal)this).value.ToString("r", Utils.EnUsCulture);
+                    return ((OSDReal)this).value.ToString("g", Utils.EnUsCulture);
                 case OSDType.String:
                     return ((OSDString)this).value;
                 case OSDType.OSDUTF8:
@@ -1206,7 +1206,7 @@ namespace OpenMetaverse.StructuredData
         public override double AsReal() { return value; }
         // "r" ensures the value will correctly round-trip back through Double.TryParse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override string AsString() { return value.ToString("r", Utils.EnUsCulture); }
+        public override string AsString() { return value.ToString("g", Utils.EnUsCulture); }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override byte[] AsBinary() { return Utils.DoubleToBytesBig(value); }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

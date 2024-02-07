@@ -40,9 +40,7 @@ namespace OpenMetaverse
 {
     public static partial class Utils
     {
-//        public static readonly bool NoAlignment = CheckNeedAlignment();
         public static readonly bool CanDirectCopyLE = CheckNeedAlignment();
-        //public static readonly bool CanDirectCopyBE = CheckDirectCopyBE();
 
         [StructLayout(LayoutKind.Sequential, Size = 16, Pack = 1)]
         public struct Bytes16 { }
@@ -100,17 +98,7 @@ namespace OpenMetaverse
             return false;
 
         }
-/*
-        static bool CheckDirectCopyLE()
-        {
-            return BitConverter.IsLittleEndian && NoAlignment;
-        }
 
-        static bool CheckDirectCopyBE()
-        {
-            return !BitConverter.IsLittleEndian && NoAlignment;
-        }
-*/
         #region String Arrays
 
         private static readonly string[] _AssetTypeNames = new string[]
@@ -385,51 +373,50 @@ namespace OpenMetaverse
             return 65599 * a + b;
         }
 
+        #region BytesTo
+
         /// <summary>
-        /// Convert the first two bytes starting in the byte array in
-        /// little endian ordering to a signed short integer
+        /// Convert the first two bytes starting in the byte array in native endian ordeing
+        /// to signed short integer
         /// </summary>
         /// <param name="bytes">An array two bytes or longer</param>
         /// <returns>A signed short integer, will be zero if a short can't be
         /// read at the given position</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe short BytesToInt16(byte[] bytes)
+        public static short BytesToInt16(byte[] bytes)
         {
-            //if (bytes.Length < 2 ) return 0;
-            if (CanDirectCopyLE)
-            {
-                return Unsafe.As<byte, short>(ref MemoryMarshal.GetArrayDataReference(bytes));
-            }
-            else
-                return (short)(bytes[0] | (bytes[1] << 8));
+            return Unsafe.ReadUnaligned<short>(ref MemoryMarshal.GetArrayDataReference(bytes));
         }
 
-        #region BytesTo
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static short BytesToInt16(ref byte bytes)
+        {
+            return Unsafe.ReadUnaligned<short>(ref bytes);
+        }
 
         /// <summary>
         /// Convert the first two bytes starting at the given position in
-        /// little endian ordering to a signed short integer
+        /// native endian ordering to a signed short integer
         /// </summary>
         /// <param name="bytes">An array two bytes or longer</param>
         /// <param name="pos">Position in the array to start reading</param>
         /// <returns>A signed short integer, will be zero if a short can't be
         /// read at the given position</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe short BytesToInt16(byte[] bytes, int pos)
+        public static short BytesToInt16(byte[] bytes, int pos)
         {
-            //if (bytes.Length < pos + 2) return 0;
-            if (CanDirectCopyLE)
-            {
-                return Unsafe.As<byte, short>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
-            }
-            else
-                return (short)(bytes[pos] | (bytes[pos + 1] << 8));
+            return Unsafe.ReadUnaligned<short>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static short BytesToInt16(ref byte bytes, int pos)
+        {
+            return Unsafe.ReadUnaligned<short>(ref Unsafe.Add(ref bytes, pos));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe short BytesToInt16(byte* bytes)
         {
-            //if (bytes.Length < pos + 2) return 0;
             if (CanDirectCopyLE)
             {
                 return *(short*)bytes;
@@ -439,26 +426,24 @@ namespace OpenMetaverse
         }
 
         /// <summary>
-        /// Convert the first four bytes starting at the given position in
-        /// little endian ordering to a signed integer
+        /// Convert the first four bytes starting at the given position in native endian order
+        /// to a signed integer
         /// </summary>
         /// <param name="bytes">An array four bytes or longer</param>
         /// <param name="pos">Position to start reading the int from</param>
         /// <returns>A signed integer, will be zero if an int can't be read
         /// at the given position</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int BytesToInt(byte[] bytes, int pos)
+        public static int BytesToInt(byte[] bytes, int pos)
         {
-            if (CanDirectCopyLE)
-            {
-                //if (bytes.Length < pos + 4) return 0;
-                return Unsafe.As<byte, int>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
-            }
+            //if (bytes.Length < pos + 4) return 0;
+            return Unsafe.As<byte, int>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+        }
 
-            return bytes[pos] |
-                    (bytes[pos + 1] << 8) |
-                    (bytes[pos + 2] << 16) |
-                    (bytes[pos + 3] << 24);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int BytesToInt(ref byte bytes, int pos)
+        {
+            return Unsafe.ReadUnaligned<int>(ref Unsafe.Add(ref bytes, pos));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -476,17 +461,15 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int BytesToIntSafepos(byte[] bytes, int pos)
+        public static int BytesToIntSafepos(byte[] bytes, int pos)
         {
-            if (CanDirectCopyLE)
-            {
-                return Unsafe.As<byte, int>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
-            }
+            return Unsafe.ReadUnaligned<int>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+        }
 
-            return bytes[pos] |
-                    (bytes[pos + 1] << 8) |
-                    (bytes[pos + 2] << 16) |
-                    (bytes[pos + 3] << 24);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int BytesToIntSafepos(ref byte bytes, int pos)
+        {
+            return Unsafe.ReadUnaligned<int>(ref Unsafe.Add(ref bytes, pos));
         }
 
         /// <summary>
@@ -497,17 +480,15 @@ namespace OpenMetaverse
         /// <returns>A signed integer, will be zero if the array contains
         /// less than four bytes</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int BytesToInt(byte[] bytes)
+        public static int BytesToInt(byte[] bytes)
         {
-            if (CanDirectCopyLE)
-            {
-                return Unsafe.As<byte, int>(ref MemoryMarshal.GetArrayDataReference(bytes));
-            }
-            else
-                return bytes[0]      |
-                    (bytes[1] << 8)  |
-                    (bytes[2] << 16) |
-                    (bytes[3] << 24);
+            return Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetArrayDataReference(bytes));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int BytesToInt(ref byte bytes)
+        {
+            return Unsafe.ReadUnaligned<int>(ref bytes);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -536,22 +517,15 @@ namespace OpenMetaverse
         /// <returns>A signed long integer, will be zero if the array contains
         /// less than eight bytes</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static long BytesToInt64(byte[] bytes)
+        public static long BytesToInt64(byte[] bytes)
         {
-            if (CanDirectCopyLE)
-            {
-                return Unsafe.As<byte, long>(ref MemoryMarshal.GetArrayDataReference(bytes));
-            }
-            else
-                return
-                    bytes[0] |
-                    ((long)bytes[1] << 8) |
-                    ((long)bytes[2] << 16) |
-                    ((long)bytes[3] << 24) |
-                    ((long)bytes[4] << 32) |
-                    ((long)bytes[5] << 40) |
-                    ((long)bytes[6] << 48) |
-                    ((long)bytes[7] << 56);
+            return Unsafe.ReadUnaligned<long>(ref MemoryMarshal.GetArrayDataReference(bytes));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long BytesToInt64(ref byte bytes)
+        {
+            return Unsafe.ReadUnaligned<long>(ref bytes);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -596,42 +570,28 @@ namespace OpenMetaverse
         /// <returns>A signed long integer, will be zero if a long can't be read
         /// at the given position</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static long BytesToInt64(byte[] bytes, int pos)
+        public static long BytesToInt64(byte[] bytes, int pos)
         {
-            if (CanDirectCopyLE)
-            {
-                if (bytes.Length < pos + 8) return 0;
-                return Unsafe.As<byte, long>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
-            }
-            else
-                return
-                    (bytes[pos] |
-                    ((long)bytes[pos + 1] << 8)) |
-                    ((long)bytes[pos + 2] << 16) |
-                    ((long)bytes[pos + 3] << 24) |
-                    ((long)bytes[pos + 4] << 32) |
-                    ((long)bytes[pos + 5] << 40) |
-                    ((long)bytes[pos + 6] << 48) |
-                    ((long)bytes[pos + 7] << 56);
+            if (bytes.Length < pos + 8) return 0;
+            return Unsafe.ReadUnaligned<long>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static long BytesToInt64Safepos(byte[] bytes, int pos)
+        public static long BytesToInt64(ref byte bytes, int pos)
         {
-            if (CanDirectCopyLE)
-            {
-                return Unsafe.As<byte, long>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
-            }
-            else
-                return
-                    (bytes[pos] |
-                    ((long)bytes[pos + 1] << 8)) |
-                    ((long)bytes[pos + 2] << 16) |
-                    ((long)bytes[pos + 3] << 24) |
-                    ((long)bytes[pos + 4] << 32) |
-                    ((long)bytes[pos + 5] << 40) |
-                    ((long)bytes[pos + 6] << 48) |
-                    ((long)bytes[pos + 7] << 56);
+            return Unsafe.ReadUnaligned<long>(ref Unsafe.Add(ref bytes, pos));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long BytesToInt64Safepos(byte[] bytes, int pos)
+        {
+            return Unsafe.ReadUnaligned<long>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long BytesToInt64Safepos(ref byte bytes, int pos)
+        {
+            return Unsafe.ReadUnaligned<long>(ref Unsafe.Add(ref bytes, pos));
         }
 
         /// <summary>
@@ -643,21 +603,20 @@ namespace OpenMetaverse
         /// <returns>An unsigned short, will be zero if a ushort can't be read
         /// at the given position</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe ushort BytesToUInt16(byte[] bytes, int pos)
+        public static ushort BytesToUInt16(byte[] bytes, int pos)
         {
-            //if (bytes.Length < pos + 2) return 0;
-            if (CanDirectCopyLE)
-            {
-                return Unsafe.As<byte, ushort>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
-            }
-            else
-                return (ushort)(bytes[pos] + (bytes[pos + 1] << 8));
+            return Unsafe.ReadUnaligned<ushort>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort BytesToUInt16(ref byte bytes, int pos)
+        {
+            return Unsafe.ReadUnaligned<ushort>(ref Unsafe.Add(ref bytes, pos));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe ushort BytesToUInt16(byte* bytes)
         {
-            //if (bytes.Length < pos + 2) return 0;
             if (CanDirectCopyLE)
                 return *(ushort*)bytes;
             else
@@ -665,21 +624,22 @@ namespace OpenMetaverse
         }
 
         /// <summary>
-        /// Convert two bytes in little endian ordering to an unsigned short
+        /// Convert two bytes in native endian ordeing to an unsigned short
         /// </summary>
         /// <param name="bytes">Byte array containing the ushort</param>
         /// <returns>An unsigned short, will be zero if a ushort can't be
         /// read</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe ushort BytesToUInt16(byte[] bytes)
+        public static ushort BytesToUInt16(byte[] bytes)
         {
             //if (bytes.Length < 2) return 0;
-            if (CanDirectCopyLE)
-            {
-                return Unsafe.As<byte, ushort>(ref MemoryMarshal.GetArrayDataReference(bytes));
-            }
-            else
-                return (ushort)(bytes[0] + (bytes[1] << 8));
+            return Unsafe.ReadUnaligned<ushort>(ref MemoryMarshal.GetArrayDataReference(bytes));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort BytesToUInt16(ref byte bytes)
+        {
+            return Unsafe.ReadUnaligned<ushort>(ref bytes);
         }
 
         /// <summary>
@@ -691,34 +651,22 @@ namespace OpenMetaverse
         /// <returns>An unsigned integer, will be zero if a uint can't be read
         /// at the given position</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static uint BytesToUInt(byte[] bytes, int pos)
+        public static uint BytesToUInt(byte[] bytes, int pos)
         {
-            if (CanDirectCopyLE)
-            {
-                if (bytes.Length < pos + 4) return 0;
-                return Unsafe.As<byte, uint>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
-            }
-            else
-                return (uint)(
-                    (bytes[pos]) |
-                    (bytes[pos + 1] << 8) |
-                    (bytes[pos + 2] << 16) |
-                    (bytes[pos + 3] << 24));
+            if (bytes.Length < pos + 4) return 0;
+            return Unsafe.ReadUnaligned<uint>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static uint BytesToUIntSafepos(byte[] bytes, int pos)
+        public static uint BytesToUIntSafepos(byte[] bytes, int pos)
         {
-            if (CanDirectCopyLE)
-            {
-                return Unsafe.As<byte, uint>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
-            }
-            else
-                return (uint)(
-                    (bytes[pos]) |
-                    (bytes[pos + 1] << 8) |
-                    (bytes[pos + 2] << 16) |
-                    (bytes[pos + 3] << 24));
+            return Unsafe.ReadUnaligned<uint>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint BytesToUIntSafepos(ref byte bytes, int pos)
+        {
+            return Unsafe.ReadUnaligned<uint>(ref Unsafe.Add(ref bytes, pos));
         }
 
         /// <summary>
@@ -729,18 +677,15 @@ namespace OpenMetaverse
         /// <returns>An unsigned integer, will be zero if the array contains
         /// less than four bytes</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static uint BytesToUInt(byte[] bytes)
+        public static uint BytesToUInt(byte[] bytes)
         {
-            if (CanDirectCopyLE)
-            {
-                return Unsafe.As<byte, uint>(ref MemoryMarshal.GetArrayDataReference(bytes));
-            }
-            else
-                return (uint)(
-                    bytes[0] |
-                    (bytes[1] << 8) |
-                    (bytes[2] << 16) |
-                    (bytes[3] << 24));
+            return Unsafe.ReadUnaligned<uint>(ref MemoryMarshal.GetArrayDataReference(bytes));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint BytesToUInt(ref byte bytes)
+        {
+            return Unsafe.ReadUnaligned<uint>(ref bytes);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -766,42 +711,28 @@ namespace OpenMetaverse
         /// <returns>An unsigned 64-bit integer, will be zero if the array
         /// contains less than eight bytes</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static ulong BytesToUInt64(byte[] bytes, int pos)
+        public static ulong BytesToUInt64(byte[] bytes, int pos)
         {
             if (bytes.Length < pos + 8) return 0;
-            if (CanDirectCopyLE)
-            {
-                return Unsafe.As<byte, ulong>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
-            }
-            else
-                return (ulong)(
-                    bytes[pos] |
-                    ((long)bytes[pos + 1] << 8) |
-                    ((long)bytes[pos + 2] << 16) |
-                    ((long)bytes[pos + 3] << 24) |
-                    ((long)bytes[pos + 4] << 32) |
-                    ((long)bytes[pos + 5] << 40) |
-                    ((long)bytes[pos + 6] << 48) |
-                    ((long)bytes[pos + 7] << 56));
+            return Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static ulong BytesToUInt64Safepos(byte[] bytes, int pos)
+        public static ulong BytesToUInt64(ref byte bytes, int pos)
         {
-            if (CanDirectCopyLE)
-            {
-                return Unsafe.As<byte, ulong>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
-            }
-            else
-                return (ulong)(
-                    bytes[pos] |
-                    ((long)bytes[pos + 1] << 8) |
-                    ((long)bytes[pos + 2] << 16) |
-                    ((long)bytes[pos + 3] << 24) |
-                    ((long)bytes[pos + 4] << 32) |
-                    ((long)bytes[pos + 5] << 40) |
-                    ((long)bytes[pos + 6] << 48) |
-                    ((long)bytes[pos + 7] << 56));
+            return Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref bytes, pos));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong BytesToUInt64Safepos(byte[] bytes, int pos)
+        {
+            return Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong BytesToUInt64Safepos(ref byte bytes, int pos)
+        {
+            return Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref bytes, pos));
         }
 
         /// <summary>
@@ -812,22 +743,15 @@ namespace OpenMetaverse
         /// <returns>An unsigned 64-bit integer, will be zero if the array
         /// contains less than eight bytes</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static ulong BytesToUInt64(byte[] bytes)
+        public static ulong BytesToUInt64(byte[] bytes)
         {
-            if (CanDirectCopyLE)
-            {
-                return Unsafe.As<byte, ulong>(ref MemoryMarshal.GetArrayDataReference(bytes));
-            }
-            else
-                return (ulong)(
-                    bytes[0]               |
-                    ((long)bytes[1] << 8)  |
-                    ((long)bytes[2] << 16) |
-                    ((long)bytes[3] << 24) |
-                    ((long)bytes[4] << 32) |
-                    ((long)bytes[5] << 40) |
-                    ((long)bytes[6] << 48) |
-                    ((long)bytes[7] << 56));
+            return Unsafe.ReadUnaligned<ulong>(ref MemoryMarshal.GetArrayDataReference(bytes));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static ulong BytesToUInt64(ref byte bytes)
+        {
+            return Unsafe.ReadUnaligned<ulong>(ref bytes);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -850,7 +774,7 @@ namespace OpenMetaverse
         }
 
         /// <summary>
-        /// Convert four bytes in little endian ordering to a floating point
+        /// Convert four bytes in native endian ordeing to a floating point
         /// value
         /// </summary>
         /// <param name="bytes">Byte array containing a little ending floating
@@ -859,9 +783,15 @@ namespace OpenMetaverse
         /// the byte array</param>
         /// <returns>Single precision value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static float BytesToFloat(byte[] bytes)
+        public static float BytesToFloat(byte[] bytes)
         {
-            return Unsafe.As<byte, float>(ref MemoryMarshal.GetArrayDataReference(bytes));
+            return Unsafe.ReadUnaligned<float>(ref MemoryMarshal.GetArrayDataReference(bytes));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float BytesToFloat(ref byte bytes)
+        {
+            return Unsafe.ReadUnaligned<float>(ref bytes);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -872,21 +802,39 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static float BytesToFloat(byte[] bytes, int pos)
+        public static float BytesToFloat(byte[] bytes, int pos)
         {
-            return Unsafe.As<byte, float>(ref bytes[pos]);
+            return Unsafe.ReadUnaligned<float>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static float BytesToFloatSafepos(byte[] bytes, int pos)
+        public static float BytesToFloat(ref byte bytes, int pos)
         {
-            return Unsafe.As<byte, float>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+            return Unsafe.ReadUnaligned<float>(ref Unsafe.Add(ref bytes, pos));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static double BytesToDouble(byte[] bytes)
+        public static float BytesToFloatSafepos(byte[] bytes, int pos)
         {
-            return Unsafe.As<byte, double>(ref MemoryMarshal.GetArrayDataReference(bytes));
+            return Unsafe.ReadUnaligned<float>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float BytesToFloatSafepos(ref byte bytes, int pos)
+        {
+            return Unsafe.ReadUnaligned<float>(ref Unsafe.Add(ref bytes, pos));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double BytesToDouble(byte[] bytes)
+        {
+            return Unsafe.ReadUnaligned<double>(ref MemoryMarshal.GetArrayDataReference(bytes));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double BytesToDouble(ref byte bytes)
+        {
+            return Unsafe.ReadUnaligned<double>(ref bytes);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -904,15 +852,27 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static double BytesToDouble(byte[] bytes, int pos)
+        public static double BytesToDouble(byte[] bytes, int pos)
         {
-            return Unsafe.As<byte, double>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+            return Unsafe.ReadUnaligned<double>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static double BytesToDoubleSafepos(byte[] bytes, int pos)
+        public static double BytesToDouble(ref byte bytes, int pos)
         {
-            return Unsafe.As<byte, double>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+            return Unsafe.ReadUnaligned<double>(ref Unsafe.Add(ref bytes, pos));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double BytesToDoubleSafepos(byte[] bytes, int pos)
+        {
+            return Unsafe.ReadUnaligned<double>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double BytesToDoubleSafepos(ref byte bytes, int pos)
+        {
+            return Unsafe.ReadUnaligned<double>(ref Unsafe.Add(ref bytes, pos));
         }
 
         #endregion BytesTo
@@ -937,7 +897,19 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Int16ToBytes(short value, byte[] dest, int pos)
         {
-            Unsafe.As<byte, short>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos)) = value;
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Int16ToBytes(short value, ref byte dest, int pos)
+        {
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Int16ToBytes(short value, ref byte dest)
+        {
+            Unsafe.WriteUnaligned(ref dest, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -965,8 +937,19 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void UInt16ToBytes(ushort value, byte[] dest, int pos)
         {
-            Unsafe.As<byte, ushort>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos)) = value;
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+        }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void UInt16ToBytes(ushort value, ref byte dest, int pos)
+        {
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void UInt16ToBytes(ushort value, ref byte dest)
+        {
+            Unsafe.WriteUnaligned(ref dest, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1017,22 +1000,10 @@ namespace OpenMetaverse
         /// <param name="value">The integer to convert</param>
         /// <returns>A four byte little endian array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static byte[] IntToBytes(int value)
+        public static byte[] IntToBytes(int value)
         {
             byte[] bytes = new byte[4];
-            if (CanDirectCopyLE)
-            {
-                //Unsafe.As<byte, int>(ref bytes[0]) = value;
-                fixed (byte* p = bytes)
-                    *(int*)p = value;
-            }
-            else
-            {
-                bytes[0] = (byte)value;
-                bytes[1] = (byte)(value >> 8);
-                bytes[2] = (byte)(value >> 16);
-                bytes[3] = (byte)(value >> 24);
-            }
+            Unsafe.As<byte, int>(ref MemoryMarshal.GetArrayDataReference(bytes)) = value;
             return bytes;
         }
 
@@ -1040,17 +1011,19 @@ namespace OpenMetaverse
         public unsafe static void IntToBytes(int value, byte[] dest, int pos)
         {
             if (dest.Length < pos + 4) return;
-            if (CanDirectCopyLE)
-            {
-                Unsafe.As<byte, int>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos)) = value;
-            }
-            else
-            {
-                dest[pos] = (byte)(value);
-                dest[pos + 1] = (byte)((value >> 8));
-                dest[pos + 2] = (byte)((value >> 16));
-                dest[pos + 3] = (byte)((value >> 24));
-            }
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void IntToBytes(int value, ref byte dest, int pos)
+        {
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void IntToBytes(int value, ref byte dest)
+        {
+            Unsafe.WriteUnaligned(ref dest, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static void IntToBytes(int value, byte* dest, int pos)
@@ -1087,17 +1060,25 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static void IntToBytesSafepos(int value, byte[] dest, int pos)
         {
-            if (CanDirectCopyLE)
-            {
-                Unsafe.As<byte, int>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos)) = value;
-            }
-            else
-            {
-                dest[pos] = (byte)(value);
-                dest[pos + 1] = (byte)((value >> 8));
-                dest[pos + 2] = (byte)((value >> 16));
-                dest[pos + 3] = (byte)((value >> 24));
-            }
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void IntToBytesSafepos(int value, byte[] dest)
+        {
+            Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void IntToBytesSafepos(int value, ref byte dest, int pos)
+        {
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void IntToBytesSafepos(int value, ref byte dest)
+        {
+            Unsafe.WriteUnaligned(ref dest, value);
         }
 
         /// <summary>
@@ -1161,7 +1142,8 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static void UIntToBytes(uint value, byte[] dest, int pos)
         {
-            IntToBytes((int)value, dest, pos);
+            if (dest.Length < pos + 4) return;
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1173,7 +1155,25 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static void UIntToBytesSafepos(uint value, byte[] dest, int pos)
         {
-            IntToBytesSafepos((int)value, dest, pos);
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void UIntToBytesSafepos(uint value, byte[] dest)
+        {
+            Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void UIntToBytesSafepos(uint value, ref byte dest, int pos)
+        {
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void UIntToBytesSafepos(uint value, ref byte dest)
+        {
+            Unsafe.WriteUnaligned(ref dest, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1191,44 +1191,15 @@ namespace OpenMetaverse
         public unsafe static byte[] Int64ToBytes(long value)
         {
             byte[] bytes = new byte[8];
-            if (CanDirectCopyLE)
-            {
-                Unsafe.As<byte, long>(ref MemoryMarshal.GetArrayDataReference(bytes)) = value;
-            }
-            else
-            {
-                bytes[0] = (byte)value;
-                bytes[1] = (byte)(value >> 8);
-                bytes[2] = (byte)(value >> 16);
-                bytes[3] = (byte)(value >> 24);
-                bytes[4] = (byte)(value >> 32);
-                bytes[5] = (byte)(value >> 40);
-                bytes[6] = (byte)(value >> 48);
-                bytes[7] = (byte)(value >> 56);
-            }
+            Unsafe.As<byte, long>(ref MemoryMarshal.GetArrayDataReference(bytes)) = value;
             return bytes;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static void Int64ToBytes(long value, byte[] dest, int pos)
         {
-            if (CanDirectCopyLE)
-            {
-                //Unsafe.As<byte, long>(ref dest[pos]) = value;
                 if (dest.Length < pos + 8) return;
-                    Unsafe.As<byte, long>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos)) = value;
-            }
-            else
-            {
-                dest[pos] = (byte)value;
-                dest[pos + 1] = (byte)(value >> 8);
-                dest[pos + 2] = (byte)(value >> 16);
-                dest[pos + 3] = (byte)(value >> 24);
-                dest[pos + 4] = (byte)(value >> 32);
-                dest[pos + 5] = (byte)(value >> 40);
-                dest[pos + 6] = (byte)(value >> 48);
-                dest[pos + 7] = (byte)(value >> 56);
-            }
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1274,21 +1245,25 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static void Int64ToBytesSafepos(long value, byte[] dest, int pos)
         {
-            if (CanDirectCopyLE)
-            {
-                Unsafe.As<byte, long>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos)) = value;
-            }
-            else
-            {
-                dest[pos] = (byte)value;
-                dest[pos + 1] = (byte)(value >> 8);
-                dest[pos + 2] = (byte)(value >> 16);
-                dest[pos + 3] = (byte)(value >> 24);
-                dest[pos + 4] = (byte)(value >> 32);
-                dest[pos + 5] = (byte)(value >> 40);
-                dest[pos + 6] = (byte)(value >> 48);
-                dest[pos + 7] = (byte)(value >> 56);
-            }
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void Int64ToBytesSafepos(long value, byte[] dest)
+        {
+            Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void Int64ToBytesSafepos(long value, ref byte dest, int pos)
+        {
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void Int64ToBytesSafepos(long value, ref byte dest)
+        {
+            Unsafe.WriteUnaligned(ref dest, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1397,13 +1372,25 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static void UInt64ToBytesSafepos(ulong value, byte[] dest, int pos)
         {
-            Int64ToBytesSafepos((long)value, dest, pos);
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void UInt64ToBytesBig(ulong value, byte[] dest, int pos)
+        public static void UInt64ToBytesSafepos(ulong value, byte[] dest)
         {
-            Int64ToBytesBig((long) value, dest, pos);
+            Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void UInt64ToBytesSafepos(ulong value, ref byte dest, int pos)
+        {
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void UInt64ToBytesSafepos(ulong value, ref byte dest)
+        {
+            Unsafe.WriteUnaligned(ref dest, value);
         }
 
         /// <summary>
@@ -1426,9 +1413,9 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static void FloatToBytes(float value, byte[] dest, int pos)
+        public static void FloatToBytes(float value, byte[] dest, int pos)
         {
-            Unsafe.As<byte, float>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos)) = value;
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1445,9 +1432,27 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static void FloatToBytesSafepos(float value, byte[] dest, int pos)
+        public static void FloatToBytesSafepos(float value, byte[] dest, int pos)
         {
-            Unsafe.As<byte, float>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos)) = value;
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void FloatToBytesSafepos(float value, ref byte dest, int pos)
+        {
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void FloatToBytesSafepos(float value, byte[] dest)
+        {
+            Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void FloatToBytesSafepos(float value, ref byte dest)
+        {
+            Unsafe.WriteUnaligned(ref dest, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1594,9 +1599,9 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="str">The string to convert</param>
         /// <returns>A null-terminated UTF8 byte array</returns>
-        public static byte[] StringToBytes(string str)
+        public static byte[] StringToBytes(ReadOnlySpan<char> str)
         {
-            if (string.IsNullOrEmpty(str))
+            if (str.Length == 0)
                 return Array.Empty<byte>();
 
             int nbytes = osUTF8GetBytesCount(str, out int sourcelen);
@@ -1608,9 +1613,9 @@ namespace OpenMetaverse
             return dstarray;
         }
 
-        public static byte[] StringToBytes(string str, int maxlen)
+        public static byte[] StringToBytes(ReadOnlySpan<char> str, int maxlen)
         {
-            if (string.IsNullOrEmpty(str))
+            if (str.Length == 0)
                 return Array.Empty<byte>();
 
             int nbytes = osUTF8GetBytesCount(str, maxlen -1, out int sourcelen);
@@ -1622,9 +1627,9 @@ namespace OpenMetaverse
             return dstarray;
         }
 
-        public static byte[] StringToBytesNoTerm(string str)
+        public static byte[] StringToBytesNoTerm(ReadOnlySpan<char> str)
         {
-            if (string.IsNullOrEmpty(str))
+            if (str.Length == 0)
                 return Array.Empty<byte>();
 
             int nbytes = osUTF8GetBytesCount(str, out int sourcelen);
@@ -1635,9 +1640,9 @@ namespace OpenMetaverse
             return dstarray;
         }
 
-        public static byte[] StringToBytesNoTerm(string str, int maxlen)
+        public static byte[] StringToBytesNoTerm(ReadOnlySpan<char> str, int maxlen)
         {
-            if (string.IsNullOrEmpty(str))
+            if (str.Length == 0)
                 return Array.Empty<byte>();
 
             int nbytes = osUTF8GetBytesCount(str, maxlen, out int sourcelen);
@@ -1648,7 +1653,7 @@ namespace OpenMetaverse
             return dstarray;
         }
 
-        public static unsafe int osUTF8Getbytes(string source, int srclenght, byte[] destiny, int maxdstlen)
+        public static unsafe int osUTF8Getbytes(ReadOnlySpan<char> source, int srclenght, byte[] destiny, int maxdstlen)
         {
             int ret = 0;
             char c;
@@ -1723,9 +1728,9 @@ namespace OpenMetaverse
             return ret;
         }
 
-        public static unsafe bool osUTF8TryGetbytes(string srcstr, ref int srcstart, byte[] dstarray, ref int pos)
+        public static unsafe bool osUTF8TryGetbytes(ReadOnlySpan<char> srcstr, ref int srcstart, byte[] dstarray, ref int pos)
         {
-            if (string.IsNullOrEmpty(srcstr))
+            if (srcstr.Length == 0)
                 return true;
 
             bool ret = false;
@@ -1816,14 +1821,213 @@ namespace OpenMetaverse
             return ret;
         }
 
-        public static int osUTF8GetBytesCount(string sstr, out int maxsource)
+        public static int SingleCharToUTF8(char c, out byte[] bytes)
+        {
+            if (c <= 0x7f)
+            {
+                bytes = new byte[1] { (byte)c };
+                return 1;
+            }
+
+            if (c < 0x800)
+            {
+                bytes = new byte[2]
+                {
+                    (byte)(0xC0 | (c >> 6)),
+                    (byte)(0x80 | (c & 0x3F))
+                };
+                return 2;
+            }
+
+            if (c >= 0xD800 && c < 0xE000)
+            {
+                bytes = Array.Empty<byte>();
+                if (c >= 0xDC00)
+                    return 0; // ignore invalid
+
+                /* ignore multi char
+
+                int a = c;
+                c = *src++;
+
+                if (c < 0xDC00 || c > 0xDFFF)
+                    continue; // ignore invalid
+
+                a = (a << 10) + c - 0x35fdc00;
+
+                *dst++ = (byte)(0xF0 | (a >> 18));
+                *dst++ = (byte)(0x80 | ((a >> 12) & 0x3f));
+                *dst++ = (byte)(0x80 | ((a >> 6) & 0x3f));
+                *dst++ = (byte)(0x80 | (a & 0x3f));
+                */
+                return -1;
+            }
+
+            bytes = new byte[3]
+            {
+                (byte)(0xE0 | (c >> 12)),
+                (byte)(0x80 | ((c >> 6) & 0x3f)),
+                (byte)(0x80 | (c & 0x3f))
+            };
+            return 3;  
+        }
+
+        public static unsafe int SingleCharToUTF8(char c, byte[] dstarray, ref int pos)
+        {
+            int free = dstarray.Length - pos;
+            if (c <= 0x7f)
+            {
+                if(free < 1)
+                    return 0;
+                dstarray[pos++] = (byte)c;
+                return 1;
+            }
+
+            if (c < 0x800)
+            {
+                if (free < 2)
+                    return 0;
+                dstarray[pos++] = (byte)(0xC0 | (c >> 6));
+                dstarray[pos++] = (byte)(0x80 | (c & 0x3F));
+                return 2;
+            }
+
+            if (c >= 0xD800 && c < 0xE000)
+            {
+                if (c >= 0xDC00)
+                    return 0; // ignore invalid
+                /*
+                int a = c;
+                c = *src++;
+
+                if (c < 0xDC00 || c > 0xDFFF)
+                    continue; // ignore invalid
+
+                free -= 4;
+                if (free <= 0)
+                {
+                    src -= 2;
+                    break;
+                }
+
+                a = (a << 10) + c - 0x35fdc00;
+
+                *dst++ = (byte)(0xF0 | (a >> 18));
+                *dst++ = (byte)(0x80 | ((a >> 12) & 0x3f));
+                *dst++ = (byte)(0x80 | ((a >> 6) & 0x3f));
+                *dst++ = (byte)(0x80 | (a & 0x3f));
+                continue;
+                */
+                return -1;
+            }
+
+            if (free < 3)
+                return 0;
+
+            dstarray[pos++] = (byte)(0xE0 | (c >> 12));
+            dstarray[pos++] = (byte)(0x80 | ((c >> 6) & 0x3f));
+            dstarray[pos++] = (byte)(0x80 | (c & 0x3f));
+            return 3;
+        }
+
+        public static unsafe int SingleCharToUTF8safepos(char c, byte[] dstarray, ref int pos)
+        {
+            if (c <= 0x7f)
+            {
+                dstarray[pos++] = (byte)c;
+                return 1;
+            }
+
+            if (c < 0x800)
+            {
+                dstarray[pos++] = (byte)(0xC0 | (c >> 6));
+                dstarray[pos++] = (byte)(0x80 | (c & 0x3F));
+                return 2;
+            }
+
+            if (c >= 0xD800 && c < 0xE000)
+            {
+                if (c >= 0xDC00)
+                    return 0; // ignore invalid
+                /*
+                int a = c;
+                c = *src++;
+
+                if (c < 0xDC00 || c > 0xDFFF)
+                    continue; // ignore invalid
+
+                free -= 4;
+                if (free <= 0)
+                {
+                    src -= 2;
+                    break;
+                }
+
+                a = (a << 10) + c - 0x35fdc00;
+
+                *dst++ = (byte)(0xF0 | (a >> 18));
+                *dst++ = (byte)(0x80 | ((a >> 12) & 0x3f));
+                *dst++ = (byte)(0x80 | ((a >> 6) & 0x3f));
+                *dst++ = (byte)(0x80 | (a & 0x3f));
+                continue;
+                */
+                return -1;
+            }
+
+            dstarray[pos++] = (byte)(0xE0 | (c >> 12));
+            dstarray[pos++] = (byte)(0x80 | ((c >> 6) & 0x3f));
+            dstarray[pos++] = (byte)(0x80 | (c & 0x3f));
+            return 3;
+        }
+
+        public static int osUTF8GetBytesCount(ReadOnlySpan<char> str)
+        {
+            char c;
+            int nbytes = 0;
+            int i = 0;
+            while (i < str.Length)
+            {
+                c = str[i++];
+
+                if (c <= 0x7f)
+                {
+                    ++nbytes;
+                    continue;
+                }
+
+                if (c < 0x800)
+                {
+                    nbytes += 2;
+                    continue;
+                }
+
+                if (c >= 0xD800 && c < 0xE000)
+                {
+                    if (c >= 0xDC00)
+                        continue;
+                    if (i == str.Length)
+                        break;
+                    c = str[i++];
+                    if (c < 0xDC00 || c > 0xDFFF)
+                        continue;
+                    nbytes += 4;
+                    continue;
+                }
+                nbytes += 3;
+            }
+
+            if (i > 0 && str[i - 1] == 0)
+                --nbytes;
+            return nbytes;
+        }
+
+        public static int osUTF8GetBytesCount(ReadOnlySpan<char> str, out int maxsource)
         {
             maxsource = 0;
             char c;
             char lastc = (char)0;
             int nbytes = 0;
             int i = 0;
-            var str = sstr.AsSpan();
             while (i < str.Length)
             {
                 c = str[i++];
@@ -1868,7 +2072,7 @@ namespace OpenMetaverse
             return nbytes;
         }
 
-        public static int osUTF8GetBytesCount(string sstr, int maxnbytes, out int maxsourcelen)
+        public static int osUTF8GetBytesCount(ReadOnlySpan<char> str, int maxnbytes, out int maxsourcelen)
         {
             maxsourcelen = 0;
             int max2 = maxnbytes - 2;
@@ -1878,7 +2082,6 @@ namespace OpenMetaverse
             char c;
             int nbytes = 0;
             int i = 0;
-            var str = sstr.AsSpan();
             while(i < str.Length && nbytes < maxnbytes)
             {
                 c = str[i++];
@@ -2082,13 +2285,13 @@ namespace OpenMetaverse
             return true;
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte HexToByte(byte[] data, int pos)
         {
             return (byte)(HexNibble(data[pos]) << 4 | HexNibble(data[pos + 1]));
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static byte HexToByte(byte* data, int pos)
         {
             return (byte)(HexNibble(data[pos]) << 4 | HexNibble(data[pos + 1]));
@@ -2683,64 +2886,44 @@ namespace OpenMetaverse
         private const byte ASCIIzero = (byte)'0';
         private const byte ASCIIminus = (byte)'-';
 
-        private static unsafe int UintToStrBytes_reversed(uint value, byte* dst)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe void UintToStrBytesFromEnd(uint value, byte* dst)
         {
-            int n = 0;
-            do
+            if(value >= 10)
             {
-                byte a = ASCIIzero;
-                a += (byte)(value % 10);
-                dst[n] = a;
-                ++n;
-                value /= 10;
+                while (value >= 100)
+                {
+                    uint div = value / 100;
+                    dst--;
+                    WriteTwoDecDigits(value - 100 * div, dst);
+                    value = div;
+                    dst--;
+                }
+                if (value >= 10)
+                {
+                    dst--;
+                    WriteTwoDecDigits(value, dst);
+                    return;
+                }
             }
-            while(value > 0);
-            return n;
+            *dst = (byte)('0' + value);
         }
 
-        private static unsafe int ULongToStrBytes_reversed(ulong value, byte* dst)
-        {
-            int n = 0;
-            do
-            {
-                byte a = ASCIIzero;
-                a += (byte)(value % 10);
-                dst[n] = a;
-                ++n;
-                value /= 10;
-            }
-            while (value > 0);
-            return n;
-        }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe int UIntToByteString(uint value, byte* dst)
         {
-            if (value == 0)
-            {
-                *dst = ASCIIzero;
-                return 1;
-            }
-
-            byte* tmp = stackalloc byte[16];
-            int n = UintToStrBytes_reversed(value, tmp);
-            for (int i = 0, j = n - 1; i < n; ++i, --j)
-                dst[i] = tmp[j];
+            int n = CountDigits(value);
+            UintToStrBytesFromEnd(value, dst + n - 1);
             return n;
         }
 
-        public static unsafe int ULongToByteString(ulong value, byte* dst)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe int UIntToByteString(uint value, byte[] dst, int pos)
         {
-            if (value == 0)
+            fixed (byte* d = &dst[pos])
             {
-                *dst = ASCIIzero;
-                return 1;
+                return UIntToByteString(value, d);
             }
-
-            byte* tmp = stackalloc byte[32];
-            int n = ULongToStrBytes_reversed(value, tmp);
-            for (int i = 0, j = n - 1; i < n; ++i, --j)
-                dst[i] = tmp[j];
-            return n;
         }
 
         public static unsafe int UIntToByteString(uint value, Stream st)
@@ -2751,108 +2934,44 @@ namespace OpenMetaverse
                 return 1;
             }
 
+            int n = CountDigits(value);
             byte* tmp = stackalloc byte[32];
-            int n = UintToStrBytes_reversed(value, tmp);
-            for (int j = n - 1; j <= 0; --j)
-                st.WriteByte(tmp[j]);
+            UintToStrBytesFromEnd(value, tmp + n - 1);
+            for (int i = 0; i < n; i++)
+                st.WriteByte(tmp[i]);
             return n;
         }
 
-        public static unsafe int ULongToByteString(ulong value, Stream st)
-        {
-            if (value == 0)
-            {
-                st.WriteByte(ASCIIzero);
-                return 1;
-            }
-
-            byte* tmp = stackalloc byte[32];
-            int n = ULongToStrBytes_reversed(value, tmp);
-            for (int j = n - 1; j <= 0; --j)
-                st.WriteByte(tmp[j]);
-            return n;
-        }
-
-        public static unsafe int UIntToByteString(uint value, byte[] dst, int pos)
-        {
-            if (value == 0)
-            {
-                dst[pos] = ASCIIzero;
-                return 1;
-            }
-
-            fixed (byte* d = &dst[pos])
-            {
-                return UIntToByteString(value, d);
-            }
-        }
-
-        public static unsafe int ULongToByteString(ulong value, byte[] dst, int pos)
-        {
-            if (value == 0)
-            {
-                dst[pos] = ASCIIzero;
-                return 1;
-            }
-
-            fixed (byte* d = &dst[pos])
-            {
-                return ULongToByteString(value, d);
-            }
-        }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe int IntToByteString(int value, byte* dst)
         {
+            int n;
+            if(value > 0)
+            {
+                n = CountDigits((uint)value);
+                UintToStrBytesFromEnd((uint)value, dst + n - 1);
+                return n;
+            }
             if (value == 0)
             {
                 *dst = ASCIIzero;
                 return 1;
             }
 
-            byte* tmp = stackalloc byte[16];
-            int n;
-            if (value > 0)
-            {
-                n = UintToStrBytes_reversed((uint)value, tmp);
-                for (int i = 0, j = n - 1; i < n; ++i, --j)
-                    dst[i] = tmp[j];
-            }
-            else
-            {
-                dst[0] = ASCIIminus;
-                n = UintToStrBytes_reversed((uint)(-value), tmp);
-                for (int i = 1, j = n - 1; i < n + 1; ++i, --j)
-                    dst[i] = tmp[j];
-                ++n;
-            }
-            return n;
+            *dst = ASCIIminus;
+            value = -value;
+            n = CountDigits((uint)value);
+            UintToStrBytesFromEnd((uint)value, dst + n);
+            return n + 1;
         }
 
-        public static unsafe int LongToByteString(long value, byte* dst)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe int IntToByteString(int value, byte[] dst, int pos)
         {
-            if (value == 0)
+            fixed (byte* d = &dst[pos])
             {
-                *dst = ASCIIzero;
-                return 1;
+                return IntToByteString(value, d);
             }
-
-            byte* tmp = stackalloc byte[32];
-            int n;
-            if (value > 0)
-            {
-                n = ULongToStrBytes_reversed((ulong)value, tmp);
-                for (int i = 0, j = n - 1; i < n; ++i, --j)
-                    dst[i] = tmp[j];
-            }
-            else
-            {
-                dst[0] = ASCIIminus;
-                n = ULongToStrBytes_reversed((ulong)(-value), tmp);
-                for (int i = 1, j = n - 1; i < n + 1; ++i, --j)
-                    dst[i] = tmp[j];
-                ++n;
-            }
-            return n;
         }
 
         public static unsafe int IntToByteString(int value, Stream st)
@@ -2867,19 +2986,96 @@ namespace OpenMetaverse
             int n;
             if (value > 0)
             {
-                n = UintToStrBytes_reversed((uint)value, tmp);
-                for (int j = n - 1; j >= 0; --j)
+                n = CountDigits((uint)value);
+                UintToStrBytesFromEnd((uint)value, tmp + n - 1);
+                for (int j = 0; j < n; j++)
                     st.WriteByte(tmp[j]);
+                return n;
             }
-            else
+
+            st.WriteByte(ASCIIminus);
+            value = -value;
+            n = CountDigits((uint)value);
+            UintToStrBytesFromEnd((uint)value, tmp + n - 1);
+            for (int j = 0; j < n; j++)
+                st.WriteByte(tmp[j]);
+            return n + 1;
+        }
+
+         public static unsafe void ULongToStrBytesFromEnd(ulong value, byte* dst)
+        {
+            if (value >= 10)
             {
-                st.WriteByte(ASCIIminus);
-                n = UintToStrBytes_reversed((uint)(-value), tmp);
-                for (int j = n - 1; j >= 0; --j)
-                    st.WriteByte(tmp[j]);
-                ++n;
+                while (value >= 100)
+                {
+                    ulong div = value / 100;
+                    dst--;
+                    WriteTwoDecDigits((uint)(value - 100 * div), dst);
+                    value = div;
+                    dst--;
+                }
+                if (value >= 10)
+                {
+                    dst--;
+                    WriteTwoDecDigits((uint)value, dst);
+                    return;
+                }
             }
+            *dst = (byte)('0' + value);
+        }
+
+        public static unsafe int ULongToByteString(ulong value, byte* dst)
+        {
+            int n = CountDigits(value);
+            ULongToStrBytesFromEnd(value, dst + n - 1);
             return n;
+        }
+
+        public static unsafe int ULongToByteString(ulong value, Stream st)
+        {
+            if (value == 0)
+            {
+                st.WriteByte(ASCIIzero);
+                return 1;
+            }
+
+            int n = CountDigits(value);
+            byte* tmp = stackalloc byte[32];
+            ULongToStrBytesFromEnd(value, tmp + n - 1);
+            for (int i = 0; i < n; i++)
+                st.WriteByte(tmp[i]);
+            return n;
+        }
+
+        public static unsafe int ULongToByteString(ulong value, byte[] dst, int pos)
+        {
+            fixed (byte* d = &dst[pos])
+            {
+                return ULongToByteString(value, d);
+            }
+        }
+
+        public static unsafe int LongToByteString(long value, byte* dst)
+        {
+            int n;
+            if (value > 0)
+            {
+                n = CountDigits((ulong)value);
+                UintToStrBytesFromEnd((uint)value, dst + n - 1);
+                return n;
+            }
+
+            if (value == 0)
+            {
+                *dst = ASCIIzero;
+                return 1;
+            }
+
+            *dst = ASCIIminus;
+            value = -value;
+            n = CountDigits((ulong)value);
+            UintToStrBytesFromEnd((uint)value, dst + n);
+            return n + 1;
         }
 
         public static unsafe int LongToByteString(long value, Stream st)
@@ -2894,45 +3090,25 @@ namespace OpenMetaverse
             int n;
             if (value > 0)
             {
-                n = ULongToStrBytes_reversed((ulong)value, tmp);
-                for (int j = n - 1; j >= 0; --j)
+                n = CountDigits((ulong)value);
+                ULongToStrBytesFromEnd((ulong)value, tmp + n - 1);
+                for (int j = 0; j < n; j++)
                     st.WriteByte(tmp[j]);
-            }
-            else
-            {
-                st.WriteByte(ASCIIminus);
-                n = ULongToStrBytes_reversed((ulong)(-value), tmp);
-                for (int j = n - 1; j >= 0; --j)
-                    st.WriteByte(tmp[j]);
-                ++n;
-            }
-            return n;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe int IntToByteString(int value, byte[] dst, int pos)
-        {
-            if (value == 0)
-            {
-                dst[pos] = ASCIIzero;
-                return 1;
+                return n;
             }
 
-            fixed (byte* d = &dst[pos])
-            {
-                return IntToByteString(value, d);
-            }
+            st.WriteByte(ASCIIminus);
+            value = -value;
+            n = CountDigits((ulong)value);
+            ULongToStrBytesFromEnd((ulong)value, tmp + n - 1);
+            for (int j = 0; j < n; j++)
+                st.WriteByte(tmp[j]);
+            return n + 1;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe int LongToByteString(long value, byte[] dst, int pos)
         {
-            if (value == 0)
-            {
-                dst[pos] = ASCIIzero;
-                return 1;
-            }
-
             fixed (byte* d = &dst[pos])
             {
                 return LongToByteString(value, d);
@@ -3338,6 +3514,111 @@ namespace OpenMetaverse
                 dst[34] = charHighNibbleToHexChar(b);
                 dst[35] = charLowNibbleToHexChar(b);
             });
+        }
+
+        //from .net8 for integer to utf8
+
+        // Map the log2(value) to a power of 10.
+        public static readonly byte[] log2ToPow10 = new byte[]
+        {
+                1,  1,  1,  2,  2,  2,  3,  3,  3,  4,  4,  4,  4,  5,  5,  5,
+                6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  9,  9,  9,  10, 10, 10,
+                10, 11, 11, 11, 12, 12, 12, 13, 13, 13, 13, 14, 14, 14, 15, 15,
+                15, 16, 16, 16, 16, 17, 17, 17, 18, 18, 18, 19, 19, 19, 19, 20
+        };
+
+        public static readonly ulong[] powersOf10 = new ulong[]
+        {
+            0, // unused entry to avoid needing to subtract
+            0,
+            10,
+            100,
+            1000,
+            10000,
+            100000,
+            1000000,
+            10000000,
+            100000000,
+            1000000000,
+            10000000000,
+            100000000000,
+            1000000000000,
+            10000000000000,
+            100000000000000,
+            1000000000000000,
+            10000000000000000,
+            100000000000000000,
+            1000000000000000000,
+            10000000000000000000
+        };
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int CountDigits(ulong value)
+        {
+            uint index = Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(log2ToPow10), System.Numerics.BitOperations.Log2(value));
+            bool lessThan = value < Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(powersOf10), index); ;
+            return (int)(index - Unsafe.As<bool, byte>(ref lessThan));
+        }
+
+        public static readonly long[] CountDigitlongtable = new long[]
+        {
+            4294967296,
+            8589934582,
+            8589934582,
+            8589934582,
+            12884901788,
+            12884901788,
+            12884901788,
+            17179868184,
+            17179868184,
+            17179868184,
+            21474826480,
+            21474826480,
+            21474826480,
+            21474826480,
+            25769703776,
+            25769703776,
+            25769703776,
+            30063771072,
+            30063771072,
+            30063771072,
+            34349738368,
+            34349738368,
+            34349738368,
+            34349738368,
+            38554705664,
+            38554705664,
+            38554705664,
+            41949672960,
+            41949672960,
+            41949672960,
+            42949672960,
+            42949672960,
+        };
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int CountDigits(uint value)
+        {
+            long tableValue = Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(CountDigitlongtable), System.Numerics.BitOperations.Log2(value));
+            return (int)((value + tableValue) >> 32);
+        }
+
+        public static readonly byte[] twodigitbytes = StringToBytesNoTerm(
+                                        "00010203040506070809" +
+                                        "10111213141516171819" +
+                                        "20212223242526272829" +
+                                        "30313233343536373839" +
+                                        "40414243444546474849" +
+                                        "50515253545556575859" +
+                                        "60616263646566676869" +
+                                        "70717273747576777879" +
+                                        "80818283848586878889" +
+                                        "90919293949596979899");
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe void WriteTwoDecDigits(uint value, byte* dest)
+        {
+            *(ushort*)dest = Unsafe.ReadUnaligned<ushort>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(twodigitbytes), 2 * value));
         }
         #endregion Miscellaneous
     }

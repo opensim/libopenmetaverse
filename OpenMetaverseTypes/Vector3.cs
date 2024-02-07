@@ -1035,14 +1035,10 @@ namespace OpenMetaverse
             float yz2 = rot.Y * z2;
             float zz2 = rot.Z * z2;
 
-            x2 = vec.X;
-            y2 = vec.Y;
-            z2 = vec.Z;
-
             return new Vector3(
-                x2 * (1.0f - yy2 - zz2) + y2 * (xy2 - wz2) + z2 * (xz2 + wy2),
-                x2 * (xy2 + wz2) + y2 * (1.0f - xx2 - zz2) + z2 * (yz2 - wx2),
-                x2 * (xz2 - wy2) + y2 * (yz2 + wx2) + z2 * (1.0f - xx2 - yy2));
+                vec.X * (1.0f - yy2 - zz2) + vec.Y * (xy2 - wz2) + vec.Z * (xz2 + wy2),
+                vec.X * (xy2 + wz2) + vec.Y * (1.0f - xx2 - zz2) + vec.Z * (yz2 - wx2),
+                vec.X * (xz2 - wy2) + vec.Y * (yz2 + wx2) + vec.Z * (1.0f - xx2 - yy2));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1062,14 +1058,10 @@ namespace OpenMetaverse
             float yz2 = rot.Y * z2;
             float zz2 = rot.Z * z2;
 
-            x2 = vec.X;
-            y2 = vec.Y;
-            z2 = vec.Z;
-
             return new Vector3(
-                x2 * (1.0f - yy2 - zz2) + y2 * (xy2 + wz2) + z2 * (xz2 - wy2),
-                x2 * (xy2 - wz2) + y2 * (1.0f - xx2 - zz2) + z2 * (yz2 + wx2),
-                x2 * (xz2 + wy2) + y2 * (yz2 - wx2) + z2 * (1.0f - xx2 - yy2));
+                vec.X * (1.0f - yy2 - zz2) + vec.Y * (xy2 + wz2) + vec.Z * (xz2 - wy2),
+                vec.X * (xy2 - wz2) + vec.Y * (1.0f - xx2 - zz2) + vec.Z * (yz2 + wx2),
+                vec.X * (xz2 + wy2) + vec.Y * (yz2 - wx2) + vec.Z * (1.0f - xx2 - yy2));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1133,7 +1125,7 @@ namespace OpenMetaverse
             return new Vector3(
                 vec.X * zz2 - vec.Y * wz2,
                 vec.X * wz2 + vec.Y * zz2,
-                vec.Z);;
+                vec.Z);
         }
 
         //quaternion must be normalized <0,0,z,w>
