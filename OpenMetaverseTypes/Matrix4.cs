@@ -419,8 +419,6 @@ namespace OpenMetaverse
 
         public static Matrix4 CreateFromQuaternion(Quaternion rot)
         {
-            Matrix4 matrix;
-
             float x2 = rot.X + rot.X;
             float y2 = rot.Y + rot.Y;
             float z2 = rot.Z + rot.Z;
@@ -435,25 +433,34 @@ namespace OpenMetaverse
             float yz2 = rot.Y * z2;
             float zz2 = rot.Z * z2;
 
-            matrix.M11 = 1.0f - yy2 - zz2;
-            matrix.M12 = xy2 - wz2;
-            matrix.M13 = xz2 + wy2;
-            matrix.M14 = 0f;
+            return new Matrix4(
+                1.0f - yy2 - zz2, xy2 + wz2, xz2 - wy2, 0,
+                xy2 - wz2, 1.0f - xx2 - zz2, yz2 + wx2, 0,
+                xz2 + wy2, yz2 - wx2, 1.0f - xx2 - yy2, 0,
+                0, 0, 0, 1.0f);
+        }
 
-            matrix.M21 = xy2 + wz2;
-            matrix.M22 = 1.0f - xx2 - zz2;
-            matrix.M23 = yz2 - wx2;
-            matrix.M24 = 0f;
+        public static Matrix4 CreateFromInverseQuaternion(Quaternion rot)
+        {
+            float x2 = rot.X + rot.X;
+            float y2 = rot.Y + rot.Y;
+            float z2 = rot.Z + rot.Z;
 
-            matrix.M31 = xz2 - wy2;
-            matrix.M32 = yz2 + wx2;
-            matrix.M33 = 1.0f - xx2 - yy2;
-            matrix.M34 = 0f;
+            float wx2 = rot.W * x2;
+            float wy2 = rot.W * y2;
+            float wz2 = rot.W * z2;
+            float xx2 = rot.X * x2;
+            float xy2 = rot.X * y2;
+            float xz2 = rot.X * z2;
+            float yy2 = rot.Y * y2;
+            float yz2 = rot.Y * z2;
+            float zz2 = rot.Z * z2;
 
-            matrix.M43 = matrix.M42 = matrix.M41 = 0f;
-            matrix.M44 = 1f;
-
-            return matrix;
+            return new Matrix4(
+                1.0f - yy2 - zz2, xy2 - wz2, xz2 + wy2, 0,
+                xy2 + wz2, 1.0f - xx2 - zz2, yz2 - wx2, 0,
+                xz2 - wy2, yz2 + wx2, 1.0f - xx2 - yy2, 0,
+                0, 0, 0, 1.0f);
         }
 
         public static Matrix4 CreateLookAt(Vector3 cameraPosition, Vector3 cameraTarget, Vector3 cameraUpVector)

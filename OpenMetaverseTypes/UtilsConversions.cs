@@ -773,6 +773,283 @@ namespace OpenMetaverse
                     ((long)bytes[7] << 56));
         }
 
+        public static ulong VarBytestoUlong(byte[] bytes, int pos)
+        {
+            ref byte dataref = ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos);
+
+            ulong value = Unsafe.ReadUnaligned<byte>(ref dataref);
+            if ((value & 0x80) == 0)
+                return value;
+            value &= 0x7F;
+
+            ulong next = Unsafe.ReadUnaligned<byte>(ref Unsafe.Add(ref dataref, 1));
+            if ((next & 0x80) == 0)
+                return value | (next << 7);
+            value |= (next & 0x7F) << 7;
+
+            next = Unsafe.ReadUnaligned<byte>(ref Unsafe.Add(ref dataref, 2));
+            if ((next & 0x80) == 0)
+                return value | (next << 14);
+            value |= (next & 0x7F) << 14;
+
+            next = Unsafe.ReadUnaligned<byte>(ref Unsafe.Add(ref dataref, 3));
+            if ((next & 0x80) == 0)
+                return value | (next << 21);
+            value |= (next & 0x7F) << 21;
+
+            next = Unsafe.ReadUnaligned<byte>(ref Unsafe.Add(ref dataref, 4));
+            if ((next & 0x80) == 0)
+                return value | (next << 28);
+            value |= (next & 0x7F) << 28;
+
+            next = Unsafe.ReadUnaligned<byte>(ref Unsafe.Add(ref dataref, 5));
+            if ((next & 0x80) == 0)
+                return value | (next << 35);
+            value |= (next & 0x7F) << 35;
+
+            next = Unsafe.ReadUnaligned<byte>(ref Unsafe.Add(ref dataref, 6));
+            if ((next & 0x80) == 0)
+                return value | (next << 42);
+            value |= (next & 0x7F) << 42;
+
+            next = Unsafe.ReadUnaligned<byte>(ref Unsafe.Add(ref dataref, 7));
+            if ((next & 0x80) == 0)
+                return value | (next << 49);
+            value |= (next & 0x7F) << 49;
+
+            next = Unsafe.ReadUnaligned<byte>(ref Unsafe.Add(ref dataref, 8));
+            if ((next & 0x80) == 0)
+                return value | (next << 56);
+            value |= (next & 0x7F) << 56;
+
+            next = Unsafe.ReadUnaligned<byte>(ref Unsafe.Add(ref dataref, 9));
+            return value | (next << 63);
+        }
+
+        public static bool TryVarBytestoUlong(byte[] bytes, ref int pos, out ulong value)
+        {
+            int st = pos;
+            try
+            { 
+                value = bytes[pos++];
+                if ((value & 0x80) == 0)
+                    return true;
+                value &= 0x7F;
+
+                ulong next = bytes[pos++];
+                if ((next & 0x80) == 0)
+                {
+                    value |= (next << 7);
+                    return true;
+                }
+                value |= (next & 0x7F) << 7;
+
+                next = bytes[pos++];
+                if ((next & 0x80) == 0)
+                {
+                    value |= (next << 14);
+                    return true;
+                }
+                value |= (next & 0x7F) << 14;
+
+                pos++;
+                next = bytes[pos++];
+                if ((next & 0x80) == 0)
+                {
+                    value |= (next << 21);
+                    return true;
+                }
+                value |= (next & 0x7F) << 21;
+
+                next = bytes[pos++];
+                if ((next & 0x80) == 0)
+                { 
+                    value |= (next << 28);
+                    return true;
+                }
+                value |= (next & 0x7F) << 28;
+
+                next = bytes[pos++];
+                if ((next & 0x80) == 0)
+                {
+                    value |= (next << 35);
+                    return true;
+                }
+                value |= (next & 0x7F) << 35;
+
+                next = bytes[pos++];
+                if ((next & 0x80) == 0)
+                {
+                    value |= (next << 42);
+                    return true;
+                }
+                value |= (next & 0x7F) << 42;
+
+                next = bytes[pos++];
+                if ((next & 0x80) == 0)
+                {
+                    value |= (next << 49);
+                    return true;
+                }
+                value |= (next & 0x7F) << 49;
+
+                next = bytes[pos++];
+                if ((next & 0x80) == 0)
+                {
+                    value |= (next << 56);
+                    return true;
+                }
+                value |= (next & 0x7F) << 56;
+
+                next = bytes[pos++];
+                value |= (next << 63);
+                if( next < 2)
+                return true;
+            }
+            catch {}
+
+            value = 0;
+            pos = st;
+            return false;
+        }
+
+        public static ulong VarBytestoUlong(Stream ms)
+        {
+            ulong value = (ulong)ms.ReadByte();
+            if ((value & 0x80) == 0)
+                return value;
+            value &= 0x7F;
+
+            ulong next = (ulong)ms.ReadByte();
+            if ((next & 0x80) == 0)
+                return value | (next << 7);
+            value |= (next & 0x7F) << 7;
+
+            next = (ulong)ms.ReadByte();
+            if ((next & 0x80) == 0)
+                return value | (next << 14);
+            value |= (next & 0x7F) << 14;
+
+            next = (ulong)ms.ReadByte();
+            if ((next & 0x80) == 0)
+                return value | (next << 21);
+            value |= (next & 0x7F) << 21;
+
+            next = (ulong)ms.ReadByte();
+            if ((next & 0x80) == 0)
+                return value | (next << 28);
+            value |= (next & 0x7F) << 28;
+
+            next = (ulong)ms.ReadByte();
+            if ((next & 0x80) == 0)
+                return value | (next << 35);
+            value |= (next & 0x7F) << 35;
+
+            next = (ulong)ms.ReadByte();
+            if ((next & 0x80) == 0)
+                return value | (next << 42);
+            value |= (next & 0x7F) << 42;
+
+            next = (ulong)ms.ReadByte();
+            if ((next & 0x80) == 0)
+                return value | (next << 49);
+            value |= (next & 0x7F) << 49;
+
+            next = (ulong)ms.ReadByte();
+            if ((next & 0x80) == 0)
+                return value | (next << 56);
+            value |= (next & 0x7F) << 56;
+
+            next = (ulong)ms.ReadByte();
+            return value | (next << 63);
+        }
+
+        public static bool TryVarBytestoUlong(Stream ms, out ulong value)
+        {
+            long st = ms.Position;
+            try
+            {
+                value = (ulong)ms.ReadByte();
+                if ((value & 0x80) == 0)
+                    return true;
+                value &= 0x7F;
+
+                ulong next = (ulong)ms.ReadByte();
+                if ((next & 0x80) == 0)
+                {
+                    value |= (next << 7);
+                    return true;
+                }
+                value |= (next & 0x7F) << 7;
+
+                next = (ulong)ms.ReadByte();
+                if ((next & 0x80) == 0)
+                { 
+                    value |= (next << 14);
+                    return true;
+                }
+                value |= (next & 0x7F) << 14;
+
+                next = (ulong)ms.ReadByte();
+                if ((next & 0x80) == 0)
+                {
+                    value |= (next << 21);
+                    return true;
+                }
+                value |= (next & 0x7F) << 21;
+
+                next = (ulong)ms.ReadByte();
+                if ((next & 0x80) == 0)
+                {
+                    value |= (next << 28);
+                    return true;
+                }
+                value |= (next & 0x7F) << 28;
+
+                next = (ulong)ms.ReadByte();
+                if ((next & 0x80) == 0)
+                {
+                    value |= (next << 35);
+                    return true;
+                }
+                value |= (next & 0x7F) << 35;
+
+                next = (ulong)ms.ReadByte();
+                if ((next & 0x80) == 0)
+                {
+                    value |= (next << 42);
+                    return true;
+                }
+                value |= (next & 0x7F) << 42;
+
+                next = (ulong)ms.ReadByte();
+                if ((next & 0x80) == 0)
+                {
+                    value |= (next << 49);
+                    return true;
+                }
+                value |= (next & 0x7F) << 49;
+
+                next = (ulong)ms.ReadByte();
+                if ((next & 0x80) == 0)
+                {
+                    value |= (next << 56);
+                    return true;
+                }
+                value |= (next & 0x7F) << 56;
+
+                next = (ulong)ms.ReadByte();
+                value |= (next << 63);
+                if(next < 2)
+                    return true;
+            }
+            catch { }
+
+            value = 0;
+            ms.Position = st;
+            return false;
+        }
+
         /// <summary>
         /// Convert four bytes in native endian ordeing to a floating point
         /// value
@@ -881,10 +1158,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] Int16ToBytes(short value)
         {
-            byte[] bytes = new byte[2];
-            bytes[0] = (byte)value;
-            bytes[1] = (byte)(value >> 8);
-            return bytes;
+            return new byte[] {(byte)value, (byte)(value >> 8)};
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -928,10 +1202,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] UInt16ToBytes(ushort value)
         {
-            byte[] bytes = new byte[2];
-            bytes[0] = (byte)value;
-            bytes[1] = (byte)(value >> 8);
-            return bytes;
+            return new byte[] { (byte)value, (byte)(value >> 8) };
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1089,14 +1360,13 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] IntToBytesBig(int value)
         {
-            byte[] bytes = new byte[4];
-
-            bytes[0] = (byte)(value >> 24);
-            bytes[1] = (byte)(value >> 16);
-            bytes[2] = (byte)(value >> 8);
-            bytes[3] = (byte)value;
-
-            return bytes;
+            return new byte[]
+            {
+                (byte)(value >> 24),
+                (byte)(value >> 16),
+                (byte)(value >> 8),
+                (byte)value
+            };
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1182,6 +1452,16 @@ namespace OpenMetaverse
            IntToBytesBig((int)value, dest, pos);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void UIntToVarBytes(Stream ms, uint value)
+        {
+            while (value > 127)
+            {
+                ms.WriteByte((byte)(value | 0x80));
+                value >>= 7;
+            }
+            ms.WriteByte((byte)value);
+        }
         /// <summary>
         /// Convert a 64-bit integer to a byte array in little endian format
         /// </summary>
@@ -1391,6 +1671,68 @@ namespace OpenMetaverse
         public static void UInt64ToBytesSafepos(ulong value, ref byte dest)
         {
             Unsafe.WriteUnaligned(ref dest, value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int UInt64ToVarBytes(byte[] bytes, int pos, ulong value)
+        {
+            ref byte bytesref = ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos);
+            ref byte bytesrefbase = ref bytesref;
+            while (value > 127UL)
+            {
+                Unsafe.WriteUnaligned(ref bytesref, (byte)(value | 0x80));
+                bytesref = ref Unsafe.Add(ref bytesref, 1);
+                value >>= 7;
+            }
+            Unsafe.WriteUnaligned(ref bytesref, (byte)value);
+            return (int)Unsafe.ByteOffset(ref bytesrefbase, ref bytesref) + 1;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int TryUInt64ToVarBytes(byte[] bytes, int pos, ulong value)
+        {
+            int st = pos;
+            try
+            {
+                while (value > 127UL)
+                {
+                    bytes[pos] = (byte)(value | 0x80);
+                    pos++;
+                    value >>= 7;
+                }
+                bytes[pos] = (byte)value;
+                return pos - st + 1;
+            }
+            catch { }
+            return -1;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void UInt64ToVarBytes(Stream ms, ulong value)
+        {
+            while (value > 127UL)
+            {
+                ms.WriteByte((byte)(value | 0x80));
+                value >>= 7;
+            }
+            ms.WriteByte((byte)value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TryUInt64ToVarBytes(Stream ms, ulong value)
+        {
+            try
+            {
+                while (value > 127UL)
+                {
+                    ms.WriteByte((byte)(value | 0x80));
+                    value >>= 7;
+                }
+                ms.WriteByte((byte)value);
+                return true;
+            }
+            catch { }
+            return false;
         }
 
         /// <summary>
@@ -2267,7 +2609,7 @@ namespace OpenMetaverse
             return true;
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryHexToByte(byte[] data, int pos, out byte res)
         {
             int a,b;
@@ -2325,11 +2667,13 @@ namespace OpenMetaverse
                 }
                 hexString = stripped.ToString();
 
+                /*
                 // if odd number of characters, discard last character
                 if (hexString.Length % 2 != 0)
                 {
-                    hexString = hexString.Substring(0, hexString.Length - 1);
+                    hexString = hexString[..^1];
                 }
+                */
             }
 
             int byteLength = hexString.Length / 2;
@@ -2712,7 +3056,7 @@ namespace OpenMetaverse
             if (bytes == null)
                 return null;
 
-            byte[] newBytes = new byte[bytes.Length];
+            byte[] newBytes = GC.AllocateUninitializedArray<byte>(bytes.Length);
             Array.Copy(bytes, newBytes, bytes.Length);
             return newBytes;
         }
@@ -3619,6 +3963,23 @@ namespace OpenMetaverse
         public static unsafe void WriteTwoDecDigits(uint value, byte* dest)
         {
             *(ushort*)dest = Unsafe.ReadUnaligned<ushort>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(twodigitbytes), 2 * value));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void StringToUFT8VarBin(Stream ms, ReadOnlySpan<char> s)
+        {
+            ReadOnlySpan<byte> sp = StringToBytesNoTerm(s);
+            UIntToVarBytes(ms, (uint)sp.Length);
+            if (sp.Length > 0)
+                ms.Write(sp);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Utf8ToVarBin(Stream ms, ReadOnlySpan<byte> sp)
+        {
+            UIntToVarBytes(ms, (uint)sp.Length);
+            if (sp.Length > 0)
+                ms.Write(sp);
         }
         #endregion Miscellaneous
     }

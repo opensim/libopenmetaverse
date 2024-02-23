@@ -520,6 +520,7 @@ namespace OpenMetaverse
             Z = x2 * (xz2 - wy2) + y2 * (yz2 + wx2) + z2 * (1.0f - xx2 - yy2);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void InverseRotate(Quaternion rot)
         {
             float x2 = rot.X + rot.X;
@@ -996,6 +997,26 @@ namespace OpenMetaverse
                 return Subtract(value1, value2);
         }
         */
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 Transform(Vector3 position, Matrix3x3 matrix)
+        {
+            return new Vector3(
+                (position.X * matrix.M11) + (position.Y * matrix.M21) + (position.Z * matrix.M31),
+                (position.X * matrix.M12) + (position.Y * matrix.M22) + (position.Z * matrix.M32),
+                (position.X * matrix.M13) + (position.Y * matrix.M23) + (position.Z * matrix.M33));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 TransformByTransposed(Vector3 position, Matrix3x3 matrix)
+        {
+            return new Vector3(
+                (position.X * matrix.M11) + (position.Y * matrix.M12) + (position.Z * matrix.M13),
+                (position.X * matrix.M21) + (position.Y * matrix.M22) + (position.Z * matrix.M23),
+                (position.X * matrix.M31) + (position.Y * matrix.M32) + (position.Z * matrix.M33));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Transform(Vector3 position, Matrix4 matrix)
         {
             return new Vector3(
@@ -1004,6 +1025,7 @@ namespace OpenMetaverse
                 (position.X * matrix.M13) + (position.Y * matrix.M23) + (position.Z * matrix.M33) + matrix.M43);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 TransformNormal(Vector3 position, Matrix4 matrix)
         {
             return new Vector3(

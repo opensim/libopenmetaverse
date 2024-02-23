@@ -131,10 +131,10 @@ namespace OpenMetaverse.Imaging
             if (bitmap.PixelFormat == System.Drawing.Imaging.PixelFormat.Format32bppArgb)
             {
                 Channels = ImageChannels.Alpha | ImageChannels.Color;
-                Red = new byte[pixelCount];
-                Green = new byte[pixelCount];
-                Blue = new byte[pixelCount];
-                Alpha = new byte[pixelCount];
+                Red = GC.AllocateUninitializedArray<byte>(pixelCount);
+                Green = GC.AllocateUninitializedArray<byte>(pixelCount);
+                Blue = GC.AllocateUninitializedArray<byte>(pixelCount);
+                Alpha = GC.AllocateUninitializedArray<byte>(pixelCount);
 
                 System.Drawing.Imaging.BitmapData bd = bitmap.LockBits(new System.Drawing.Rectangle(0, 0, Width, Height),
                     System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
@@ -158,16 +158,16 @@ namespace OpenMetaverse.Imaging
             else if (bitmap.PixelFormat == System.Drawing.Imaging.PixelFormat.Format16bppGrayScale)
             {
                 Channels = ImageChannels.Gray;
-                Red = new byte[pixelCount];
+                Red = GC.AllocateUninitializedArray<byte>(pixelCount);
 
                 throw new NotImplementedException("16bpp grayscale image support is incomplete");
             }
             else if (bitmap.PixelFormat == System.Drawing.Imaging.PixelFormat.Format24bppRgb)
             {
                 Channels = ImageChannels.Color;
-                Red = new byte[pixelCount];
-                Green = new byte[pixelCount];
-                Blue = new byte[pixelCount];
+                Red = GC.AllocateUninitializedArray<byte>(pixelCount);
+                Green = GC.AllocateUninitializedArray<byte>(pixelCount);
+                Blue = GC.AllocateUninitializedArray<byte>(pixelCount);
 
                 System.Drawing.Imaging.BitmapData bd = bitmap.LockBits(new System.Drawing.Rectangle(0, 0, Width, Height),
                         System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
@@ -190,9 +190,9 @@ namespace OpenMetaverse.Imaging
 			else if (bitmap.PixelFormat == System.Drawing.Imaging.PixelFormat.Format32bppRgb)
 			{
 				Channels = ImageChannels.Color;
-				Red = new byte[pixelCount];
-				Green = new byte[pixelCount];
-				Blue = new byte[pixelCount];
+				Red = GC.AllocateUninitializedArray<byte>(pixelCount);
+				Green = GC.AllocateUninitializedArray<byte>(pixelCount);
+				Blue = GC.AllocateUninitializedArray<byte>(pixelCount);
 
 				System.Drawing.Imaging.BitmapData bd = bitmap.LockBits(new System.Drawing.Rectangle(0, 0, Width, Height),
 						System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
@@ -235,9 +235,9 @@ namespace OpenMetaverse.Imaging
 
             if ((add & ImageChannels.Color) != 0)
             {
-                Red = new byte[n];
-                Green = new byte[n];
-                Blue = new byte[n];
+                Red = GC.AllocateUninitializedArray<byte>(n);
+                Green = GC.AllocateUninitializedArray<byte>(n);
+                Blue = GC.AllocateUninitializedArray<byte>(n);
             }
             else if ((del & ImageChannels.Color) != 0)
             {

@@ -450,17 +450,17 @@ namespace OpenMetaverse.StructuredData
             int lenMod3 = data.Length % 3;
             int len = data.Length - lenMod3;
 
-            mb.CheckCapacity(4 * data.Length / 3);
+            mb.CheckCapacity(((data.Length + 2) / 3) * 4);
 
             fixed (byte* d = data, b64 = osUTF8Const.base64Bytes)
             {
                 int i = 0;
                 while (i < len)
                 {
-                    mb.Append(b64[d[i] >> 2]);
-                    mb.Append(b64[((d[i] & 0x03) << 4) | ((d[i + 1] & 0xf0) >> 4)]);
-                    mb.Append(b64[((d[i + 1] & 0x0f) << 2) | ((d[i + 2] & 0xc0) >> 6)]);
-                    mb.Append(b64[d[i + 2] & 0x3f]);
+                    mb.AppendSafe(b64[d[i] >> 2]);
+                    mb.AppendSafe(b64[((d[i] & 0x03) << 4) | ((d[i + 1] & 0xf0) >> 4)]);
+                    mb.AppendSafe(b64[((d[i + 1] & 0x0f) << 2) | ((d[i + 2] & 0xc0) >> 6)]);
+                    mb.AppendSafe(b64[d[i + 2] & 0x3f]);
                     i += 3;
                 }
 
@@ -469,19 +469,19 @@ namespace OpenMetaverse.StructuredData
                     case 2:
                     {
                         i = len;
-                        mb.Append(b64[d[i] >> 2]);
-                        mb.Append(b64[((d[i] & 0x03) << 4) | ((d[i + 1] & 0xf0) >> 4)]);
-                        mb.Append(b64[((d[i + 1] & 0x0f) << 2)]);
-                        mb.Append((byte)'=');
+                        mb.AppendSafe(b64[d[i] >> 2]);
+                        mb.AppendSafe(b64[((d[i] & 0x03) << 4) | ((d[i + 1] & 0xf0) >> 4)]);
+                        mb.AppendSafe(b64[((d[i + 1] & 0x0f) << 2)]);
+                        mb.AppendSafe((byte)'=');
                         break;
                     }
                     case 1:
                     {
                         i = len;
-                        mb.Append(b64[d[i] >> 2]);
-                        mb.Append(b64[(d[i] & 0x03) << 4]);
-                        mb.Append((byte)'=');
-                        mb.Append((byte)'=');
+                        mb.AppendSafe(b64[d[i] >> 2]);
+                        mb.AppendSafe(b64[(d[i] & 0x03) << 4]);
+                        mb.AppendSafe((byte)'=');
+                        mb.AppendSafe((byte)'=');
                         break;
                     }
                 }
@@ -493,15 +493,16 @@ namespace OpenMetaverse.StructuredData
             int lenMod3 = lenght % 3;
             int len = lenght - lenMod3;
 
+            mb.CheckCapacity(((lenght + 2) / 3) * 4);
             fixed (byte* d = &data[start], b64 = osUTF8Const.base64Bytes)
             {
                 int i = 0;
                 while (i < len)
                 {
-                    mb.Append(b64[d[i] >> 2]);
-                    mb.Append(b64[((d[i] & 0x03) << 4) | ((d[i + 1] & 0xf0) >> 4)]);
-                    mb.Append(b64[((d[i + 1] & 0x0f) << 2) | ((d[i + 2] & 0xc0) >> 6)]);
-                    mb.Append(b64[d[i + 2] & 0x3f]);
+                    mb.AppendSafe(b64[d[i] >> 2]);
+                    mb.AppendSafe(b64[((d[i] & 0x03) << 4) | ((d[i + 1] & 0xf0) >> 4)]);
+                    mb.AppendSafe(b64[((d[i + 1] & 0x0f) << 2) | ((d[i + 2] & 0xc0) >> 6)]);
+                    mb.AppendSafe(b64[d[i + 2] & 0x3f]);
                     i += 3;
                 }
 
@@ -510,19 +511,19 @@ namespace OpenMetaverse.StructuredData
                     case 2:
                     {
                         i = len;
-                        mb.Append(b64[d[i] >> 2]);
-                        mb.Append(b64[((d[i] & 0x03) << 4) | ((d[i + 1] & 0xf0) >> 4)]);
-                        mb.Append(b64[((d[i + 1] & 0x0f) << 2)]);
-                        mb.Append((byte)'=');
+                        mb.AppendSafe(b64[d[i] >> 2]);
+                        mb.AppendSafe(b64[((d[i] & 0x03) << 4) | ((d[i + 1] & 0xf0) >> 4)]);
+                        mb.AppendSafe(b64[((d[i + 1] & 0x0f) << 2)]);
+                        mb.AppendSafe((byte)'=');
                         break;
                     }
                     case 1:
                     {
                         i = len;
-                        mb.Append(b64[d[i] >> 2]);
-                        mb.Append(b64[(d[i] & 0x03) << 4]);
-                        mb.Append((byte)'=');
-                        mb.Append((byte)'=');
+                        mb.AppendSafe(b64[d[i] >> 2]);
+                        mb.AppendSafe(b64[(d[i] & 0x03) << 4]);
+                        mb.AppendSafe((byte)'=');
+                        mb.AppendSafe((byte)'=');
                         break;
                     }
                 }
@@ -540,6 +541,7 @@ namespace OpenMetaverse.StructuredData
             int lenMod3 = data.Length % 3;
             int len = data.Length - lenMod3;
 
+            sb.EnsureCapacity(((data.Length + 2) / 3) * 4);
             fixed (byte* d = data)
             {
                 fixed (char* b64 = base64Chars)

@@ -41,6 +41,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 using System.Runtime.Intrinsics;
+using System.IO;
 
 namespace OpenMetaverse
 {
@@ -471,6 +472,13 @@ namespace OpenMetaverse
         public void Append(byte c)
         {
             CheckCapacity(1);
+            Unsafe.As<byte, byte>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(m_data), m_len)) = c;
+            ++m_len;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void AppendSafe(byte c)
+        {
             Unsafe.As<byte, byte>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(m_data), m_len)) = c;
             ++m_len;
         }
@@ -1284,6 +1292,27 @@ namespace OpenMetaverse
             Array.Copy(m_data, end, o.m_data, start, m_len - end);
             o.m_len = m_len - len;
             return o;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ToVarBin(Stream ms)
+        {
+            Utils.UIntToVarBytes(ms, (uint)m_len);
+            if (m_len > 0)
+                ms.Write(m_data, 0, m_len);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static osUTF8 FromVarBin(Stream ms)
+        {
+            int len = (int)Utils.VarBytestoUlong(ms);
+            if(len > 0)
+            {
+                byte[] data = new byte[len];
+                ms.Read(data,0, len);
+                return new osUTF8(data);
+            }
+            return new osUTF8();
         }
     }
 }

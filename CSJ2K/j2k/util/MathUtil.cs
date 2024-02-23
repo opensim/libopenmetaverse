@@ -41,6 +41,7 @@
 * Copyright (c) 1999/2000 JJ2000 Partners.
 * */
 using System;
+using System.Runtime.CompilerServices;
 namespace CSJ2K.j2k.util
 {
 	
@@ -50,34 +51,12 @@ namespace CSJ2K.j2k.util
 	/// </summary>
 	public class MathUtil
 	{
-		
-		/// <summary> Method that calculates the floor of the log, base 2, of 'x'. The
-		/// calculation is performed in integer arithmetic, therefore, it is exact.
-		/// 
-		/// </summary>
-		/// <param name="x">The value to calculate log2 on.
-		/// 
-		/// </param>
-		/// <returns> floor(log(x)/log(2)), calculated in an exact way.
-		/// 
-		/// </returns>
-		public static int log2(int x)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int log2(int x)
 		{
-			int y, v;
-			// No log of 0 or negative
-			if (x <= 0)
-			{
-				throw new System.ArgumentException("" + x + " <= 0");
-			}
-			// Calculate log2 (it's actually floor log2)
-			v = x;
-			y = - 1;
-			while (v > 0)
-			{
-				v >>= 1;
-				y++;
-			}
-			return y;
+            if (x <= 0)
+                throw new System.ArgumentException("" + x + " <= 0");
+            return System.Numerics.BitOperations.Log2((uint)x);
 		}
 		
 		/// <summary> Method that calculates the Least Common Multiple (LCM) of two strictly

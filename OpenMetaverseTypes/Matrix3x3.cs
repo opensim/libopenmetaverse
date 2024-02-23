@@ -372,17 +372,32 @@ namespace OpenMetaverse
             float zz2 = rot.Z * z2;
 
             return new Matrix3x3(
-                1.0f - yy2 - zz2,
-                xy2 - wz2,
-                xz2 + wy2,
+                1.0f - yy2 - zz2, xy2 + wz2, xz2 - wy2,
+                xy2 - wz2, 1.0f - xx2 - zz2, yz2 + wx2,
+                xz2 + wy2, yz2 - wx2, 1.0f - xx2 - yy2
+            );
+        }
 
-                xy2 + wz2,
-                1.0f - xx2 - zz2,
-                yz2 - wx2,
+        public static Matrix3x3 CreateFromInverseQuaternion(Quaternion rot)
+        {
+            float x2 = rot.X + rot.X;
+            float y2 = rot.Y + rot.Y;
+            float z2 = rot.Z + rot.Z;
 
-                xz2 - wy2,
-                yz2 + wx2,
-                1.0f - xx2 - yy2
+            float wx2 = rot.W * x2;
+            float wy2 = rot.W * y2;
+            float wz2 = rot.W * z2;
+            float xx2 = rot.X * x2;
+            float xy2 = rot.X * y2;
+            float xz2 = rot.X * z2;
+            float yy2 = rot.Y * y2;
+            float yz2 = rot.Y * z2;
+            float zz2 = rot.Z * z2;
+
+            return new Matrix3x3(
+                1.0f - yy2 - zz2, xy2 - wz2, xz2 + wy2,
+                xy2 + wz2, 1.0f - xx2 - zz2, yz2 - wx2,
+                xz2 - wy2, yz2 + wx2, 1.0f - xx2 - yy2
             );
         }
 
@@ -595,20 +610,7 @@ namespace OpenMetaverse
             if (matrix.Determinant3x3() == 0f)
                 throw new ArgumentException("Singular matrix inverse not possible");
 
-            return (Adjoint3x3(matrix) / matrix.Determinant3x3());
-        }
-
-        public static  Matrix3x3 Adjoint3x3(Matrix3x3 matrix)
-        {
-             Matrix3x3 adjointMatrix = new  Matrix3x3();
-            for (int i = 0; i < 4; i++)
-            {
-                for (int j = 0; j < 4; j++)
-                    adjointMatrix[i,j] = MathF.Pow(-1, i + j) * (Minor(matrix, i, j).Determinant3x3());
-            }
-
-            adjointMatrix = Transpose(adjointMatrix);
-            return adjointMatrix;
+            return (Adjoint(matrix) / matrix.Determinant3x3());
         }
 
         public static  Matrix3x3 Inverse(Matrix3x3 matrix)
@@ -616,7 +618,7 @@ namespace OpenMetaverse
             if (matrix.Determinant() == 0f)
                 throw new ArgumentException("Singular matrix inverse not possible");
 
-            return (Adjoint(matrix) / matrix.Determinant());
+            return Adjoint(matrix) / matrix.Determinant();
         }
 
         public static  Matrix3x3 Adjoint(Matrix3x3 matrix)

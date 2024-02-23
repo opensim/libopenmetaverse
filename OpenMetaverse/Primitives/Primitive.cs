@@ -36,7 +36,7 @@ namespace OpenMetaverse
         protected const float CUT_QUANTA = 0.00002f;
         protected const float CUT_QUANTAINV = 1.0f / CUT_QUANTA;
         protected const float SCALE_QUANTA = 0.01f;
-        protected const float SCALE_QUANTAINV = 1-0f/ SCALE_QUANTA;
+        protected const float SCALE_QUANTAINV = 1.0f/ SCALE_QUANTA;
         protected const float SHEAR_QUANTA = 0.01f;
         protected const float SHEAR_QUANTAINV = 1.0f / SHEAR_QUANTA;
         protected const float TAPER_QUANTA = 0.01f;
