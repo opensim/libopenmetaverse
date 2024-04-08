@@ -48,7 +48,7 @@ namespace OpenMetaverse
         public float Y;
         /// <summary>Z value</summary>
         public float Z;
-        
+
         #region Constructors
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -91,17 +91,37 @@ namespace OpenMetaverse
             Z = vector.Z;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector3(Vector128<float> v)
+        {
+            Unsafe.SkipInit(out this);
+            unsafe
+            {
+                Sse2.StoreScalar((double*)Unsafe.AsPointer(ref X), v.AsDouble());
+                Sse2.StoreScalar((float*)Unsafe.AsPointer(ref Z), Sse2.Shuffle(v.AsInt32(), 0x02).AsSingle());
+            }
+        }
+
         /// <summary>
         /// Constructor, builds a vector from a byte array
         /// </summary>
         /// <param name="byteArray">Byte array containing three four-byte floats</param>
         /// <param name="pos">Beginning position in the byte array</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector3(byte[] byteArray)
+        {
+            this = Unsafe.ReadUnaligned<Vector3>(ref MemoryMarshal.GetArrayDataReference(byteArray));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector3(byte[] byteArray, int pos)
         {
-            X = Utils.BytesToFloatSafepos(byteArray, pos);
-            Y = Utils.BytesToFloatSafepos(byteArray, pos + 4);
-            Z = Utils.BytesToFloatSafepos(byteArray, pos + 8);
+            this = Unsafe.ReadUnaligned<Vector3>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(byteArray), pos));
+        }
+
+        public Vector3(ReadOnlySpan<byte> bytes)
+        {
+            this = Unsafe.ReadUnaligned<Vector3>(ref MemoryMarshal.GetReference(bytes));
         }
 
         #endregion Constructors
@@ -326,7 +346,7 @@ namespace OpenMetaverse
         public readonly byte[] GetBytes()
         {
             byte[] dest = new byte[12];
-            Unsafe.WriteUnaligned<Vector3>(ref MemoryMarshal.GetArrayDataReference(dest), this);
+            Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), this);
             return dest;
         }
 
@@ -339,17 +359,16 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly unsafe void ToBytes(byte[] dest, int pos)
         {
-            if (Utils.CanDirectCopyLE)
-            {
-                fixed (byte* d = &dest[0])
-                    *(Vector3*)(d + pos) = this;
-            }
-            else
-            {
-                Utils.FloatToBytesSafepos(X, dest, pos);
-                Utils.FloatToBytesSafepos(Y, dest, pos + 4);
-                Utils.FloatToBytesSafepos(Z, dest, pos + 8);
-            }
+            //if (Utils.CanDirectCopyLE)
+            //{
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), this);
+            //}
+            //else
+            //{
+            //    Utils.FloatToBytesSafepos(X, dest, pos);
+            //    Utils.FloatToBytesSafepos(Y, dest, pos + 4);
+            //    Utils.FloatToBytesSafepos(Z, dest, pos + 8);
+            //}
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1191,6 +1210,130 @@ namespace OpenMetaverse
                 vec.Y * zz2 - vec.X * wz2,
                 vec.Z);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector3 TransformPositionOffset(ref Quaternion ParentRot, ref Vector3 ParentPos)
+        {
+            float x2 = ParentRot.X + ParentRot.X;
+            float y2 = ParentRot.Y + ParentRot.Y;
+            float z2 = ParentRot.Z + ParentRot.Z;
+
+            float wx2 = ParentRot.W * x2;
+            float wy2 = ParentRot.W * y2;
+            float wz2 = ParentRot.W * z2;
+
+            float xx2 = ParentRot.X * x2;
+            float xy2 = ParentRot.X * y2;
+            float xz2 = ParentRot.X * z2;
+
+            float yy2 = ParentRot.Y * y2;
+            float yz2 = ParentRot.Y * z2;
+
+            float zz2 = ParentRot.Z * z2;
+
+            return new Vector3(
+                ParentPos.X + X * (1.0f - yy2 - zz2) + Y * (xy2 - wz2) + Z * (xz2 + wy2),
+                ParentPos.Y + X * (xy2 + wz2) + Y * (1.0f - xx2 - zz2) + Z * (yz2 - wx2),
+                ParentPos.Z + X * (xz2 - wy2) + Y * (yz2 + wx2) + Z * (1.0f - xx2 - yy2));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector3 TransformPositionOffset(ref Matrix3x3 ParentRot, ref Vector3 ParentPos)
+        {
+            if (Sse.IsSupported)
+            {
+                unsafe
+                {
+                    Vector128<float> result = Sse.Multiply(Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentRot.M11)), Vector128.Create(X));
+                    result = Sse.Add(result, Sse.Multiply(Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentRot.M21)), Vector128.Create(Y)));
+                    result = Sse.Add(result, Sse.Multiply(Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentRot.M31)), Vector128.Create(Z)));
+                    result = Sse.Add(result, Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentPos)));
+                    return new Vector3(result);
+                }
+            }
+
+            return new Vector3(
+                ParentPos.X + X * ParentRot.M11 + Y * ParentRot.M21 + Z * ParentRot.M31,
+                ParentPos.Y + X * ParentRot.M12 + Y * ParentRot.M22 + Z * ParentRot.M32,
+                ParentPos.Z + X * ParentRot.M13 + Y * ParentRot.M23 + Z * ParentRot.M33);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 TransformPositionOffset(ref Quaternion ParentRot, ref Vector3 ParentPos, ref Vector3 Partoffset)
+        {
+            float x2 = ParentRot.X + ParentRot.X;
+            float y2 = ParentRot.Y + ParentRot.Y;
+            float z2 = ParentRot.Z + ParentRot.Z;
+
+            float wx2 = ParentRot.W * x2;
+            float wy2 = ParentRot.W * y2;
+            float wz2 = ParentRot.W * z2;
+            float xx2 = ParentRot.X * x2;
+            float xy2 = ParentRot.X * y2;
+            float xz2 = ParentRot.X * z2;
+            float yy2 = ParentRot.Y * y2;
+            float yz2 = ParentRot.Y * z2;
+            float zz2 = ParentRot.Z * z2;
+
+            return new Vector3(
+                ParentPos.X + Partoffset.X * (1.0f - yy2 - zz2) + Partoffset.Y * (xy2 - wz2) + Partoffset.Z * (xz2 + wy2),
+                ParentPos.Y + Partoffset.X * (xy2 + wz2) + Partoffset.Y * (1.0f - xx2 - zz2) + Partoffset.Z * (yz2 - wx2),
+                ParentPos.Z + Partoffset.X * (xz2 - wy2) + Partoffset.Y * (yz2 + wx2) + Partoffset.Z * (1.0f - xx2 - yy2));
+        }
+
+        internal struct vtmp
+        {
+            public double a;
+            public float b;
+            public vtmp(Vector128<float> v)
+            {
+                a = Vector128.GetElement(v.AsDouble(), 0);
+                b = Vector128.GetElement(v, 2);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 TransformPositionOffset(ref Matrix3x3 ParentRot, ref Vector3 ParentPos, ref Vector3 Partoffset)
+        {
+            if (Sse.IsSupported)
+            {
+                unsafe
+                {
+                    Vector128<float> result = Sse.Multiply(Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentRot.M11)), Vector128.Create(Partoffset.X));
+                    result = Sse.Add(result, Sse.Multiply(Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentRot.M21)), Vector128.Create(Partoffset.Y)));
+                    result = Sse.Add(result, Sse.Multiply(Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentRot.M31)), Vector128.Create(Partoffset.Z)));
+                    result = Sse.Add(result, Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentPos)));
+                    return new Vector3(result);
+                }
+            }
+
+            return new Vector3(
+                ParentPos.X + Partoffset.X * ParentRot.M11 + Partoffset.Y * ParentRot.M12 + Partoffset.Z * ParentRot.M13,
+                ParentPos.Y + Partoffset.X * ParentRot.M21 + Partoffset.Y * ParentRot.M22 + Partoffset.Z * ParentRot.M23,
+                ParentPos.Z + Partoffset.X * ParentRot.M31 + Partoffset.Y * ParentRot.M32 + Partoffset.Z * ParentRot.M33);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 TransformPositionOffset(Matrix3x3 ParentRot, Vector3 ParentPos, Vector3 Partoffset)
+        {
+            if (Sse.IsSupported)
+            {
+                unsafe
+                {
+                    Vector128<float> result = Sse.Multiply(Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentRot.M11)), Vector128.Create(Partoffset.X));
+                    result = Sse.Add(result, Sse.Multiply(Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentRot.M21)), Vector128.Create(Partoffset.Y)));
+                    result = Sse.Add(result, Sse.Multiply(Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentRot.M31)), Vector128.Create(Partoffset.Z)));
+                    result = Sse.Add(result, Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentPos)));
+                    return new Vector3(result);
+                }
+            }
+
+            return new Vector3(
+                ParentPos.X + Partoffset.X * ParentRot.M11 + Partoffset.Y * ParentRot.M12 + Partoffset.Z * ParentRot.M13,
+                ParentPos.Y + Partoffset.X * ParentRot.M21 + Partoffset.Y * ParentRot.M22 + Partoffset.Z * ParentRot.M23,
+                ParentPos.Z + Partoffset.X * ParentRot.M31 + Partoffset.Y * ParentRot.M32 + Partoffset.Z * ParentRot.M33);
+        }
+
         #endregion Static Methods
 
         #region Overrides

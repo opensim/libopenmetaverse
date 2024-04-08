@@ -77,19 +77,7 @@ namespace OpenMetaverse
         [FieldOffset(0)] public Guid Guid;
 
         #region Constructors
-        /*
-        public Guid Guid
-        {
-            get
-            {
-                return Unsafe.As<UUID, Guid>(ref this);
-            }
-            set
-            {
-                Unsafe.As<UUID, Guid>(ref this) = value;
-            }
-        }
-        */
+
         /// <summary>
         /// Constructor that takes a string UUID representation
         /// </summary>
@@ -103,7 +91,8 @@ namespace OpenMetaverse
 
         public unsafe UUID(ReadOnlySpan<char> sval)
         {
-            this = new UUID();
+            Unsafe.SkipInit(out this);
+
             int len = sval.Length;
             if (len < 32)
                 throw new FormatException("Invalid UUID");
@@ -301,14 +290,16 @@ namespace OpenMetaverse
         /// <param name="val">A Guid object that contains the unique identifier
         /// to be represented by this UUID</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe UUID(Guid val)
+        public UUID(Guid val)
         {
-            this = *(UUID*)&val;
+            Unsafe.SkipInit(out this);
+            Guid = val;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe UUID(ulong _la, ulong _lb) : this()
+        public UUID(ulong _la, ulong _lb)
         {
+            Unsafe.SkipInit(out this);
             ulonga = _la;
             ulongb = _lb;
         }
@@ -319,9 +310,10 @@ namespace OpenMetaverse
         /// <param name="source">Byte array containing a 16 byte UUID</param>
         /// <param name="pos">Beginning offset in the array</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe UUID(byte[] source, int pos) : this()
+        public unsafe UUID(byte[] source, int pos)
         {
-            if(Ssse3.IsSupported)
+            Unsafe.SkipInit(out this);
+            if (Ssse3.IsSupported)
             {
                 Vector128<byte> rawval = Unsafe.As<byte, Vector128<byte>>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(source), pos));
                 if (BitConverter.IsLittleEndian)
@@ -369,8 +361,9 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="val">64-bit unsigned integer to convert to a UUID</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public UUID(ulong val) : this()
+        public UUID(ulong val)
         {
+            Unsafe.SkipInit(out this);
             if (BitConverter.IsLittleEndian)
                 ulongb = val;
             else
@@ -392,6 +385,7 @@ namespace OpenMetaverse
         /// <param name="val">UUID to copy</param>
         public UUID(UUID val)
         {
+            Unsafe.SkipInit(out this);
             this = val;
         }
 
@@ -407,7 +401,7 @@ namespace OpenMetaverse
             if (val == null)
                 return 1;
 
-            UUID id = (UUID)val;
+            ref UUID id = ref Unsafe.Unbox<UUID>(val);
             if (id.a != a)
                 return (uint)id.a > (uint)a ? -1 : 1;
             if (id.b != b)

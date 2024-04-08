@@ -25,6 +25,7 @@
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace OpenMetaverse
@@ -92,6 +93,8 @@ namespace OpenMetaverse
             float m31, float m32, float m33, float m34,
             float m41, float m42, float m43, float m44)
         {
+            Unsafe.SkipInit(out this);
+
             M11 = m11;
             M12 = m12;
             M13 = m13;
@@ -440,6 +443,28 @@ namespace OpenMetaverse
                 0, 0, 0, 1.0f);
         }
 
+        public static Matrix4 CreateFromQuaternion(ref Quaternion rot)
+        {
+            float x2 = rot.X + rot.X;
+            float y2 = rot.Y + rot.Y;
+            float z2 = rot.Z + rot.Z;
+
+            float wx2 = rot.W * x2;
+            float wy2 = rot.W * y2;
+            float wz2 = rot.W * z2;
+            float xx2 = rot.X * x2;
+            float xy2 = rot.X * y2;
+            float xz2 = rot.X * z2;
+            float yy2 = rot.Y * y2;
+            float yz2 = rot.Y * z2;
+            float zz2 = rot.Z * z2;
+
+            return new Matrix4(
+                1.0f - yy2 - zz2, xy2 + wz2, xz2 - wy2, 0,
+                xy2 - wz2, 1.0f - xx2 - zz2, yz2 + wx2, 0,
+                xz2 + wy2, yz2 - wx2, 1.0f - xx2 - yy2, 0,
+                0, 0, 0, 1.0f);
+        }
         public static Matrix4 CreateFromInverseQuaternion(Quaternion rot)
         {
             float x2 = rot.X + rot.X;
@@ -463,6 +488,28 @@ namespace OpenMetaverse
                 0, 0, 0, 1.0f);
         }
 
+        public static Matrix4 CreateFromInverseQuaternion(ref Quaternion rot)
+        {
+            float x2 = rot.X + rot.X;
+            float y2 = rot.Y + rot.Y;
+            float z2 = rot.Z + rot.Z;
+
+            float wx2 = rot.W * x2;
+            float wy2 = rot.W * y2;
+            float wz2 = rot.W * z2;
+            float xx2 = rot.X * x2;
+            float xy2 = rot.X * y2;
+            float xz2 = rot.X * z2;
+            float yy2 = rot.Y * y2;
+            float yz2 = rot.Y * z2;
+            float zz2 = rot.Z * z2;
+
+            return new Matrix4(
+                1.0f - yy2 - zz2, xy2 - wz2, xz2 + wy2, 0,
+                xy2 + wz2, 1.0f - xx2 - zz2, yz2 - wx2, 0,
+                xz2 - wy2, yz2 + wx2, 1.0f - xx2 - yy2, 0,
+                0, 0, 0, 1.0f);
+        }
         public static Matrix4 CreateLookAt(Vector3 cameraPosition, Vector3 cameraTarget, Vector3 cameraUpVector)
         {
             Matrix4 matrix;

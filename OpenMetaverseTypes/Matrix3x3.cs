@@ -25,7 +25,11 @@
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics.X86;
+using System.Runtime.Intrinsics;
+using System.IO;
 
 namespace OpenMetaverse
 {
@@ -105,22 +109,31 @@ namespace OpenMetaverse
 
         public  Matrix3x3(float roll, float pitch, float yaw)
         {
-            this = CreateFromEulers(roll, pitch, yaw);
+            float a = MathF.Cos(roll);
+            float b = MathF.Sin(roll);
+            float c = MathF.Cos(pitch);
+            float d = MathF.Sin(pitch);
+            float e = MathF.Cos(yaw);
+            float f = MathF.Sin(yaw);
+
+            float ad = a * d;
+            float bd = b * d;
+            M11 = c * e;
+            M12 = -c * f;
+            M13 = d;
+
+            M21 = bd * e + a * f;
+            M22 = -bd * f + a * e;
+            M23 = -b * c;
+
+            M31 = -ad * e + b * f;
+            M32 = ad * f + b * e;
+            M33 = a * c;
         }
 
-        public  Matrix3x3(Matrix3x3 m)
+        public Matrix3x3(Matrix3x3 m)
         {
-            M11 = m.M11;
-            M12 = m.M12;
-            M13 = m.M13;
-
-            M21 = m.M21;
-            M22 = m.M22;
-            M23 = m.M23;
-
-            M31 = m.M31;
-            M32 = m.M32;
-            M33 = m.M33;
+            this = m;
         }
 
         #endregion Constructors
@@ -202,12 +215,13 @@ namespace OpenMetaverse
         /// Convert this matrix to a quaternion rotation
         /// </summary>
         /// <returns>A quaternion representation of this rotation matrix</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Quaternion GetQuaternion()
         {
             Quaternion quat = new Quaternion();
             float trace = Trace() + 1f;
 
-            if (trace > Single.Epsilon)
+            if (trace > float.Epsilon)
             {
                 float s = 0.5f / MathF.Sqrt(trace);
 
@@ -270,13 +284,14 @@ namespace OpenMetaverse
 
             rotation = Quaternion.CreateFromRotationMatrix(m1);
             return true;
-        }	
+        }
 
         #endregion Public Methods
 
         #region Static Methods
 
-        public static  Matrix3x3 Add(Matrix3x3 matrix1, in Matrix3x3 matrix2)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Matrix3x3 Add(Matrix3x3 matrix1, in Matrix3x3 matrix2)
         {
             return new Matrix3x3(
                 matrix1.M11 + matrix2.M11,
@@ -355,7 +370,8 @@ namespace OpenMetaverse
                 );
         }
 
-        public static  Matrix3x3 CreateFromQuaternion(Quaternion rot)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Matrix3x3 CreateFromQuaternion(Quaternion rot)
         {
             float x2 = rot.X + rot.X;
             float y2 = rot.Y + rot.Y;
@@ -378,26 +394,61 @@ namespace OpenMetaverse
             );
         }
 
-        public static Matrix3x3 CreateFromInverseQuaternion(Quaternion rot)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Matrix3x3 CreateFromQuaternion(ref Quaternion rot)
         {
+            float wx2, wy2, wz2;
+            float xx2, xy2, xz2;
+            float yy2, yz2;
+            float zz2;
+
+            if (Sse41.IsSupported)
+            {
+                unsafe
+                {
+                    Vector128<float> vrot = Sse.LoadVector128((float*)Unsafe.AsPointer(ref rot));
+                    Vector128<float> vrot2 = Sse.Add(vrot, vrot);
+                    Vector128<float> v2 = Sse.Multiply(vrot, vrot2);
+                    xx2 = Vector128.GetElement(v2, 0);
+                    yy2 = Vector128.GetElement(v2, 1);
+                    zz2 = Vector128.GetElement(v2, 3);
+
+                    v2 = Sse.Multiply(vrot2, Sse3.Shuffle(vrot, vrot, 0xff));
+                    wx2 = Vector128.GetElement(v2, 0);
+                    wy2 = Vector128.GetElement(v2, 1);
+                    wz2 = Vector128.GetElement(v2, 2);
+
+                    v2 = Sse.Multiply(vrot2, Sse3.Shuffle(vrot, vrot, 0x00));
+                    xy2 = Vector128.GetElement(v2, 1);
+                    xz2 = Vector128.GetElement(v2, 2);
+
+                    yz2 = Vector128.GetElement(vrot, 1) * Vector128.GetElement(vrot2, 2);
+
+                    return new Matrix3x3(
+                        1.0f - yy2 - zz2, xy2 + wz2, xz2 - wy2,
+                        xy2 - wz2, 1.0f - xx2 - zz2, yz2 + wx2,
+                        xz2 + wy2, yz2 - wx2, 1.0f - xx2 - yy2);
+                }
+            }
+
             float x2 = rot.X + rot.X;
             float y2 = rot.Y + rot.Y;
             float z2 = rot.Z + rot.Z;
 
-            float wx2 = rot.W * x2;
-            float wy2 = rot.W * y2;
-            float wz2 = rot.W * z2;
-            float xx2 = rot.X * x2;
-            float xy2 = rot.X * y2;
-            float xz2 = rot.X * z2;
-            float yy2 = rot.Y * y2;
-            float yz2 = rot.Y * z2;
-            float zz2 = rot.Z * z2;
+            wx2 = rot.W * x2;
+            wy2 = rot.W * y2;
+            wz2 = rot.W * z2;
+            xx2 = rot.X * x2;
+            xy2 = rot.X * y2;
+            xz2 = rot.X * z2;
+            yy2 = rot.Y * y2;
+            yz2 = rot.Y * z2;
+            zz2 = rot.Z * z2;
 
             return new Matrix3x3(
-                1.0f - yy2 - zz2, xy2 - wz2, xz2 + wy2,
-                xy2 + wz2, 1.0f - xx2 - zz2, yz2 - wx2,
-                xz2 - wy2, yz2 + wx2, 1.0f - xx2 - yy2
+                1.0f - yy2 - zz2, xy2 + wz2, xz2 - wy2,
+                xy2 - wz2, 1.0f - xx2 - zz2, yz2 + wx2,
+                xz2 + wy2, yz2 - wx2, 1.0f - xx2 - yy2
             );
         }
 

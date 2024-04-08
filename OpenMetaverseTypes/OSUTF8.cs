@@ -108,6 +108,7 @@ namespace OpenMetaverse
             m_len = m_data.Length;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public osUTF8(string source, bool isascii)
         {
             if(isascii)
@@ -273,6 +274,7 @@ namespace OpenMetaverse
             return true;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(string s)
         {
             if (string.IsNullOrEmpty(s))
@@ -407,6 +409,7 @@ namespace OpenMetaverse
             m_len = 0;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public osUTF8 Clone()
         {
             byte[] b = new byte[m_data.Length];
@@ -414,6 +417,7 @@ namespace OpenMetaverse
             return new osUTF8(b);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public osUTF8 Extract()
         {
             byte[] b = new byte[m_len];
@@ -421,6 +425,7 @@ namespace OpenMetaverse
             return new osUTF8(b);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte[] ToArray()
         {
             byte[] b = new byte[m_len];
@@ -434,6 +439,7 @@ namespace OpenMetaverse
             return m_data;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public osUTF8 Concat(osUTF8 other)
         {
             byte[] b = new byte[m_len + other.m_len];
@@ -520,6 +526,7 @@ namespace OpenMetaverse
             m_len = indx;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Append(byte[] b)
         {
             int nbytes = b.Length;
@@ -528,6 +535,18 @@ namespace OpenMetaverse
             m_len += nbytes;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Append(byte[] b, int bstart, int nbytes)
+        {
+            if(bstart + nbytes >= b.Length)
+                nbytes = b.Length - bstart;
+
+            CheckCapacity(nbytes);
+            Array.Copy(b, bstart, m_data, m_len, nbytes);
+            m_len += nbytes;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Append(osUTF8 b)
         {
             int nbytes = b.m_len;
@@ -536,6 +555,7 @@ namespace OpenMetaverse
             m_len += nbytes;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe void AppendInt(sbyte v)
         {
             CheckCapacity(4);
@@ -543,12 +563,15 @@ namespace OpenMetaverse
                 m_len += Utils.IntToByteString(v, d + m_len);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe void AppendInt(byte v)
         {
             CheckCapacity(3);
             fixed (byte* d = m_data)
                 m_len += Utils.UIntToByteString(v, d + m_len);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe void AppendInt(int v)
         {
             CheckCapacity(16);
@@ -556,6 +579,7 @@ namespace OpenMetaverse
                 m_len += Utils.IntToByteString(v, d + m_len);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe void AppendInt(uint v)
         {
             CheckCapacity(16);
@@ -563,6 +587,7 @@ namespace OpenMetaverse
                 m_len += Utils.UIntToByteString(v, d + m_len);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe void AppendInt(long v)
         {
             CheckCapacity(32);

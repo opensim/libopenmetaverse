@@ -21,7 +21,7 @@ jobs:
       run: bash ${GITHUB_WORKSPACE}/runprebuild.sh
     - name: Build
       id: build
-      run: dotnet build --configuration Releas OpenMetaverse.sln
+      run: dotnet build --configuration Release OpenMetaverse.sln
     - name: release
       if: success()
       run: zip -r LastBuild.zip bin LICENSE.txt

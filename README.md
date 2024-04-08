@@ -6,11 +6,11 @@ for older Opensimulator versions >= 0.9.1.0 use branch Mono-Net4x
 
 get or update source from git
 
- `git clone https://bitbucket.org/opensimulator/libopenmetaverse.git`
+ `clone https://bitbucket.org/opensimulator/libopenmetaverse.git`
  
 or
 
-  `git clone https://github.com/UbitUmarov/libopenmetaverse.git´
+ `git clone https://github.com/UbitUmarov/libopenmetaverse.git`
 
 
 # Building on Windows
