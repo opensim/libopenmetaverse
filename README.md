@@ -7,7 +7,9 @@ for older Opensimulator versions >= 0.9.1.0 use branch Mono-Net4x
 get or update source from git
 
  `git clone https://bitbucket.org/opensimulator/libopenmetaverse.git`
+ 
 or
+
   `git clone https://github.com/UbitUmarov/libopenmetaverse.git´
 
 
@@ -28,7 +30,8 @@ optionally also
 
   `runprebuild.bat`
 
-run 
+run
+
   `compile.bat`
 
 Or load the generated OpenSim.sln into Visual Studio and build the solution.
@@ -61,5 +64,5 @@ Now just run `OpenSim.exe` from the `bin` folder, and set up the region.
  
  
 ### Current building problems
-several projest will only compile and run on windows
+several projects will only compile and run on windows
 many of those project also need fixes on their project files to set the framework to netxxx-windows and allow windows forms

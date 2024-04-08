@@ -1,4 +1,4 @@
-name: msbuild48
+name: msbuild
 
 on:
   push:
@@ -18,10 +18,10 @@ jobs:
       id: vars
       run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"     
     - name: preBuild
-      run: bash ${GITHUB_WORKSPACE}/runprebuild48.sh
+      run: bash ${GITHUB_WORKSPACE}/runprebuild.sh
     - name: Build
       id: build
-      run: msbuild /p:Configuration=Release OpenMetaverse.sln
+      run: dotnet build --configuration Releas OpenMetaverse.sln
     - name: release
       if: success()
       run: zip -r LastBuild.zip bin LICENSE.txt
@@ -37,7 +37,7 @@ jobs:
       with:
         channel: "#opensim-dev"
         server: "irc.libera.chat"
-        nickname: osgithub
+        nickname: osgithubomv
         message: |
           ${{ github.actor }} pushed to ${{ github.repository }}
           ${{ join(github.event.commits.*.message, '\n') }}
@@ -51,4 +51,4 @@ jobs:
         nickname: osgithub
         message: |
           ${{ github.repository }}
-          mono compile: ${{ steps.build.conclusion }}
+          dotnet compile: ${{ steps.build.conclusion }}
