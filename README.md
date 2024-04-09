@@ -1,6 +1,10 @@
 libOpenMetaverse Library Fork for OpenSimulator (version >= 0.9.3.0)
 
-for older Opensimulator versions >= 0.9.1.0 use branch Mono-Net4x
+For OpenSimulator versions older than 0.9.1.0 use original Library
+
+ `https://github.com/openmetaversefoundation/libopenmetaverse`
+ 
+for versions 0.9.1.x and 0.9.2.x use branch Mono-Net4x
 
 # git clone
 
