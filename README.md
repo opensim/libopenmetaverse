@@ -69,11 +69,11 @@ Now just run `OpenSim.exe` from the `bin` folder, and set up the region.
 
   then run
 
- `compile.bat``
+ `compile.bat`
  
  
 ### Current building problems
 several projects will only compile and run on windows
 many of those project also need fixes on their project files to set the framework to netxxx-windows and allow windows forms
 
-so, for now, runprebuild.(bat/sh) will only create projects for the dlls needed for OpenSimular.
+For now, runprebuild.(bat/sh) will only create projects for the dlls needed for OpenSimular.
