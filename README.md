@@ -1,4 +1,4 @@
-libOpenMetaverse Fork for OpenSimulator (versions >= 0.9.3.0)
+A fork of libOpenMetaverse for OpenSimulator (versions >= 0.9.3.0) use
 
 For OpenSimulator versions 0.9.1.x and 0.9.2.x use branch Mono-Net4x
 
