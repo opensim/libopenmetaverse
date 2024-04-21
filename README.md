@@ -74,4 +74,4 @@ Or load the generated OpenMetaverse.sln into Visual Studio and build the solutio
 several projects will only compile and run on windows
 many of those project also need fixes on their project files to set the framework to netxxx-windows and allow windows forms
 
-For now, runprebuild.(bat/sh) will only create projects for the dlls needed for OpenSimular.
+For now, runprebuild.(bat/sh) will only create projects for the dlls needed for OpenSimulator.
