@@ -175,7 +175,7 @@ namespace mapgenerator
             switch (field.Type)
             {
                 case FieldType.BOOL:
-                    writer.WriteLine("Utils.ByteToBytes((byte)((" + field.Name + ") ? 1 : 0), bytes, i);");
+                    writer.WriteLine("Utils.ByteToBytes((byte)((" + field.Name + ") ? 1 : 0), bytes, ref i);");
                     break;
                 case FieldType.F32:
                     writer.WriteLine("Utils.FloatToBytesSafepos(" + field.Name + ", bytes, i); i += 4;");
