@@ -27,11 +27,11 @@ or
 ## Requirements
   To building under Windows, the following is required:
 
-  * [dotnet 6.0 SDK, Runtime and Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
+  * [dotnet 8.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
 
 optionally also
 
-  * [Visual Studio .NET](https://visualstudio.microsoft.com/vs/features/net-development/), version 2022 or later
+  * [Visual Studio](https://visualstudio.microsoft.com/vs/features/net-development/), version 2022 or later
   
 
 ### Building
@@ -43,17 +43,15 @@ run
 
   `compile.bat`
 
-Or load the generated OpenSim.sln into Visual Studio and build the solution.
+Or load the generated OpenMetaverse.sln into Visual Studio and build the solution.
 
-Configure, see below
 
-Now just run `OpenSim.exe` from the `bin` folder, and set up the region.
 
 # Building on Linux / Mac
 
 ## Requirements
 
- * [dotnet 6.0 SDK and Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
+ * [dotnet 8.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
  * libgdiplus 
  
  if you have mono 6.x complete, you already have libgdiplus, otherwise you need to install it

@@ -550,8 +550,7 @@ namespace OpenMetaverse.StructuredData
         {
             writer.Write(arrayBeginNotationMarker);
             int lastIndex = osdArray.Count - 1;
-
-            for (int idx = 0; idx <= lastIndex; idx++)
+            for (int idx = 0; idx < osdArray.Count; idx++)
             {
                 SerializeLLSDNotationElement(writer, osdArray[idx]);
                 if (idx < lastIndex)

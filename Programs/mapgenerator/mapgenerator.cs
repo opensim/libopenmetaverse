@@ -95,7 +95,7 @@ namespace mapgenerator
             switch (field.Type)
             {
                 case FieldType.BOOL:
-                    writer.WriteLine("                    " + field.Name + " = (bytes[i++] != 0) ? (bool)true : (bool)false;");
+                    writer.WriteLine("                    " + field.Name + " = (Utils.BytesToByte(bytes, ref i) != 0);");
                     break;
                 case FieldType.F32:
                     writer.WriteLine("                    " + field.Name + " = Utils.BytesToFloatSafepos(bytes, i); i += 4;");
@@ -142,22 +142,22 @@ namespace mapgenerator
                     writer.WriteLine("                    " + field.Name + " = Utils.BytesToIntSafepos(bytes, i); i +=4;");
                     break;
                 case FieldType.S8:
-                    writer.WriteLine("                    " + field.Name + " = (sbyte)bytes[i++];");
+                    writer.WriteLine("                    " + field.Name + " = (sbyte)Utils.BytesToByte(bytes, ref i);");
                     break;
                 case FieldType.U64:
                     writer.WriteLine("                    " + field.Name + " = Utils.BytesToUInt64Safepos(bytes, i); i += 8;");
                     break;
                 case FieldType.U8:
-                    writer.WriteLine("                    " + field.Name + " = (byte)bytes[i++];");
+                    writer.WriteLine("                    " + field.Name + " = Utils.BytesToByte(bytes, ref i);");
                     break;
                 case FieldType.Variable:
                     if (field.Count == 1)
                     {
-                        writer.WriteLine("                    length = bytes[i++];");
+                        writer.WriteLine("                    length = Utils.BytesToByte(bytes, ref i);");
                     }
                     else
                     {
-                        writer.WriteLine("                    length = (bytes[i++] + (bytes[i++] << 8));");
+                        writer.WriteLine("                    length = Utils.BytesToUInt16(bytes, i); i+=2;");
                     }
                     writer.WriteLine("                    " + field.Name + " = new byte[length];");
                     writer.WriteLine("                    Buffer.BlockCopy(bytes, i, " + field.Name + ", 0, length); i += length;");
@@ -175,7 +175,7 @@ namespace mapgenerator
             switch (field.Type)
             {
                 case FieldType.BOOL:
-                    writer.WriteLine("bytes[i++] = (byte)((" + field.Name + ") ? 1 : 0);");
+                    writer.WriteLine("Utils.ByteToBytes((byte)((" + field.Name + ") ? 1 : 0), bytes, i);");
                     break;
                 case FieldType.F32:
                     writer.WriteLine("Utils.FloatToBytesSafepos(" + field.Name + ", bytes, i); i += 4;");
@@ -189,8 +189,7 @@ namespace mapgenerator
                     break;
                 case FieldType.IPPORT:
                     // IPPORT is big endian while U16/S16 is little endian. Go figure
-                    writer.WriteLine("bytes[i++] = (byte)((" + field.Name + " >> 8) % 256);");
-                    writer.WriteLine("                bytes[i++] = (byte)(" + field.Name + " % 256);");
+                    writer.WriteLine("Utils.UInt16ToBytesBig(" + field.Name + ", bytes, i); i += 2;");
                     break;
                 case FieldType.U16:
                     writer.WriteLine("Utils.UInt16ToBytes(" + field.Name + ", bytes, i); i += 2;");
@@ -210,10 +209,10 @@ namespace mapgenerator
                     writer.WriteLine(field.Name + ".ToBytes(bytes, i); i += 24;");
                     break;
                 case FieldType.U8:
-                    writer.WriteLine("bytes[i++] = " + field.Name + ";");
+                    writer.WriteLine("Utils.ByteToBytes( " + field.Name + ", bytes, ref i);");
                     break;
                 case FieldType.S8:
-                    writer.WriteLine("bytes[i++] = (byte)" + field.Name + ";");
+                    writer.WriteLine("Utils.ByteToBytes( (byte)" + field.Name + ", bytes, ref i);");
                     break;
                 case FieldType.IPADDR:
                 case FieldType.U32:
@@ -230,13 +229,11 @@ namespace mapgenerator
                     //writer.Write("                ");
                     if (field.Count == 1)
                     {
-                        writer.WriteLine("bytes[i++] = (byte)" + field.Name + ".Length;");
+                        writer.WriteLine("Utils.ByteToBytes((byte)" + field.Name + ".Length, bytes, ref i);");
                     }
                     else
                     {
-                        writer.WriteLine("bytes[i++] = (byte)(" + field.Name + ".Length % 256);");
-                        writer.WriteLine("                bytes[i++] = (byte)((" +
-                            field.Name + ".Length >> 8) % 256);");
+                        writer.WriteLine("Utils.UInt16ToBytes((ushort)" + field.Name + ".Length, bytes, i); i += 2;");
                     }
                     writer.WriteLine("                Buffer.BlockCopy(" + field.Name + ", 0, bytes, i, " +
                         field.Name + ".Length); " + "i += " + field.Name + ".Length;");
@@ -402,7 +399,7 @@ namespace mapgenerator
                 "        {" + Environment.NewLine + "            get" + Environment.NewLine +
                 "            {");
 
-            int length = 0;
+            int length;
             if (packet.Frequency == PacketFrequency.Low) { length = 10; }
             else if (packet.Frequency == PacketFrequency.Medium) { length = 8; }
             else { length = 7; }
@@ -659,7 +656,7 @@ namespace mapgenerator
                 if (block.Count == -1)
                 {
                     // Variable count block
-                    writer.WriteLine("            bytes[i++] = (byte)" + sanitizedName + ".Length;");
+                    writer.WriteLine("            Utils.ByteToBytes((byte)" + sanitizedName + ".Length, bytes, ref i);");
                     writer.WriteLine("            for (int j = 0; j < " + sanitizedName +
                         ".Length; j++) { " + sanitizedName + "[j].ToBytes(bytes, ref i); }");
                 }
@@ -911,7 +908,7 @@ namespace mapgenerator
         static int Main(string[] args)
         {
             ProtocolManager protocol;
-            List<string> unused = new List<string>();
+            List<string> unused = new();
             TextWriter writer;
 
             try
@@ -926,7 +923,7 @@ namespace mapgenerator
                 protocol = new ProtocolManager(args[0]);
 
                 // Build a list of unused packets
-                using (StreamReader unusedReader = new StreamReader(args[2]))
+                using (StreamReader unusedReader = new(args[2]))
                 {
                     while (unusedReader.Peek() >= 0)
                     {

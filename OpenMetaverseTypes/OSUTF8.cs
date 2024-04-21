@@ -50,7 +50,7 @@ namespace OpenMetaverse
         internal byte[] m_data;
         internal int m_len;
 
-        public static readonly osUTF8 Empty = new osUTF8();
+        public static readonly osUTF8 Empty = new();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public osUTF8()
@@ -187,8 +187,8 @@ namespace OpenMetaverse
             if (obj is osUTF8Slice osUTF8Sliceobj)
                 return Equals(osUTF8Sliceobj);
 
-            if (obj is string)
-                return Equals((string)obj);
+            if (obj is string v)
+                return Equals(v);
 
             if (obj is byte[] byteobj)
                 return Equals(byteobj);
@@ -279,7 +279,7 @@ namespace OpenMetaverse
         {
             if (string.IsNullOrEmpty(s))
                 return m_len == 0;
-            osUTF8 o = new osUTF8(s);
+            osUTF8 o = new(s);
             return Equals(o);
         }
 
@@ -656,7 +656,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public osUTF8Slice SubUTF8(int start, int len)
         {
-            osUTF8Slice oss = new osUTF8Slice(this);
+            osUTF8Slice oss = new(this);
             return oss.SubUTF8(start, len);
         }
 
@@ -670,91 +670,91 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string SubString(int start, int len)
         {
-            osUTF8Slice oss = new osUTF8Slice(this);
+            osUTF8Slice oss = new(this);
             return oss.SubString(start, len);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public osUTF8Slice TrimStart()
         {
-            osUTF8Slice ret = new osUTF8Slice(this);
+            osUTF8Slice ret = new(this);
             return ret.TrimStart();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public osUTF8Slice TrimEnd()
         {
-            osUTF8Slice ret = new osUTF8Slice(this);
+            osUTF8Slice ret = new(this);
             return ret.TrimEnd();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public osUTF8Slice Trim()
         {
-            osUTF8Slice ret = new osUTF8Slice(this);
+            osUTF8Slice ret = new(this);
             return ret.Trim();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public osUTF8Slice TrimStart(byte b)
         {
-            osUTF8Slice ret = new osUTF8Slice(this);
+            osUTF8Slice ret = new(this);
             return ret.TrimStart(b);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public osUTF8Slice TrimEnd(byte b)
         {
-            osUTF8Slice ret = new osUTF8Slice(this);
+            osUTF8Slice ret = new(this);
             return ret.TrimEnd(b);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public osUTF8Slice Trim(byte b)
         {
-            osUTF8Slice ret = new osUTF8Slice(this);
+            osUTF8Slice ret = new(this);
             return ret.Trim(b);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public osUTF8Slice TrimStart(byte[] v)
         {
-            osUTF8Slice ret = new osUTF8Slice(this);
+            osUTF8Slice ret = new(this);
             return ret.TrimStart(v);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public osUTF8Slice TrimEnd(byte[] v)
         {
-            osUTF8Slice ret = new osUTF8Slice(this);
+            osUTF8Slice ret = new(this);
             return ret.TrimEnd(v);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public osUTF8Slice Trim(byte[] v)
         {
-            osUTF8Slice ret = new osUTF8Slice(this);
+            osUTF8Slice ret = new(this);
             return ret.Trim(v);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public osUTF8Slice TrimStart(char[] v)
         {
-            osUTF8Slice ret = new osUTF8Slice(this);
+            osUTF8Slice ret = new(this);
             return ret.TrimStart(v);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public osUTF8Slice TrimEnd(char[] v)
         {
-            osUTF8Slice ret = new osUTF8Slice(this);
+            osUTF8Slice ret = new(this);
             return ret.TrimEnd(v);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public osUTF8Slice Trim(char[] v)
         {
-            osUTF8Slice ret = new osUTF8Slice(this);
+            osUTF8Slice ret = new(this);
             return ret.Trim(v);
         }
 
@@ -777,7 +777,7 @@ namespace OpenMetaverse
 
         public bool StartsWith(string s)
         {
-            osUTF8 other = new osUTF8(s); // yeack
+            osUTF8 other = new(s); // yeack
             return StartsWith(other);
         }
 
@@ -898,7 +898,7 @@ namespace OpenMetaverse
         {
             if (string.IsNullOrEmpty(s))
                 return -1;
-            osUTF8 o = new osUTF8(s);
+            osUTF8 o = new(s);
             return IndexOf(o);
         }
 
@@ -1303,7 +1303,7 @@ namespace OpenMetaverse
             if (start >= m_len)
                 return Clone();
 
-            osUTF8 o = new osUTF8(m_len);
+            osUTF8 o = new(m_len);
             Array.Copy(m_data, 0, o.m_data, 0, start);
             o.m_len = start;
 

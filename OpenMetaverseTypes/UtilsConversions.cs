@@ -394,6 +394,18 @@ namespace OpenMetaverse
             return Unsafe.ReadUnaligned<short>(ref bytes);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte BytesToByte(byte[] bytes, int pos)
+        {
+            return Unsafe.ReadUnaligned<byte>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte BytesToByte(byte[] bytes, ref int pos)
+        {
+            return Unsafe.ReadUnaligned<byte>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos++));
+        }
+
         /// <summary>
         /// Convert the first two bytes starting at the given position in
         /// native endian ordering to a signed short integer
@@ -1156,6 +1168,18 @@ namespace OpenMetaverse
         #region ToBytes
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void ByteToBytes(byte value, byte[] dest, int pos)
+        {
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void ByteToBytes(byte value, byte[] dest, ref int pos)
+        {
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos++), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] Int16ToBytes(short value)
         {
             return new byte[] {(byte)value, (byte)(value >> 8)};
@@ -1238,8 +1262,16 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void UInt16ToBytesBig(ushort value, byte[] dest, int pos)
         {
-            dest[pos] = (byte)(value >> 8);
-            dest[pos + 1] = (byte)value;
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), (byte)(value >> 8));
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos + 1), (byte)(value));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void UInt16ToBytesBig(ushort value, byte[] dest, ref int pos)
+        {
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), (byte)(value >> 8));
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos + 1), (byte)(value));
+            pos += 2;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -2365,7 +2397,6 @@ namespace OpenMetaverse
 
         public static int osUTF8GetBytesCount(ReadOnlySpan<char> str, out int maxsource)
         {
-            maxsource = 0;
             char c;
             char lastc = (char)0;
             int nbytes = 0;
@@ -2416,7 +2447,6 @@ namespace OpenMetaverse
 
         public static int osUTF8GetBytesCount(ReadOnlySpan<char> str, int maxnbytes, out int maxsourcelen)
         {
-            maxsourcelen = 0;
             int max2 = maxnbytes - 2;
             int max3 = maxnbytes - 3;
             int max4 = maxnbytes - 4;
@@ -3210,8 +3240,7 @@ namespace OpenMetaverse
         public static IPAddress HostnameToIPv4(string hostname)
         {
             // Is it already a valid IP?
-            IPAddress ip;
-            if (IPAddress.TryParse(hostname, out ip))
+            if (IPAddress.TryParse(hostname, out IPAddress ip))
                 return ip;
 
             IPAddress[] hosts = Dns.GetHostEntry(hostname).AddressList;

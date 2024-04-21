@@ -22,7 +22,7 @@ namespace OpenMetaverse
         /// </summary>
         public UDPPacketBuffer()
         {
-            Data = new byte[UDPPacketBuffer.BUFFER_SIZE];
+            Data = GC.AllocateUninitializedArray<byte>(BUFFER_SIZE);
             // Will be modified later by BeginReceiveFrom()
             RemoteEndPoint = new IPEndPoint(Settings.BIND_ADDR, 0);
         }
@@ -33,7 +33,7 @@ namespace OpenMetaverse
         /// <param name="endPoint">EndPoint of the remote host</param>
         public UDPPacketBuffer(IPEndPoint endPoint)
         {
-            Data = new byte[UDPPacketBuffer.BUFFER_SIZE];
+            Data = GC.AllocateUninitializedArray<byte>(BUFFER_SIZE);
             RemoteEndPoint = endPoint;
         }
 
