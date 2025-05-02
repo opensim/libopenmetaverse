@@ -116,7 +116,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Quaternion(Vector128<float> q) : this()
         {
-            Unsafe.As<Quaternion, Vector128<float>>(ref Unsafe.AsRef(this)) = q;
+            Unsafe.As<Quaternion, Vector128<float>>(ref this) = q;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

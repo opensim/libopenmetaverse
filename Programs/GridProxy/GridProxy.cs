@@ -1053,10 +1053,8 @@ namespace GridProxy
 
                 if (stage == CapsStage.Response)
                 {
-                    if (capReq.Response != null && capReq.Response is OSDMap)
+                    if (capReq.Response is OSDMap map)
                     {
-                        OSDMap map = (OSDMap)capReq.Response;
-
                         if (map.ContainsKey("uploader"))
                         {
                             string val = map["uploader"].AsString();

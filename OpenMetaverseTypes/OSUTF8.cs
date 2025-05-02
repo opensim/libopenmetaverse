@@ -102,6 +102,13 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public osUTF8(ReadOnlySpan<byte> ut8)
+        {
+            m_data = ut8.ToArray();
+            m_len = m_data.Length;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public osUTF8(string source, int maxlen)
         {
             m_data = Utils.StringToBytesNoTerm(source, maxlen);
@@ -281,6 +288,16 @@ namespace OpenMetaverse
                 return m_len == 0;
             osUTF8 o = new(s);
             return Equals(o);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Equals(ReadOnlySpan<byte> s)
+        {
+            if(m_len != s.Length)
+                return false;
+  
+            ReadOnlySpan<byte> os = m_data.AsSpan(0, m_data.Length);
+            return os.SequenceEqual(s);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -556,6 +573,15 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Append(ReadOnlySpan<byte> b)
+        {
+            int nbytes = b.Length;
+            CheckCapacity(nbytes);
+            b.CopyTo(new Span<byte>(m_data,m_len, nbytes));
+            m_len += nbytes;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe void AppendInt(sbyte v)
         {
             CheckCapacity(4);
@@ -790,7 +816,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool StartsWith(char b)
         {
-            return m_data[0] == (byte)b;
+            return Unsafe.As<byte, byte>(ref MemoryMarshal.GetArrayDataReference(m_data)) == (byte)b;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -802,7 +828,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool EndsWith(char b)
         {
-            return m_data[m_len - 1] == (byte)b;
+            return Unsafe.As<byte, byte>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(m_data), m_len - 1)) == (byte)b;
         }
 
         public unsafe bool EndsWith(osUTF8 other)

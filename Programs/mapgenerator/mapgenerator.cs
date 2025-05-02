@@ -384,6 +384,9 @@ namespace mapgenerator
             bool hasVariableBlocks = false;
             string sanitizedName;
 
+            bool hasSessionID = false;
+            bool hasAgentID = false;
+
             //writer.WriteLine("    /// <summary>" + packet.Name + " packet</summary>");
             writer.WriteLine("    /// <exclude/>");
             writer.WriteLine("    public sealed class " + packet.Name + "Packet : Packet" + Environment.NewLine + "    {");
@@ -450,19 +453,37 @@ namespace mapgenerator
                 //writer.WriteLine("        /// <summary>" + block.Name + " block</summary>");
                 writer.WriteLine("        public " + block.Name + "Block" +
                     ((block.Count != 1) ? "[]" : "") + " " + sanitizedName + ";");
+                if(block.Name.Equals("AgentData"))
+                {
+                    foreach (MapField field in block.Fields)
+                    {
+                        if(field.Name == "SessionID")
+                            hasSessionID = true;
+                        else if(field.Name == "AgentID")
+                            hasAgentID = true;
+                    }
+                }
             }
 
             writer.WriteLine("");
 
+            if (hasSessionID && hasAgentID)
+            { 
+                writer.WriteLine("        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }");
+                writer.WriteLine();
+            }
+
             // Default constructor
             //writer.WriteLine("        /// <summary>Default constructor</summary>");
             writer.WriteLine("        public " + packet.Name + "Packet()" + Environment.NewLine + "        {");
-            writer.WriteLine("            HasVariableBlocks = " + hasVariableBlocks.ToString().ToLowerInvariant() + ";");
-            writer.WriteLine("            Type = PacketType." + packet.Name + ";");
+            writer.WriteLine($"            HasVariableBlocks = {hasVariableBlocks.ToString().ToLowerInvariant()};");
+            writer.WriteLine($"            Type = PacketType.{packet.Name};");
             writer.WriteLine("            Header = new Header();");
-            writer.WriteLine("            Header.Frequency = PacketFrequency." + packet.Frequency + ";");
-            writer.WriteLine("            Header.ID = " + packet.ID + ";");
+            writer.WriteLine($"            Header.Frequency = PacketFrequency.{packet.Frequency};");
+            writer.WriteLine($"            Header.ID ={packet.ID};");
             writer.WriteLine("            Header.Reliable = true;"); // Turn the reliable flag on by default
+            writer.WriteLine($"            NeedValidateIDs = {(hasSessionID && hasAgentID).ToString().ToLowerInvariant()};");
+            
             if (packet.Encoded) { writer.WriteLine("            Header.Zerocoded = true;"); }
             foreach (MapBlock block in packet.Blocks)
             {
@@ -908,7 +929,7 @@ namespace mapgenerator
         static int Main(string[] args)
         {
             ProtocolManager protocol;
-            List<string> unused = new();
+            HashSet<string> unused = new();
             TextWriter writer;
 
             try
@@ -994,8 +1015,10 @@ namespace mapgenerator
                 "        public abstract void FromBytes(byte[] bytes, ref int i, ref int packetEnd, byte[] zeroBuffer);" + Environment.NewLine +
                 "        public abstract void FromBytes(Header header, byte[] bytes, ref int i);" + Environment.NewLine +
                 "        public abstract byte[] ToBytes();" + Environment.NewLine +
-                "        public abstract byte[][] ToBytesMultiple();"
-            );
+                "        public abstract byte[][] ToBytesMultiple();" + Environment.NewLine +
+                "        public bool NeedValidateIDs;" + Environment.NewLine +
+                "        public virtual bool ValidIDs(UUID session, UUID agent) { return true; }"
+            ); ;
             writer.WriteLine();
 
             // Write the Packet.GetType() function

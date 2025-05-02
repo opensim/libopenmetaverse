@@ -700,6 +700,8 @@ namespace OpenMetaverse.Packets
         public abstract void FromBytes(Header header, byte[] bytes, ref int i);
         public abstract byte[] ToBytes();
         public abstract byte[][] ToBytesMultiple();
+        public bool NeedValidateIDs;
+        public virtual bool ValidIDs(UUID session, UUID agent) { return true; }
 
         public static PacketType GetType(ushort id, PacketFrequency frequency)
         {
@@ -2040,8 +2042,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.TestMessage;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 1;
+            Header.ID =1;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             TestBlock1 = new TestBlock1Block();
             NeighborBlock = new NeighborBlockBlock[4];
@@ -2174,8 +2177,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.UseCircuitCode;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 3;
+            Header.ID =3;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             CircuitCode = new CircuitCodeBlock();
         }
 
@@ -2340,8 +2344,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.TelehubInfo;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 10;
+            Header.ID =10;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             TelehubBlock = new TelehubBlockBlock();
             SpawnPointBlock = null;
         }
@@ -2484,8 +2489,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.EconomyDataRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 24;
+            Header.ID =24;
             Header.Reliable = true;
+            NeedValidateIDs = false;
         }
 
         public EconomyDataRequestPacket(byte[] bytes, ref int i) : this()
@@ -2637,8 +2643,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.EconomyData;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 25;
+            Header.ID =25;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             Info = new InfoBlock();
         }
@@ -2794,14 +2801,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AvatarPickerRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.AvatarPickerRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 26;
+            Header.ID =26;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -2975,8 +2985,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.AvatarPickerReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 28;
+            Header.ID =28;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             Data = null;
         }
@@ -3258,14 +3269,17 @@ namespace OpenMetaverse.Packets
         public TransactionDataBlock TransactionData;
         public QueryDataBlock QueryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public PlacesQueryPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.PlacesQuery;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 29;
+            Header.ID =29;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             TransactionData = new TransactionDataBlock();
@@ -3519,8 +3533,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.PlacesReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 30;
+            Header.ID =30;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             TransactionData = new TransactionDataBlock();
@@ -3763,14 +3778,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public QueryDataBlock QueryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public DirFindQueryPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.DirFindQuery;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 31;
+            Header.ID =31;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             QueryData = new QueryDataBlock();
@@ -3947,14 +3965,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public QueryDataBlock QueryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public DirPlacesQueryPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.DirPlacesQuery;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 33;
+            Header.ID =33;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             QueryData = new QueryDataBlock();
@@ -4210,8 +4231,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.DirPlacesReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 35;
+            Header.ID =35;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             QueryData = null;
@@ -4583,8 +4605,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.DirPeopleReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 36;
+            Header.ID =36;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             QueryData = new QueryDataBlock();
@@ -4922,8 +4945,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.DirEventsReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 37;
+            Header.ID =37;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             QueryData = new QueryDataBlock();
@@ -5249,8 +5273,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.DirGroupsReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 38;
+            Header.ID =38;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             QueryData = new QueryDataBlock();
@@ -5496,14 +5521,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public QueryDataBlock QueryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public DirClassifiedQueryPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.DirClassifiedQuery;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 39;
+            Header.ID =39;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             QueryData = new QueryDataBlock();
@@ -5761,8 +5789,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.DirClassifiedReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 41;
+            Header.ID =41;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             QueryData = new QueryDataBlock();
@@ -6045,8 +6074,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.AvatarClassifiedReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 42;
+            Header.ID =42;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             Data = null;
         }
@@ -6266,14 +6296,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ClassifiedInfoRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ClassifiedInfoRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 43;
+            Header.ID =43;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
@@ -6488,8 +6521,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ClassifiedInfoReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 44;
+            Header.ID =44;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -6677,14 +6711,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ClassifiedInfoUpdatePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ClassifiedInfoUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 45;
+            Header.ID =45;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -6835,14 +6872,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ClassifiedDeletePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ClassifiedDelete;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 46;
+            Header.ID =46;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -6996,14 +7036,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ClassifiedGodDeletePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ClassifiedGodDelete;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 47;
+            Header.ID =47;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -7169,14 +7212,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public QueryDataBlock QueryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public DirLandQueryPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.DirLandQuery;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 48;
+            Header.ID =48;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             QueryData = new QueryDataBlock();
@@ -7393,8 +7439,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.DirLandReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 50;
+            Header.ID =50;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             QueryData = new QueryDataBlock();
@@ -7625,14 +7672,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public QueryDataBlock QueryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public DirPopularQueryPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.DirPopularQuery;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 51;
+            Header.ID =51;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             QueryData = new QueryDataBlock();
@@ -7840,8 +7890,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.DirPopularReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 53;
+            Header.ID =53;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             QueryData = new QueryDataBlock();
@@ -8069,14 +8120,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelInfoRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ParcelInfoRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 54;
+            Header.ID =54;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -8286,8 +8340,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ParcelInfoReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 55;
+            Header.ID =55;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
@@ -8439,14 +8494,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ParcelDataBlock ParcelData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelObjectOwnersRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ParcelObjectOwnersRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 56;
+            Header.ID =56;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             ParcelData = new ParcelDataBlock();
         }
@@ -8570,8 +8628,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ParcelObjectOwnersReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 57;
+            Header.ID =57;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             Data = null;
         }
@@ -8785,14 +8844,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GroupNoticesListRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.GroupNoticesListRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 58;
+            Header.ID =58;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -8975,8 +9037,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.GroupNoticesListReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 59;
+            Header.ID =59;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             Data = null;
         }
@@ -9196,14 +9259,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GroupNoticeRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.GroupNoticeRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 60;
+            Header.ID =60;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -9360,14 +9426,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public InfoBlock Info;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public TeleportRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.TeleportRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 62;
+            Header.ID =62;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Info = new InfoBlock();
         }
@@ -9524,14 +9593,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public InfoBlock Info;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public TeleportLocationRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.TeleportLocationRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 63;
+            Header.ID =63;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Info = new InfoBlock();
         }
@@ -9657,8 +9729,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.TeleportLocal;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 64;
+            Header.ID =64;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Info = new InfoBlock();
         }
 
@@ -9773,8 +9846,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.TeleportLandmarkRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 65;
+            Header.ID =65;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             Info = new InfoBlock();
         }
@@ -9933,8 +10007,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.TeleportProgress;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 66;
+            Header.ID =66;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             Info = new InfoBlock();
         }
@@ -10075,8 +10150,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.TeleportFinish;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 69;
+            Header.ID =69;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Info = new InfoBlock();
         }
 
@@ -10272,14 +10348,17 @@ namespace OpenMetaverse.Packets
         public InfoBlock Info;
         public TargetDataBlock[] TargetData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public StartLurePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.StartLure;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 70;
+            Header.ID =70;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Info = new InfoBlock();
             TargetData = null;
@@ -10478,8 +10557,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.TeleportLureRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 71;
+            Header.ID =71;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Info = new InfoBlock();
         }
 
@@ -10591,8 +10671,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.TeleportCancel;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 72;
+            Header.ID =72;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Info = new InfoBlock();
         }
 
@@ -10701,8 +10782,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.TeleportStart;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 73;
+            Header.ID =73;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Info = new InfoBlock();
         }
 
@@ -10874,8 +10956,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.TeleportFailed;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 74;
+            Header.ID =74;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Info = new InfoBlock();
             AlertInfo = null;
         }
@@ -11099,14 +11182,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public UndoPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.Undo;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 75;
+            Header.ID =75;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
         }
@@ -11330,14 +11416,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RedoPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.Redo;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 76;
+            Header.ID =76;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
         }
@@ -11517,14 +11606,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public UndoLandPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.UndoLand;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 77;
+            Header.ID =77;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -11633,14 +11725,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AgentPausePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.AgentPause;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 78;
+            Header.ID =78;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -11749,14 +11844,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AgentResumePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.AgentResume;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 79;
+            Header.ID =79;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -11914,14 +12012,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ChatDataBlock ChatData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ChatFromViewerPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ChatFromViewer;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 80;
+            Header.ID =80;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ChatData = new ChatDataBlock();
@@ -12085,14 +12186,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ThrottleBlock Throttle;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AgentThrottlePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.AgentThrottle;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 81;
+            Header.ID =81;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             Throttle = new ThrottleBlock();
@@ -12250,14 +12354,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public FOVBlockBlock FOVBlock;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AgentFOVPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.AgentFOV;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 82;
+            Header.ID =82;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             FOVBlock = new FOVBlockBlock();
         }
@@ -12417,14 +12524,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public HeightWidthBlockBlock HeightWidthBlock;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AgentHeightWidthPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.AgentHeightWidth;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 83;
+            Header.ID =83;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             HeightWidthBlock = new HeightWidthBlockBlock();
         }
@@ -12672,14 +12782,17 @@ namespace OpenMetaverse.Packets
         public ObjectDataBlock ObjectData;
         public VisualParamBlock[] VisualParam;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AgentSetAppearancePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.AgentSetAppearance;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 84;
+            Header.ID =84;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             WearableData = null;
@@ -12873,14 +12986,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public FuseBlockBlock FuseBlock;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AgentQuitCopyPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.AgentQuitCopy;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 85;
+            Header.ID =85;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             FuseBlock = new FuseBlockBlock();
         }
@@ -12994,8 +13110,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ImageNotInDatabase;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 86;
+            Header.ID =86;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             ImageID = new ImageIDBlock();
         }
 
@@ -13104,8 +13221,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.RebakeAvatarTextures;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 87;
+            Header.ID =87;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             TextureData = new TextureDataBlock();
         }
 
@@ -13214,14 +13332,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public SetAlwaysRunPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.SetAlwaysRun;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 88;
+            Header.ID =88;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -13371,14 +13492,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectDeletePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectDelete;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 89;
+            Header.ID =89;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -13646,14 +13770,17 @@ namespace OpenMetaverse.Packets
         public SharedDataBlock SharedData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectDuplicatePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectDuplicate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 90;
+            Header.ID =90;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             SharedData = new SharedDataBlock();
@@ -13909,14 +14036,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectDuplicateOnRayPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectDuplicateOnRay;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 91;
+            Header.ID =91;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -14141,14 +14271,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectScalePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectScale;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 92;
+            Header.ID =92;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -14373,14 +14506,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectRotationPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectRotation;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 93;
+            Header.ID =93;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -14629,14 +14765,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ExtraPhysicsBlock[] ExtraPhysics;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectFlagUpdatePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectFlagUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 94;
+            Header.ID =94;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ExtraPhysics = null;
@@ -14861,14 +15000,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectClickActionPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectClickAction;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 95;
+            Header.ID =95;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -15106,14 +15248,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectImagePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectImage;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 96;
+            Header.ID =96;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -15338,14 +15483,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectMaterialPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectMaterial;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 97;
+            Header.ID =97;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -15621,14 +15769,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectShapePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectShape;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 98;
+            Header.ID =98;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -15868,14 +16019,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectExtraParamsPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectExtraParams;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 99;
+            Header.ID =99;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -16143,14 +16297,17 @@ namespace OpenMetaverse.Packets
         public HeaderDataBlock HeaderData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectOwnerPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectOwner;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 100;
+            Header.ID =100;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             HeaderData = new HeaderDataBlock();
@@ -16382,14 +16539,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectGroupPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectGroup;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 101;
+            Header.ID =101;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -16623,14 +16783,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectBuyPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectBuy;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 102;
+            Header.ID =102;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -16857,14 +17020,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public BuyObjectInventoryPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.BuyObjectInventory;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 103;
+            Header.ID =103;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
@@ -16982,8 +17148,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.DerezContainer;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 104;
+            Header.ID =104;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             Data = new DataBlock();
         }
@@ -17180,14 +17347,17 @@ namespace OpenMetaverse.Packets
         public HeaderDataBlock HeaderData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectPermissionsPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectPermissions;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 105;
+            Header.ID =105;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             HeaderData = new HeaderDataBlock();
@@ -17422,14 +17592,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectSaleInfoPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectSaleInfo;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 106;
+            Header.ID =106;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -17660,14 +17833,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectNamePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectName;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 107;
+            Header.ID =107;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -17898,14 +18074,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectDescriptionPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectDescription;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 108;
+            Header.ID =108;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -18130,14 +18309,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectCategoryPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectCategory;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 109;
+            Header.ID =109;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -18359,14 +18541,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectSelectPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectSelect;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 110;
+            Header.ID =110;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -18588,14 +18773,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectDeselectPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectDeselect;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 111;
+            Header.ID =111;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -18823,14 +19011,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectAttachPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectAttach;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 112;
+            Header.ID =112;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -19052,14 +19243,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectDetachPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectDetach;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 113;
+            Header.ID =113;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
         }
@@ -19280,14 +19474,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectDropPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectDrop;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 114;
+            Header.ID =114;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
         }
@@ -19508,14 +19705,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectLinkPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectLink;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 115;
+            Header.ID =115;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
         }
@@ -19736,14 +19936,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectDelinkPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectDelink;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 116;
+            Header.ID =116;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
         }
@@ -20022,14 +20225,17 @@ namespace OpenMetaverse.Packets
         public ObjectDataBlock ObjectData;
         public SurfaceInfoBlock[] SurfaceInfo;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectGrabPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectGrab;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 117;
+            Header.ID =117;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = new ObjectDataBlock();
@@ -20322,14 +20528,17 @@ namespace OpenMetaverse.Packets
         public ObjectDataBlock ObjectData;
         public SurfaceInfoBlock[] SurfaceInfo;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectGrabUpdatePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectGrabUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 118;
+            Header.ID =118;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = new ObjectDataBlock();
@@ -20613,14 +20822,17 @@ namespace OpenMetaverse.Packets
         public ObjectDataBlock ObjectData;
         public SurfaceInfoBlock[] SurfaceInfo;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectDeGrabPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectDeGrab;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 119;
+            Header.ID =119;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             ObjectData = new ObjectDataBlock();
             SurfaceInfo = null;
@@ -20847,14 +21059,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectSpinStartPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ObjectSpinStart;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 120;
+            Header.ID =120;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = new ObjectDataBlock();
@@ -21009,14 +21224,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectSpinUpdatePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ObjectSpinUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 121;
+            Header.ID =121;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = new ObjectDataBlock();
@@ -21168,14 +21386,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectSpinStopPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ObjectSpinStop;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 122;
+            Header.ID =122;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = new ObjectDataBlock();
@@ -21337,8 +21558,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ObjectExportSelected;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 123;
+            Header.ID =123;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -21662,14 +21884,17 @@ namespace OpenMetaverse.Packets
         public ParcelDataBlock[] ParcelData;
         public ModifyBlockExtendedBlock[] ModifyBlockExtended;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ModifyLandPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ModifyLand;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 124;
+            Header.ID =124;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ModifyBlock = new ModifyBlockBlock();
@@ -21896,14 +22121,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public VelocityInterpolateOnPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.VelocityInterpolateOn;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 125;
+            Header.ID =125;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -22009,14 +22237,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public VelocityInterpolateOffPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.VelocityInterpolateOff;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 126;
+            Header.ID =126;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -22168,14 +22399,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlockBlock DataBlock;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public StateSavePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.StateSave;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 127;
+            Header.ID =127;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             DataBlock = new DataBlockBlock();
         }
@@ -22292,8 +22526,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ReportAutosaveCrash;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 128;
+            Header.ID =128;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AutosaveData = new AutosaveDataBlock();
         }
 
@@ -22442,14 +22677,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlockBlock DataBlock;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public SimWideDeletesPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.SimWideDeletes;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 129;
+            Header.ID =129;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             DataBlock = new DataBlockBlock();
         }
@@ -22600,14 +22838,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public TargetDataBlock TargetData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public TrackAgentPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.TrackAgent;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 130;
+            Header.ID =130;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             TargetData = new TargetDataBlock();
         }
@@ -22966,14 +23207,17 @@ namespace OpenMetaverse.Packets
         public FailStatsBlock FailStats;
         public MiscStatsBlock[] MiscStats;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ViewerStatsPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ViewerStats;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 131;
+            Header.ID =131;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             DownloadTotals = new DownloadTotalsBlock();
@@ -23233,14 +23477,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ScriptAnswerYesPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ScriptAnswerYes;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 132;
+            Header.ID =132;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -23442,14 +23689,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ReportDataBlock ReportData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public UserReportPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.UserReport;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 133;
+            Header.ID =133;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ReportData = new ReportDataBlock();
@@ -23624,8 +23874,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.AlertMessage;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 134;
+            Header.ID =134;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AlertData = new AlertDataBlock();
             AlertInfo = null;
         }
@@ -23857,8 +24108,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.AgentAlertMessage;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 135;
+            Header.ID =135;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             AlertData = new AlertDataBlock();
         }
@@ -23985,8 +24237,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.MeanCollisionAlert;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 136;
+            Header.ID =136;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             MeanCollision = null;
         }
@@ -24163,8 +24416,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ViewerFrozenMessage;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 137;
+            Header.ID =137;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             FrozenData = new FrozenDataBlock();
         }
 
@@ -24273,8 +24527,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.HealthMessage;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 138;
+            Header.ID =138;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             HealthData = new HealthDataBlock();
         }
@@ -24415,8 +24670,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ChatFromSimulator;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 139;
+            Header.ID =139;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             ChatData = new ChatDataBlock();
         }
 
@@ -24659,8 +24915,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.SimStats;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 140;
+            Header.ID =140;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Region = new RegionBlock();
             Stat = null;
             PidStat = new PidStatBlock();
@@ -24813,14 +25070,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RequestRegionInfoPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.RequestRegionInfo;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 141;
+            Header.ID =141;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -25120,14 +25380,17 @@ namespace OpenMetaverse.Packets
         public RegionInfo2Block RegionInfo2;
         public RegionInfo3Block[] RegionInfo3;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RegionInfoPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.RegionInfo;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 142;
+            Header.ID =142;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             RegionInfo = new RegionInfoBlock();
@@ -25430,14 +25693,17 @@ namespace OpenMetaverse.Packets
         public RegionInfoBlock RegionInfo;
         public RegionInfo2Block[] RegionInfo2;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GodUpdateRegionInfoPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.GodUpdateRegionInfo;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 143;
+            Header.ID =143;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             RegionInfo = new RegionInfoBlock();
@@ -25853,8 +26119,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.RegionHandshake;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 148;
+            Header.ID =148;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             RegionInfo = new RegionInfoBlock();
             RegionInfo2 = new RegionInfo2Block();
@@ -26089,14 +26356,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public RegionInfoBlock RegionInfo;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RegionHandshakeReplyPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.RegionHandshakeReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 149;
+            Header.ID =149;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             RegionInfo = new RegionInfoBlock();
@@ -26226,8 +26496,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.SimulatorViewerTimeMessage;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 150;
+            Header.ID =150;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             TimeInfo = new TimeInfoBlock();
         }
 
@@ -26342,8 +26613,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.EnableSimulator;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 151;
+            Header.ID =151;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             SimulatorInfo = new SimulatorInfoBlock();
         }
 
@@ -26412,8 +26684,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.DisableSimulator;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 152;
+            Header.ID =152;
             Header.Reliable = true;
+            NeedValidateIDs = false;
         }
 
         public DisableSimulatorPacket(byte[] bytes, ref int i) : this()
@@ -26535,8 +26808,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.TransferRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 153;
+            Header.ID =153;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             TransferInfo = new TransferInfoBlock();
         }
@@ -26667,8 +26941,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.TransferInfo;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 154;
+            Header.ID =154;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             TransferInfo = new TransferInfoBlock();
         }
@@ -26781,8 +27056,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.TransferAbort;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 155;
+            Header.ID =155;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             TransferInfo = new TransferInfoBlock();
         }
@@ -26916,8 +27192,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.RequestXfer;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 156;
+            Header.ID =156;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             XferID = new XferIDBlock();
         }
@@ -27030,8 +27307,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.AbortXfer;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 157;
+            Header.ID =157;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             XferID = new XferIDBlock();
         }
 
@@ -27318,8 +27596,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.AvatarAppearance;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 158;
+            Header.ID =158;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             Sender = new SenderBlock();
             ObjectData = new ObjectDataBlock();
@@ -27632,8 +27911,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.SetFollowCamProperties;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 159;
+            Header.ID =159;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             ObjectData = new ObjectDataBlock();
             CameraProperty = null;
         }
@@ -27816,8 +28096,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ClearFollowCamProperties;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 160;
+            Header.ID =160;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             ObjectData = new ObjectDataBlock();
         }
 
@@ -27926,8 +28207,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.RequestPayPrice;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 161;
+            Header.ID =161;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             ObjectData = new ObjectDataBlock();
         }
 
@@ -28080,8 +28362,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.PayPriceReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 162;
+            Header.ID =162;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             ObjectData = new ObjectDataBlock();
             ButtonData = null;
         }
@@ -28319,8 +28602,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.KickUser;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 163;
+            Header.ID =163;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             TargetBlock = new TargetBlockBlock();
             UserInfo = new UserInfoBlock();
         }
@@ -28452,8 +28736,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.GodKickUser;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 165;
+            Header.ID =165;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             UserInfo = new UserInfoBlock();
         }
 
@@ -28602,14 +28887,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public EjectUserPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.EjectUser;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 167;
+            Header.ID =167;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -28763,14 +29051,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public FreezeUserPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.FreezeUser;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 168;
+            Header.ID =168;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -28884,14 +29175,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AvatarPropertiesRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.AvatarPropertiesRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 169;
+            Header.ID =169;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -29089,8 +29383,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.AvatarPropertiesReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 171;
+            Header.ID =171;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             PropertiesData = new PropertiesDataBlock();
@@ -29274,8 +29569,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.AvatarInterestsReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 172;
+            Header.ID =172;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             PropertiesData = new PropertiesDataBlock();
@@ -29499,8 +29795,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.AvatarGroupsReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 173;
+            Header.ID =173;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             GroupData = null;
@@ -29705,14 +30002,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public PropertiesDataBlock PropertiesData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AvatarPropertiesUpdatePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.AvatarPropertiesUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 174;
+            Header.ID =174;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             PropertiesData = new PropertiesDataBlock();
@@ -29890,14 +30190,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public PropertiesDataBlock PropertiesData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AvatarInterestsUpdatePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.AvatarInterestsUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 175;
+            Header.ID =175;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             PropertiesData = new PropertiesDataBlock();
@@ -30061,8 +30364,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.AvatarNotesReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 176;
+            Header.ID =176;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -30222,14 +30526,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AvatarNotesUpdatePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.AvatarNotesUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 177;
+            Header.ID =177;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -30396,8 +30703,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.AvatarPicksReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 178;
+            Header.ID =178;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             Data = null;
         }
@@ -30617,14 +30925,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public EventDataBlock EventData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public EventInfoRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.EventInfoRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 179;
+            Header.ID =179;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             EventData = new EventDataBlock();
         }
@@ -30840,8 +31151,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.EventInfoReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 180;
+            Header.ID =180;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             EventData = new EventDataBlock();
         }
@@ -30992,14 +31304,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public EventDataBlock EventData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public EventNotificationAddRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.EventNotificationAddRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 181;
+            Header.ID =181;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             EventData = new EventDataBlock();
         }
@@ -31150,14 +31465,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public EventDataBlock EventData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public EventNotificationRemoveRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.EventNotificationRemoveRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 182;
+            Header.ID =182;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             EventData = new EventDataBlock();
         }
@@ -31363,14 +31681,17 @@ namespace OpenMetaverse.Packets
         public EventDataBlock EventData;
         public QueryDataBlock QueryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public EventGodDeletePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.EventGodDelete;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 183;
+            Header.ID =183;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             EventData = new EventDataBlock();
             QueryData = new QueryDataBlock();
@@ -31587,8 +31908,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.PickInfoReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 184;
+            Header.ID =184;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -31776,14 +32098,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public PickInfoUpdatePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.PickInfoUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 185;
+            Header.ID =185;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -31934,14 +32259,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public PickDeletePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.PickDelete;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 186;
+            Header.ID =186;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -32095,14 +32423,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public PickGodDeletePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.PickGodDelete;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 187;
+            Header.ID =187;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -32278,8 +32609,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ScriptQuestion;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 188;
+            Header.ID =188;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Data = new DataBlock();
             Experience = new ExperienceBlock();
         }
@@ -32400,8 +32732,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ScriptControlChange;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 189;
+            Header.ID =189;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Data = null;
         }
 
@@ -32701,8 +33034,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ScriptDialog;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 190;
+            Header.ID =190;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             Data = new DataBlock();
             Buttons = null;
@@ -32977,14 +33311,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ScriptDialogReplyPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ScriptDialogReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 191;
+            Header.ID =191;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
@@ -33096,14 +33433,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ForceScriptControlReleasePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ForceScriptControlRelease;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 192;
+            Header.ID =192;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -33252,14 +33592,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RevokePermissionsPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.RevokePermissions;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 193;
+            Header.ID =193;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -33402,8 +33745,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.LoadURL;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 194;
+            Header.ID =194;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Data = new DataBlock();
         }
 
@@ -33531,8 +33875,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ScriptTeleportRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 195;
+            Header.ID =195;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Data = new DataBlock();
         }
 
@@ -33650,8 +33995,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ParcelOverlay;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 196;
+            Header.ID =196;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             ParcelData = new ParcelDataBlock();
         }
@@ -33801,14 +34147,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ParcelDataBlock ParcelData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelPropertiesRequestByIDPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ParcelPropertiesRequestByID;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 197;
+            Header.ID =197;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ParcelData = new ParcelDataBlock();
@@ -34032,14 +34381,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ParcelDataBlock ParcelData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelPropertiesUpdatePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ParcelPropertiesUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 198;
+            Header.ID =198;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ParcelData = new ParcelDataBlock();
@@ -34276,14 +34628,17 @@ namespace OpenMetaverse.Packets
         public TaskIDsBlock[] TaskIDs;
         public OwnerIDsBlock[] OwnerIDs;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelReturnObjectsPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ParcelReturnObjects;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 199;
+            Header.ID =199;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ParcelData = new ParcelDataBlock();
@@ -34553,14 +34908,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ParcelDataBlock ParcelData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelSetOtherCleanTimePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ParcelSetOtherCleanTime;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 200;
+            Header.ID =200;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ParcelData = new ParcelDataBlock();
@@ -34797,14 +35155,17 @@ namespace OpenMetaverse.Packets
         public TaskIDsBlock[] TaskIDs;
         public OwnerIDsBlock[] OwnerIDs;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelDisableObjectsPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ParcelDisableObjects;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 201;
+            Header.ID =201;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ParcelData = new ParcelDataBlock();
@@ -35115,14 +35476,17 @@ namespace OpenMetaverse.Packets
         public ParcelDataBlock ParcelData;
         public ReturnIDsBlock[] ReturnIDs;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelSelectObjectsPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ParcelSelectObjects;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 202;
+            Header.ID =202;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ParcelData = new ParcelDataBlock();
@@ -35310,14 +35674,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public EstateCovenantRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.EstateCovenantRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 203;
+            Header.ID =203;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -35441,8 +35808,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.EstateCovenantReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 204;
+            Header.ID =204;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Data = new DataBlock();
         }
 
@@ -35592,8 +35960,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ForceObjectSelect;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 205;
+            Header.ID =205;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             _Header = new HeaderBlock();
             Data = null;
         }
@@ -35813,14 +36182,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ParcelDataBlock ParcelData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelBuyPassPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ParcelBuyPass;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 206;
+            Header.ID =206;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             ParcelData = new ParcelDataBlock();
         }
@@ -35974,14 +36346,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelDeedToGroupPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ParcelDeedToGroup;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 207;
+            Header.ID =207;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -36132,14 +36507,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelReclaimPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ParcelReclaim;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 208;
+            Header.ID =208;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -36346,14 +36724,17 @@ namespace OpenMetaverse.Packets
         public DataBlock Data;
         public ParcelDataBlock[] ParcelData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelClaimPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ParcelClaim;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 209;
+            Header.ID =209;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
@@ -36590,14 +36971,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ParcelDataBlock ParcelData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelJoinPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ParcelJoin;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 210;
+            Header.ID =210;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             ParcelData = new ParcelDataBlock();
         }
@@ -36757,14 +37141,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ParcelDataBlock ParcelData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelDividePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ParcelDivide;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 211;
+            Header.ID =211;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             ParcelData = new ParcelDataBlock();
         }
@@ -36915,14 +37302,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelReleasePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ParcelRelease;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 212;
+            Header.ID =212;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -37128,14 +37518,17 @@ namespace OpenMetaverse.Packets
         public DataBlock Data;
         public ParcelDataBlock ParcelData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelBuyPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ParcelBuy;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 213;
+            Header.ID =213;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
@@ -37295,14 +37688,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelGodForceOwnerPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ParcelGodForceOwner;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 214;
+            Header.ID =214;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
@@ -37460,14 +37856,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelAccessListRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ParcelAccessListRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 215;
+            Header.ID =215;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
@@ -37638,8 +38037,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ParcelAccessListReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 216;
+            Header.ID =216;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             Data = new DataBlock();
             List = null;
@@ -37919,14 +38319,17 @@ namespace OpenMetaverse.Packets
         public DataBlock Data;
         public ListBlock[] List;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelAccessListUpdatePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ParcelAccessListUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 217;
+            Header.ID =217;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
@@ -38157,14 +38560,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelDwellRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ParcelDwellRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 218;
+            Header.ID =218;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -38324,8 +38730,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ParcelDwellReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 219;
+            Header.ID =219;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -38476,14 +38883,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ParcelDataBlock ParcelData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelGodMarkAsContentPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ParcelGodMarkAsContent;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 227;
+            Header.ID =227;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             ParcelData = new ParcelDataBlock();
         }
@@ -38637,14 +39047,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ParcelDataBlock ParcelData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ViewerStartAuctionPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ViewerStartAuction;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 228;
+            Header.ID =228;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             ParcelData = new ParcelDataBlock();
         }
@@ -38759,8 +39172,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.UUIDNameRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 235;
+            Header.ID =235;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             UUIDNameBlock = null;
         }
 
@@ -38953,8 +39367,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.UUIDNameReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 236;
+            Header.ID =236;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             UUIDNameBlock = null;
         }
 
@@ -39131,8 +39546,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.UUIDGroupNameRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 237;
+            Header.ID =237;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             UUIDNameBlock = null;
         }
 
@@ -39318,8 +39734,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.UUIDGroupNameReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 238;
+            Header.ID =238;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             UUIDNameBlock = null;
         }
 
@@ -39492,14 +39909,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ChildAgentDyingPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ChildAgentDying;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 240;
+            Header.ID =240;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
         }
@@ -39606,14 +40026,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ChildAgentUnknownPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ChildAgentUnknown;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 241;
+            Header.ID =241;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -39725,8 +40148,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.GetScriptRunning;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 243;
+            Header.ID =243;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Script = new ScriptBlock();
         }
 
@@ -39841,8 +40265,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ScriptRunningReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 244;
+            Header.ID =244;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Script = new ScriptBlock();
         }
 
@@ -39994,14 +40419,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ScriptBlock Script;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public SetScriptRunningPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.SetScriptRunning;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 245;
+            Header.ID =245;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Script = new ScriptBlock();
         }
@@ -40155,14 +40583,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ScriptBlock Script;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ScriptResetPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ScriptReset;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 246;
+            Header.ID =246;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Script = new ScriptBlock();
         }
@@ -40312,8 +40743,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ScriptSensorRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 247;
+            Header.ID =247;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             Requester = new RequesterBlock();
         }
@@ -40494,8 +40926,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ScriptSensorReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 248;
+            Header.ID =248;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             Requester = new RequesterBlock();
             SensedData = null;
@@ -40679,14 +41112,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public CompleteAgentMovementPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.CompleteAgentMovement;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 249;
+            Header.ID =249;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -40887,14 +41323,17 @@ namespace OpenMetaverse.Packets
         public DataBlock Data;
         public SimDataBlock SimData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AgentMovementCompletePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.AgentMovementComplete;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 250;
+            Header.ID =250;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
             SimData = new SimDataBlock();
@@ -41010,14 +41449,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public LogoutRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.LogoutRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 252;
+            Header.ID =252;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -41164,14 +41606,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public InventoryDataBlock[] InventoryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public LogoutReplyPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.LogoutReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 253;
+            Header.ID =253;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             InventoryData = null;
@@ -41439,14 +41884,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public MessageBlockBlock MessageBlock;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ImprovedInstantMessagePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ImprovedInstantMessage;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 254;
+            Header.ID =254;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             MessageBlock = new MessageBlockBlock();
@@ -41558,14 +42006,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RetrieveInstantMessagesPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.RetrieveInstantMessages;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 255;
+            Header.ID =255;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -41724,8 +42175,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.FindAgent;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 256;
+            Header.ID =256;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentBlock = new AgentBlockBlock();
             LocationBlock = null;
         }
@@ -41948,14 +42400,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public RequestBlockBlock RequestBlock;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RequestGodlikePowersPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.RequestGodlikePowers;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 257;
+            Header.ID =257;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             RequestBlock = new RequestBlockBlock();
         }
@@ -42109,14 +42564,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public GrantDataBlock GrantData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GrantGodlikePowersPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.GrantGodlikePowers;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 258;
+            Header.ID =258;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             GrantData = new GrantDataBlock();
         }
@@ -42326,14 +42784,17 @@ namespace OpenMetaverse.Packets
         public MethodDataBlock MethodData;
         public ParamListBlock[] ParamList;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GodlikeMessagePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.GodlikeMessage;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 259;
+            Header.ID =259;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             MethodData = new MethodDataBlock();
@@ -42620,14 +43081,17 @@ namespace OpenMetaverse.Packets
         public MethodDataBlock MethodData;
         public ParamListBlock[] ParamList;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public EstateOwnerMessagePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.EstateOwnerMessage;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 260;
+            Header.ID =260;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             MethodData = new MethodDataBlock();
@@ -42914,14 +43378,17 @@ namespace OpenMetaverse.Packets
         public MethodDataBlock MethodData;
         public ParamListBlock[] ParamList;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GenericMessagePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.GenericMessage;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 261;
+            Header.ID =261;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             MethodData = new MethodDataBlock();
@@ -43149,14 +43616,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public MuteDataBlock MuteData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public MuteListRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.MuteListRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 262;
+            Header.ID =262;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             MuteData = new MuteDataBlock();
         }
@@ -43322,14 +43792,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public MuteDataBlock MuteData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public UpdateMuteListEntryPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.UpdateMuteListEntry;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 263;
+            Header.ID =263;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             MuteData = new MuteDataBlock();
         }
@@ -43489,14 +43962,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public MuteDataBlock MuteData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RemoveMuteListEntryPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.RemoveMuteListEntry;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 264;
+            Header.ID =264;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             MuteData = new MuteDataBlock();
         }
@@ -43694,14 +44170,17 @@ namespace OpenMetaverse.Packets
         public NotecardDataBlock NotecardData;
         public InventoryDataBlock[] InventoryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public CopyInventoryFromNotecardPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.CopyInventoryFromNotecard;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 265;
+            Header.ID =265;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             NotecardData = new NotecardDataBlock();
@@ -44006,14 +44485,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public InventoryDataBlock[] InventoryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public UpdateInventoryItemPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.UpdateInventoryItem;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 266;
+            Header.ID =266;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             InventoryData = null;
@@ -44317,8 +44799,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.UpdateCreateInventoryItem;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 267;
+            Header.ID =267;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             InventoryData = null;
@@ -44555,14 +45038,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public InventoryDataBlock[] InventoryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public MoveInventoryItemPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.MoveInventoryItem;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 268;
+            Header.ID =268;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             InventoryData = null;
@@ -44802,14 +45288,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public InventoryDataBlock[] InventoryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public CopyInventoryItemPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.CopyInventoryItem;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 269;
+            Header.ID =269;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             InventoryData = null;
@@ -45031,14 +45520,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public InventoryDataBlock[] InventoryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RemoveInventoryItemPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.RemoveInventoryItem;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 270;
+            Header.ID =270;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             InventoryData = null;
         }
@@ -45262,14 +45754,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public InventoryDataBlock[] InventoryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ChangeInventoryItemFlagsPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ChangeInventoryItemFlags;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 271;
+            Header.ID =271;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             InventoryData = null;
         }
@@ -45495,8 +45990,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.SaveAssetIntoInventory;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 272;
+            Header.ID =272;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             InventoryData = new InventoryDataBlock();
         }
@@ -45662,14 +46158,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public FolderDataBlock FolderData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public CreateInventoryFolderPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.CreateInventoryFolder;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 273;
+            Header.ID =273;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             FolderData = new FolderDataBlock();
         }
@@ -45836,14 +46335,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public FolderDataBlock[] FolderData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public UpdateInventoryFolderPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.UpdateInventoryFolder;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 274;
+            Header.ID =274;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             FolderData = null;
         }
@@ -46070,14 +46572,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public InventoryDataBlock[] InventoryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public MoveInventoryFolderPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.MoveInventoryFolder;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 275;
+            Header.ID =275;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             InventoryData = null;
@@ -46299,14 +46804,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public FolderDataBlock[] FolderData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RemoveInventoryFolderPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.RemoveInventoryFolder;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 276;
+            Header.ID =276;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             FolderData = null;
         }
@@ -46538,14 +47046,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public InventoryDataBlock InventoryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public FetchInventoryDescendentsPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.FetchInventoryDescendents;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 277;
+            Header.ID =277;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             InventoryData = new InventoryDataBlock();
@@ -46839,8 +47350,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.InventoryDescendents;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 278;
+            Header.ID =278;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             FolderData = null;
@@ -47104,14 +47616,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public InventoryDataBlock[] InventoryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public FetchInventoryPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.FetchInventory;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 279;
+            Header.ID =279;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             InventoryData = null;
@@ -47406,8 +47921,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.FetchInventoryReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 280;
+            Header.ID =280;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             InventoryData = null;
@@ -47764,8 +48280,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.BulkUpdateInventory;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 281;
+            Header.ID =281;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             FolderData = null;
@@ -48067,14 +48584,17 @@ namespace OpenMetaverse.Packets
         public FolderDataBlock[] FolderData;
         public ItemDataBlock[] ItemData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RemoveInventoryObjectsPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.RemoveInventoryObjects;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 284;
+            Header.ID =284;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             FolderData = null;
             ItemData = null;
@@ -48333,14 +48853,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public InventoryDataBlock InventoryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public PurgeInventoryDescendentsPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.PurgeInventoryDescendents;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 285;
+            Header.ID =285;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             InventoryData = new InventoryDataBlock();
@@ -48605,14 +49128,17 @@ namespace OpenMetaverse.Packets
         public UpdateDataBlock UpdateData;
         public InventoryDataBlock InventoryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public UpdateTaskInventoryPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.UpdateTaskInventory;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 286;
+            Header.ID =286;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             UpdateData = new UpdateDataBlock();
@@ -48772,14 +49298,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public InventoryDataBlock InventoryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RemoveTaskInventoryPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.RemoveTaskInventory;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 287;
+            Header.ID =287;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             InventoryData = new InventoryDataBlock();
@@ -48937,14 +49466,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public InventoryDataBlock InventoryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public MoveTaskInventoryPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.MoveTaskInventory;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 288;
+            Header.ID =288;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             InventoryData = new InventoryDataBlock();
         }
@@ -49095,14 +49627,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public InventoryDataBlock InventoryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RequestTaskInventoryPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.RequestTaskInventory;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 289;
+            Header.ID =289;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             InventoryData = new InventoryDataBlock();
         }
@@ -49228,8 +49763,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ReplyTaskInventory;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 290;
+            Header.ID =290;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             InventoryData = new InventoryDataBlock();
         }
@@ -49432,14 +49968,17 @@ namespace OpenMetaverse.Packets
         public AgentBlockBlock AgentBlock;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public DeRezObjectPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.DeRezObject;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 291;
+            Header.ID =291;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             AgentBlock = new AgentBlockBlock();
@@ -49633,8 +50172,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.DeRezAck;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 292;
+            Header.ID =292;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             TransactionData = new TransactionDataBlock();
         }
 
@@ -49926,14 +50466,17 @@ namespace OpenMetaverse.Packets
         public RezDataBlock RezData;
         public InventoryDataBlock InventoryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RezObjectPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.RezObject;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 293;
+            Header.ID =293;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             RezData = new RezDataBlock();
@@ -50210,14 +50753,17 @@ namespace OpenMetaverse.Packets
         public NotecardDataBlock NotecardData;
         public InventoryDataBlock[] InventoryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RezObjectFromNotecardPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.RezObjectFromNotecard;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 294;
+            Header.ID =294;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             RezData = new RezDataBlock();
@@ -50493,14 +51039,17 @@ namespace OpenMetaverse.Packets
         public TransactionBlockBlock TransactionBlock;
         public FolderDataBlock[] FolderData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AcceptFriendshipPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.AcceptFriendship;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 297;
+            Header.ID =297;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             TransactionBlock = new TransactionBlockBlock();
             FolderData = null;
@@ -50727,14 +51276,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public TransactionBlockBlock TransactionBlock;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public DeclineFriendshipPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.DeclineFriendship;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 298;
+            Header.ID =298;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             TransactionBlock = new TransactionBlockBlock();
         }
@@ -50885,14 +51437,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ExBlockBlock ExBlock;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public TerminateFriendshipPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.TerminateFriendship;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 300;
+            Header.ID =300;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             ExBlock = new ExBlockBlock();
         }
@@ -51046,14 +51601,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public AgentBlockBlock AgentBlock;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public OfferCallingCardPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.OfferCallingCard;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 301;
+            Header.ID =301;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             AgentBlock = new AgentBlockBlock();
         }
@@ -51245,14 +51803,17 @@ namespace OpenMetaverse.Packets
         public TransactionBlockBlock TransactionBlock;
         public FolderDataBlock[] FolderData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AcceptCallingCardPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.AcceptCallingCard;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 302;
+            Header.ID =302;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             TransactionBlock = new TransactionBlockBlock();
             FolderData = null;
@@ -51479,14 +52040,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public TransactionBlockBlock TransactionBlock;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public DeclineCallingCardPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.DeclineCallingCard;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 303;
+            Header.ID =303;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             TransactionBlock = new TransactionBlockBlock();
         }
@@ -51753,14 +52317,17 @@ namespace OpenMetaverse.Packets
         public UpdateBlockBlock UpdateBlock;
         public InventoryBlockBlock InventoryBlock;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RezScriptPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.RezScript;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 304;
+            Header.ID =304;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             UpdateBlock = new UpdateBlockBlock();
@@ -51951,14 +52518,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public InventoryBlockBlock InventoryBlock;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public CreateInventoryItemPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.CreateInventoryItem;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 305;
+            Header.ID =305;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             InventoryBlock = new InventoryBlockBlock();
@@ -52159,14 +52729,17 @@ namespace OpenMetaverse.Packets
         public EventDataBlock EventData;
         public InventoryBlockBlock InventoryBlock;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public CreateLandmarkForEventPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.CreateLandmarkForEvent;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 306;
+            Header.ID =306;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             EventData = new EventDataBlock();
@@ -52286,8 +52859,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.RegionHandleRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 309;
+            Header.ID =309;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             RequestBlock = new RequestBlockBlock();
         }
 
@@ -52399,8 +52973,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.RegionIDAndHandleReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 310;
+            Header.ID =310;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             ReplyBlock = new ReplyBlockBlock();
         }
 
@@ -52573,14 +53148,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public MoneyDataBlock MoneyData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public MoneyTransferRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.MoneyTransferRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 311;
+            Header.ID =311;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             MoneyData = new MoneyDataBlock();
@@ -52732,14 +53310,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public MoneyDataBlock MoneyData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public MoneyBalanceRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.MoneyBalanceRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 313;
+            Header.ID =313;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             MoneyData = new MoneyDataBlock();
@@ -52942,8 +53523,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.MoneyBalanceReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 314;
+            Header.ID =314;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             MoneyData = new MoneyDataBlock();
             TransactionInfo = new TransactionInfoBlock();
@@ -53189,8 +53771,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.RoutedMoneyBalanceReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 315;
+            Header.ID =315;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             TargetBlock = new TargetBlockBlock();
             MoneyData = new MoneyDataBlock();
@@ -53357,14 +53940,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock[] Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ActivateGesturesPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ActivateGestures;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 316;
+            Header.ID =316;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = null;
         }
@@ -53591,14 +54177,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock[] Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public DeactivateGesturesPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.DeactivateGestures;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 317;
+            Header.ID =317;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = null;
         }
@@ -53790,8 +54379,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.MuteListUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 318;
+            Header.ID =318;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             MuteData = new MuteDataBlock();
         }
 
@@ -53900,8 +54490,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.UseCachedMuteList;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 319;
+            Header.ID =319;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
         }
 
@@ -54051,14 +54642,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public RightsBlock[] Rights;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GrantUserRightsPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.GrantUserRights;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 320;
+            Header.ID =320;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Rights = null;
         }
@@ -54285,8 +54879,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ChangeUserRights;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 321;
+            Header.ID =321;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             Rights = null;
         }
@@ -54470,8 +55065,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.OnlineNotification;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 322;
+            Header.ID =322;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentBlock = null;
         }
 
@@ -54648,8 +55244,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.OfflineNotification;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 323;
+            Header.ID =323;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentBlock = null;
         }
 
@@ -54877,14 +55474,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public StartLocationDataBlock StartLocationData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public SetStartLocationRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.SetStartLocationRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 324;
+            Header.ID =324;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             StartLocationData = new StartLocationDataBlock();
@@ -55017,8 +55617,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.AssetUploadRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 333;
+            Header.ID =333;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AssetBlock = new AssetBlockBlock();
         }
 
@@ -55133,8 +55734,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.AssetUploadComplete;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 334;
+            Header.ID =334;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AssetBlock = new AssetBlockBlock();
         }
 
@@ -55311,14 +55913,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public GroupDataBlock GroupData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public CreateGroupRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.CreateGroupRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 339;
+            Header.ID =339;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             GroupData = new GroupDataBlock();
@@ -55485,8 +56090,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.CreateGroupReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 340;
+            Header.ID =340;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             ReplyData = new ReplyDataBlock();
         }
@@ -55664,14 +56270,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public GroupDataBlock GroupData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public UpdateGroupInfoPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.UpdateGroupInfo;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 341;
+            Header.ID =341;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             GroupData = new GroupDataBlock();
@@ -55833,14 +56442,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public RoleChangeBlock[] RoleChange;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GroupRoleChangesPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.GroupRoleChanges;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 342;
+            Header.ID =342;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             RoleChange = null;
         }
@@ -56060,14 +56672,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public GroupDataBlock GroupData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public JoinGroupRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.JoinGroupRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 343;
+            Header.ID =343;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             GroupData = new GroupDataBlock();
@@ -56225,8 +56840,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.JoinGroupReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 344;
+            Header.ID =344;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             GroupData = new GroupDataBlock();
         }
@@ -56418,14 +57034,17 @@ namespace OpenMetaverse.Packets
         public GroupDataBlock GroupData;
         public EjectDataBlock[] EjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public EjectGroupMemberRequestPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.EjectGroupMemberRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 345;
+            Header.ID =345;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             GroupData = new GroupDataBlock();
             EjectData = null;
@@ -56695,8 +57314,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.EjectGroupMemberReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 346;
+            Header.ID =346;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             GroupData = new GroupDataBlock();
             EjectData = new EjectDataBlock();
@@ -56852,14 +57472,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public GroupDataBlock GroupData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public LeaveGroupRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.LeaveGroupRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 347;
+            Header.ID =347;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             GroupData = new GroupDataBlock();
         }
@@ -57016,8 +57639,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.LeaveGroupReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 348;
+            Header.ID =348;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             GroupData = new GroupDataBlock();
         }
@@ -57212,14 +57836,17 @@ namespace OpenMetaverse.Packets
         public GroupDataBlock GroupData;
         public InviteDataBlock[] InviteData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public InviteGroupRequestPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.InviteGroupRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 349;
+            Header.ID =349;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             GroupData = new GroupDataBlock();
             InviteData = null;
@@ -57446,14 +58073,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public GroupDataBlock GroupData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GroupProfileRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.GroupProfileRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 351;
+            Header.ID =351;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             GroupData = new GroupDataBlock();
         }
@@ -57666,8 +58296,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.GroupProfileReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 352;
+            Header.ID =352;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             GroupData = new GroupDataBlock();
@@ -57828,14 +58459,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public MoneyDataBlock MoneyData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GroupAccountSummaryRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.GroupAccountSummaryRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 353;
+            Header.ID =353;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             MoneyData = new MoneyDataBlock();
@@ -58064,8 +58698,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.GroupAccountSummaryReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 354;
+            Header.ID =354;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             MoneyData = new MoneyDataBlock();
@@ -58226,14 +58861,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public MoneyDataBlock MoneyData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GroupAccountDetailsRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.GroupAccountDetailsRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 355;
+            Header.ID =355;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             MoneyData = new MoneyDataBlock();
@@ -58456,8 +59094,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.GroupAccountDetailsReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 356;
+            Header.ID =356;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             MoneyData = new MoneyDataBlock();
@@ -58694,14 +59333,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public MoneyDataBlock MoneyData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GroupAccountTransactionsRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.GroupAccountTransactionsRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 357;
+            Header.ID =357;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             MoneyData = new MoneyDataBlock();
@@ -58941,8 +59583,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.GroupAccountTransactionsReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 358;
+            Header.ID =358;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             MoneyData = new MoneyDataBlock();
@@ -59210,14 +59853,17 @@ namespace OpenMetaverse.Packets
         public GroupDataBlock GroupData;
         public TransactionDataBlock TransactionData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GroupActiveProposalsRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.GroupActiveProposalsRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 359;
+            Header.ID =359;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             GroupData = new GroupDataBlock();
             TransactionData = new TransactionDataBlock();
@@ -59472,8 +60118,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.GroupActiveProposalItemReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 360;
+            Header.ID =360;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             TransactionData = new TransactionDataBlock();
@@ -59741,14 +60388,17 @@ namespace OpenMetaverse.Packets
         public GroupDataBlock GroupData;
         public TransactionDataBlock TransactionData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GroupVoteHistoryRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.GroupVoteHistoryRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 361;
+            Header.ID =361;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             GroupData = new GroupDataBlock();
             TransactionData = new TransactionDataBlock();
@@ -60059,8 +60709,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.GroupVoteHistoryItemReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 362;
+            Header.ID =362;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             TransactionData = new TransactionDataBlock();
@@ -60313,14 +60964,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ProposalDataBlock ProposalData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public StartGroupProposalPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.StartGroupProposal;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 363;
+            Header.ID =363;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ProposalData = new ProposalDataBlock();
@@ -60484,14 +61138,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ProposalDataBlock ProposalData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GroupProposalBallotPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.GroupProposalBallot;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 364;
+            Header.ID =364;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             ProposalData = new ProposalDataBlock();
         }
@@ -60645,14 +61302,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public GroupDataBlock GroupData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GroupMembersRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.GroupMembersRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 366;
+            Header.ID =366;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             GroupData = new GroupDataBlock();
         }
@@ -60878,8 +61538,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.GroupMembersReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 367;
+            Header.ID =367;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             GroupData = new GroupDataBlock();
@@ -61070,14 +61731,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ActivateGroupPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ActivateGroup;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 368;
+            Header.ID =368;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
         }
@@ -61227,14 +61891,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public DataBlock Data;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public SetGroupContributionPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.SetGroupContribution;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 369;
+            Header.ID =369;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
         }
@@ -61428,14 +62095,17 @@ namespace OpenMetaverse.Packets
         public DataBlock Data;
         public NewDataBlock NewData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public SetGroupAcceptNoticesPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.SetGroupAcceptNotices;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 370;
+            Header.ID =370;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
             NewData = new NewDataBlock();
@@ -61594,14 +62264,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public GroupDataBlock GroupData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GroupRoleDataRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.GroupRoleDataRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 371;
+            Header.ID =371;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             GroupData = new GroupDataBlock();
         }
@@ -61831,8 +62504,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.GroupRoleDataReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 372;
+            Header.ID =372;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             GroupData = new GroupDataBlock();
             RoleData = null;
@@ -62062,14 +62736,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public GroupDataBlock GroupData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GroupRoleMembersRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.GroupRoleMembersRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 373;
+            Header.ID =373;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             GroupData = new GroupDataBlock();
         }
@@ -62236,8 +62913,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.GroupRoleMembersReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 374;
+            Header.ID =374;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             MemberData = null;
         }
@@ -62423,14 +63101,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GroupTitlesRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.GroupTitlesRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 375;
+            Header.ID =375;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -62598,8 +63279,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.GroupTitlesReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 376;
+            Header.ID =376;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             GroupData = null;
@@ -62786,14 +63468,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GroupTitleUpdatePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.GroupTitleUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 377;
+            Header.ID =377;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -62972,14 +63657,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public RoleDataBlock[] RoleData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public GroupRoleUpdatePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.GroupRoleUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 378;
+            Header.ID =378;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             RoleData = null;
         }
@@ -63165,8 +63853,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.LiveHelpGroupRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 379;
+            Header.ID =379;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             RequestData = new RequestDataBlock();
         }
 
@@ -63287,8 +63976,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.LiveHelpGroupReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 380;
+            Header.ID =380;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             ReplyData = new ReplyDataBlock();
         }
 
@@ -63394,14 +64084,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AgentWearablesRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.AgentWearablesRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 381;
+            Header.ID =381;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -63557,14 +64250,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public WearableDataBlock[] WearableData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AgentWearablesUpdatePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.AgentWearablesUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 382;
+            Header.ID =382;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             WearableData = null;
@@ -63789,14 +64485,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public WearableDataBlock[] WearableData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AgentIsNowWearingPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.AgentIsNowWearing;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 383;
+            Header.ID =383;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             WearableData = null;
@@ -64024,14 +64723,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public WearableDataBlock[] WearableData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AgentCachedTexturePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.AgentCachedTexture;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 384;
+            Header.ID =384;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             WearableData = null;
         }
@@ -64267,14 +64969,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public WearableDataBlock[] WearableData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AgentCachedTextureResponsePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.AgentCachedTextureResponse;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 385;
+            Header.ID =385;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             WearableData = null;
         }
@@ -64454,14 +65159,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AgentDataUpdateRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.AgentDataUpdateRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 386;
+            Header.ID =386;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -64606,8 +65314,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.AgentDataUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 387;
+            Header.ID =387;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
         }
@@ -64733,8 +65442,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.GroupDataUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 388;
+            Header.ID =388;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentGroupData = null;
         }
@@ -64973,8 +65683,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.AgentGroupDataUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 389;
+            Header.ID =389;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             GroupData = null;
@@ -65161,8 +65872,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.AgentDropGroup;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 390;
+            Header.ID =390;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
         }
@@ -65343,14 +66055,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RezSingleAttachmentFromInvPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.RezSingleAttachmentFromInv;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 395;
+            Header.ID =395;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = new ObjectDataBlock();
@@ -65583,14 +66298,17 @@ namespace OpenMetaverse.Packets
         public HeaderDataBlock HeaderData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RezMultipleAttachmentsFromInvPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.RezMultipleAttachmentsFromInv;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 396;
+            Header.ID =396;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             HeaderData = new HeaderDataBlock();
@@ -65784,8 +66502,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.DetachAttachmentIntoInv;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 397;
+            Header.ID =397;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             ObjectData = new ObjectDataBlock();
         }
 
@@ -65975,14 +66694,17 @@ namespace OpenMetaverse.Packets
         public HeaderDataBlock HeaderData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public CreateNewOutfitAttachmentsPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.CreateNewOutfitAttachments;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 398;
+            Header.ID =398;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             HeaderData = new HeaderDataBlock();
             ObjectData = null;
@@ -66169,14 +66891,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public UserInfoRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.UserInfoRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 399;
+            Header.ID =399;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -66341,8 +67066,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.UserInfoReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 400;
+            Header.ID =400;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             UserData = new UserDataBlock();
         }
@@ -66502,14 +67228,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public UserDataBlock UserData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public UpdateUserInfoPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.UpdateUserInfo;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 401;
+            Header.ID =401;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             UserData = new UserDataBlock();
         }
@@ -66676,8 +67405,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.InitiateDownload;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 403;
+            Header.ID =403;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             FileData = new FileDataBlock();
         }
@@ -66797,14 +67527,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public MapLayerRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.MapLayerRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 405;
+            Header.ID =405;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -66969,8 +67702,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.MapLayerReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 406;
+            Header.ID =406;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             LayerData = null;
         }
@@ -67208,14 +67942,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public PositionDataBlock PositionData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public MapBlockRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.MapBlockRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 407;
+            Header.ID =407;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             PositionData = new PositionDataBlock();
         }
@@ -67381,14 +68118,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public NameDataBlock NameData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public MapNameRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.MapNameRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 408;
+            Header.ID =408;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             NameData = new NameDataBlock();
         }
@@ -67617,8 +68357,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.MapBlockReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 409;
+            Header.ID =409;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             Data = null;
             Size = null;
@@ -67889,14 +68630,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public RequestDataBlock RequestData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public MapItemRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.MapItemRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 410;
+            Header.ID =410;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             RequestData = new RequestDataBlock();
         }
@@ -68115,8 +68859,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.MapItemReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 411;
+            Header.ID =411;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             AgentData = new AgentDataBlock();
             RequestData = new RequestDataBlock();
             Data = null;
@@ -68352,14 +69097,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public SendPostcardPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.SendPostcard;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 412;
+            Header.ID =412;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -68474,8 +69222,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ParcelMediaCommandMessage;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 419;
+            Header.ID =419;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             CommandBlock = new CommandBlockBlock();
         }
 
@@ -68658,8 +69407,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ParcelMediaUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 420;
+            Header.ID =420;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             DataBlock = new DataBlockBlock();
             DataBlockExtended = new DataBlockExtendedBlock();
         }
@@ -68825,14 +69575,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public RequestDataBlock RequestData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public LandStatRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.LandStatRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 421;
+            Header.ID =421;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             RequestData = new RequestDataBlock();
         }
@@ -69024,8 +69777,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.LandStatReply;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 422;
+            Header.ID =422;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             RequestData = new RequestDataBlock();
             ReportData = null;
         }
@@ -69281,8 +70035,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.Error;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 423;
+            Header.ID =423;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             Data = new DataBlock();
@@ -69438,14 +70193,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectIncludeInSearchPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectIncludeInSearch;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 424;
+            Header.ID =424;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
         }
@@ -69735,14 +70493,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public InventoryDataBlock InventoryData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RezRestoreToWorldPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.RezRestoreToWorld;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 425;
+            Header.ID =425;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             InventoryData = new InventoryDataBlock();
         }
@@ -69924,14 +70685,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public InventoryBlockBlock InventoryBlock;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public LinkInventoryItemPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.LinkInventoryItem;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 426;
+            Header.ID =426;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             InventoryBlock = new InventoryBlockBlock();
@@ -70142,14 +70906,17 @@ namespace OpenMetaverse.Packets
         public MethodDataBlock MethodData;
         public ParamListBlock[] ParamList;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public LargeGenericMessagePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.LargeGenericMessage;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 430;
+            Header.ID =430;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             MethodData = new MethodDataBlock();
             ParamList = null;
@@ -70340,8 +71107,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.PacketAck;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 65531;
+            Header.ID =65531;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Packets = null;
         }
 
@@ -70520,8 +71288,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.OpenCircuit;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 65532;
+            Header.ID =65532;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             CircuitInfo = new CircuitInfoBlock();
         }
 
@@ -70590,8 +71359,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.CloseCircuit;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
-            Header.ID = 65533;
+            Header.ID =65533;
             Header.Reliable = true;
+            NeedValidateIDs = false;
         }
 
         public CloseCircuitPacket(byte[] bytes, ref int i) : this()
@@ -70819,14 +71589,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectAddPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ObjectAdd;
             Header = new Header();
             Header.Frequency = PacketFrequency.Medium;
-            Header.ID = 1;
+            Header.ID =1;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = new ObjectDataBlock();
@@ -70991,14 +71764,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public MultipleObjectUpdatePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.MultipleObjectUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Medium;
-            Header.ID = 2;
+            Header.ID =2;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -71223,14 +71999,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RequestMultipleObjectsPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.RequestMultipleObjects;
             Header = new Header();
             Header.Frequency = PacketFrequency.Medium;
-            Header.ID = 3;
+            Header.ID =3;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -71455,14 +72234,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock[] ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ObjectPositionPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ObjectPosition;
             Header = new Header();
             Header.Frequency = PacketFrequency.Medium;
-            Header.ID = 4;
+            Header.ID =4;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = null;
@@ -71686,14 +72468,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ObjectDataBlock ObjectData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RequestObjectPropertiesFamilyPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.RequestObjectPropertiesFamily;
             Header = new Header();
             Header.Frequency = PacketFrequency.Medium;
-            Header.ID = 5;
+            Header.ID =5;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ObjectData = new ObjectDataBlock();
@@ -71899,8 +72684,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.CoarseLocationUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.Medium;
-            Header.ID = 6;
+            Header.ID =6;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Location = null;
             Index = new IndexBlock();
             AgentData = null;
@@ -72146,14 +72932,17 @@ namespace OpenMetaverse.Packets
         public RegionDataBlock RegionData;
         public InfoBlock Info;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public CrossedRegionPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.CrossedRegion;
             Header = new Header();
             Header.Frequency = PacketFrequency.Medium;
-            Header.ID = 7;
+            Header.ID =7;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             RegionData = new RegionDataBlock();
             Info = new InfoBlock();
@@ -72269,14 +73058,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ConfirmEnableSimulatorPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ConfirmEnableSimulator;
             Header = new Header();
             Header.Frequency = PacketFrequency.Medium;
-            Header.ID = 8;
+            Header.ID =8;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -72486,8 +73278,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ObjectProperties;
             Header = new Header();
             Header.Frequency = PacketFrequency.Medium;
-            Header.ID = 9;
+            Header.ID =9;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             ObjectData = null;
         }
@@ -72719,8 +73512,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ObjectPropertiesFamily;
             Header = new Header();
             Header.Frequency = PacketFrequency.Medium;
-            Header.ID = 10;
+            Header.ID =10;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             ObjectData = new ObjectDataBlock();
         }
@@ -72882,14 +73676,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public ParcelDataBlock ParcelData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ParcelPropertiesRequestPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ParcelPropertiesRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Medium;
-            Header.ID = 11;
+            Header.ID =11;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             ParcelData = new ParcelDataBlock();
@@ -73016,8 +73813,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.AttachedSound;
             Header = new Header();
             Header.Frequency = PacketFrequency.Medium;
-            Header.ID = 13;
+            Header.ID =13;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             DataBlock = new DataBlockBlock();
         }
 
@@ -73129,8 +73927,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.AttachedSoundGainChange;
             Header = new Header();
             Header.Frequency = PacketFrequency.Medium;
-            Header.ID = 14;
+            Header.ID =14;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             DataBlock = new DataBlockBlock();
         }
 
@@ -73246,8 +74045,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.PreloadSound;
             Header = new Header();
             Header.Frequency = PacketFrequency.Medium;
-            Header.ID = 15;
+            Header.ID =15;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             DataBlock = null;
         }
 
@@ -73483,14 +74283,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public EffectBlock[] Effect;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ViewerEffectPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ViewerEffect;
             Header = new Header();
             Header.Frequency = PacketFrequency.Medium;
-            Header.ID = 17;
+            Header.ID =17;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             Effect = null;
@@ -73677,8 +74480,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.StartPingCheck;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 1;
+            Header.ID =1;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             PingID = new PingIDBlock();
         }
 
@@ -73787,8 +74591,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.CompletePingCheck;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 2;
+            Header.ID =2;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             PingID = new PingIDBlock();
         }
 
@@ -73924,14 +74729,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AgentUpdatePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.AgentUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 4;
+            Header.ID =4;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
         }
@@ -74129,14 +74937,17 @@ namespace OpenMetaverse.Packets
         public AnimationListBlock[] AnimationList;
         public PhysicalAvatarEventListBlock[] PhysicalAvatarEventList;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AgentAnimationPacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.AgentAnimation;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 5;
+            Header.ID =5;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             AnimationList = null;
             PhysicalAvatarEventList = null;
@@ -74398,14 +75209,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public TargetObjectBlock TargetObject;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AgentRequestSitPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.AgentRequestSit;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 6;
+            Header.ID =6;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             TargetObject = new TargetObjectBlock();
@@ -74517,14 +75331,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public AgentSitPacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.AgentSit;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 7;
+            Header.ID =7;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -74683,14 +75500,17 @@ namespace OpenMetaverse.Packets
         public AgentDataBlock AgentData;
         public RequestImageBlock[] RequestImage;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public RequestImagePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.RequestImage;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 8;
+            Header.ID =8;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
             RequestImage = null;
         }
@@ -74928,8 +75748,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ImageData;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 9;
+            Header.ID =9;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             ImageID = new ImageIDBlock();
             ImageData = new ImageDataBlock();
         }
@@ -75092,8 +75913,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ImagePacket;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 10;
+            Header.ID =10;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             ImageID = new ImageIDBlock();
             ImageData = new ImageDataBlock();
         }
@@ -75253,8 +76075,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.LayerData;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 11;
+            Header.ID =11;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             LayerID = new LayerIDBlock();
             LayerData = new LayerDataBlock();
         }
@@ -75586,8 +76409,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ObjectUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 12;
+            Header.ID =12;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             RegionData = new RegionDataBlock();
             ObjectData = null;
@@ -75824,8 +76648,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ObjectUpdateCompressed;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 13;
+            Header.ID =13;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             RegionData = new RegionDataBlock();
             ObjectData = null;
         }
@@ -76058,8 +76883,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ObjectUpdateCached;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 14;
+            Header.ID =14;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             RegionData = new RegionDataBlock();
             ObjectData = null;
         }
@@ -76299,8 +77125,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ImprovedTerseObjectUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 15;
+            Header.ID =15;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             RegionData = new RegionDataBlock();
             ObjectData = null;
         }
@@ -76484,8 +77311,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.KillObject;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 16;
+            Header.ID =16;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             ObjectData = null;
         }
 
@@ -76679,8 +77507,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.TransferPacket;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 17;
+            Header.ID =17;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             TransferData = new TransferDataBlock();
         }
 
@@ -76838,8 +77667,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.SendXferPacket;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 18;
+            Header.ID =18;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             XferID = new XferIDBlock();
             DataPacket = new DataPacketBlock();
         }
@@ -76956,8 +77786,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ConfirmXferPacket;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 19;
+            Header.ID =19;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             XferID = new XferIDBlock();
         }
 
@@ -77198,8 +78029,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.AvatarAnimation;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 20;
+            Header.ID =20;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Sender = new SenderBlock();
             AnimationList = null;
             AnimationSourceList = null;
@@ -77515,8 +78347,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.AvatarSitResponse;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 21;
+            Header.ID =21;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             SitObject = new SitObjectBlock();
             SitTransform = new SitTransformBlock();
@@ -77631,8 +78464,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.CameraConstraint;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 22;
+            Header.ID =22;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             CameraCollidePlane = new CameraCollidePlaneBlock();
         }
@@ -78031,8 +78865,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ParcelProperties;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 23;
+            Header.ID =23;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Header.Zerocoded = true;
             ParcelData = new ParcelDataBlock();
             AgeVerificationBlock = new AgeVerificationBlockBlock();
@@ -78541,14 +79376,17 @@ namespace OpenMetaverse.Packets
         public AgentAccessBlock[] AgentAccess;
         public AgentInfoBlock[] AgentInfo;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ChildAgentUpdatePacket()
         {
             HasVariableBlocks = true;
             Type = PacketType.ChildAgentUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 25;
+            Header.ID =25;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             Header.Zerocoded = true;
             AgentData = new AgentDataBlock();
             GroupData = null;
@@ -78969,14 +79807,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ChildAgentAlivePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ChildAgentAlive;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 26;
+            Header.ID =26;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -79112,14 +79953,17 @@ namespace OpenMetaverse.Packets
         }
         public AgentDataBlock AgentData;
 
+        public override bool ValidIDs(UUID session, UUID agent) { return session.Equals(AgentData.SessionID) && agent.Equals(AgentData.AgentID); }
+
         public ChildAgentPositionUpdatePacket()
         {
             HasVariableBlocks = false;
             Type = PacketType.ChildAgentPositionUpdate;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 27;
+            Header.ID =27;
             Header.Reliable = true;
+            NeedValidateIDs = true;
             AgentData = new AgentDataBlock();
         }
 
@@ -79246,8 +80090,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.SoundTrigger;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 29;
+            Header.ID =29;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             SoundData = new SoundDataBlock();
         }
 
@@ -79400,8 +80245,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.ObjectAnimation;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 30;
+            Header.ID =30;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             Sender = new SenderBlock();
             AnimationList = null;
         }
@@ -79630,8 +80476,9 @@ namespace OpenMetaverse.Packets
             Type = PacketType.GenericStreamingMessage;
             Header = new Header();
             Header.Frequency = PacketFrequency.High;
-            Header.ID = 31;
+            Header.ID =31;
             Header.Reliable = true;
+            NeedValidateIDs = false;
             MethodData = new MethodDataBlock();
             DataBlock = new DataBlockBlock();
         }

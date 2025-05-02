@@ -106,7 +106,12 @@ namespace OpenMetaverse
 
         Settings = 56,
         /// <summary>Render material</summary>
-        Material = 57
+        Material = 57,
+
+        GLTF = 58,
+        GLTF_bin = 59,
+
+        OSMaterial = -2 // OpenSimulator specific
     }
 
     /// <summary>
@@ -241,7 +246,10 @@ namespace OpenMetaverse
 
         Settings = 25,
 
-        Material = 26
+        Material = 26,
+
+        GLTF = 27,
+        GLTF_bin = 28
     }
 
     /// <summary>

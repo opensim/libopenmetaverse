@@ -689,7 +689,15 @@ namespace WinGridProxy
             if (direction == this.Direction)
             {
                 IMessage message = null;
-                OSD osd = OSDParser.Deserialize(this.ResponseBytes);
+                OSD osd;
+                try
+                {
+                    osd = OSDParser.Deserialize(this.ResponseBytes);
+                }
+                catch (Exception e)
+                {
+                    return "Decode failed";
+                }
                 OSDMap data = (OSDMap)osd;
                 if (data.ContainsKey("body"))
                     message = MessageUtils.DecodeEvent(this.Name, (OSDMap)data["body"]);

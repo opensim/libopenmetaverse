@@ -199,6 +199,7 @@ namespace WinGridProxy
                             RawResponse = OSDParser.SerializeLLSDXmlBytes(bodyMap),
                             Response = bodyMap
                         };
+                            
                         capReq.ExtraInfo = $"Event iD {EventID} Message {i + 1}/{events}";
 
                         OnEventMessageLog?.Invoke(capReq, CapsStage.Response);

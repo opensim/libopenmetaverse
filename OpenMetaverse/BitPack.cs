@@ -25,6 +25,8 @@
  */
 
 using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace OpenMetaverse
 {
@@ -36,7 +38,6 @@ namespace OpenMetaverse
     public class BitPack
     {
         private const int MAX_BITS = 8;
-        private readonly bool weAreBigEndian = !BitConverter.IsLittleEndian;
 
         /// <summary></summary>
         public byte[] Data;
@@ -85,6 +86,25 @@ namespace OpenMetaverse
                 bitPos = 0;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private byte READBYTE()
+        {
+            return Unsafe.ReadUnaligned<byte>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(Data), bytePos));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void BYTESTORE(byte b)
+        {
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(Data), bytePos), b);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void OR_BYTESTORE(byte b)
+        {
+            byte o = Unsafe.ReadUnaligned<byte>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(Data), bytePos));
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(Data), bytePos), b | o);
+        }
+
         public void Reset(byte[] data, int pos, int? bitp = null)
         {
             Data = data;
@@ -108,10 +128,10 @@ namespace OpenMetaverse
         /// Pack a floating point value in to the data
         /// </summary>
         /// <param name="data">Floating point value to pack</param>
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe void PackFloat(float data)
         {
-            int d = (*(int*)&data);
+            uint d = Unsafe.As<float, uint>(ref data);
             PackBitsFromByte((byte)d);
             PackBitsFromByte((byte)(d >> 8));
             PackBitsFromByte((byte)(d >> 16));
@@ -123,7 +143,7 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="data">Integer containing the data to pack</param>
         /// <param name="totalCount">Number of bits of the integer to pack</param>
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PackBits(int data, int totalCount)
         {
             PackBits((uint)data, totalCount);
@@ -134,7 +154,7 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="data">Unsigned integer containing the data to pack</param>
         /// <param name="totalCount">Number of bits of the integer to pack</param>
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PackBits(uint data, int totalCount)
         {
             while (totalCount > 8)
@@ -147,7 +167,7 @@ namespace OpenMetaverse
                 PackBitsFromByte((byte)data, totalCount);
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PackBitsFromUInt(uint data)
         {
             PackBitsFromByte((byte)data);
@@ -156,20 +176,20 @@ namespace OpenMetaverse
             PackBitsFromByte((byte)(data >> 24));
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PackBitsFromInt(int data)
         {
             PackBitsFromUInt((uint)data);
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PackBitsFromUShort(ushort data)
         {
             PackBitsFromByte((byte)data);
             PackBitsFromByte((byte)(data >> 8));
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PackBitsFromShort(short data)
         {
             PackBitsFromUShort((ushort) data);
@@ -292,7 +312,7 @@ namespace OpenMetaverse
         {
             byte[] output = UnpackBitsArray(32);
 
-            if (weAreBigEndian) Array.Reverse(output);
+            if (!BitConverter.IsLittleEndian) Array.Reverse(output);
             return BitConverter.ToSingle(output, 0);
         }
 
@@ -306,7 +326,7 @@ namespace OpenMetaverse
         {
             byte[] output = UnpackBitsArray(totalCount);
 
-            if (weAreBigEndian) Array.Reverse(output);
+            if (!BitConverter.IsLittleEndian) Array.Reverse(output);
             return BitConverter.ToInt32(output, 0);
         }
 
@@ -321,7 +341,7 @@ namespace OpenMetaverse
         {
             byte[] output = UnpackBitsArray(totalCount);
 
-            if (weAreBigEndian) Array.Reverse(output);
+            if (!BitConverter.IsLittleEndian) Array.Reverse(output);
             return BitConverter.ToUInt32(output, 0);
         }
 
@@ -437,67 +457,70 @@ namespace OpenMetaverse
                 PackBitsFromByte(data[count], totalCount);
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PackBitsFromByte(byte inbyte)
         {
             if(bitPos == 0)
             {
-                Data[bytePos++] = inbyte;
+                BYTESTORE(inbyte);
+                ++bytePos;
                 if (bytePos < Data.Length)
-                    Data[bytePos] = 0;
+                    BYTESTORE(0);
                 return;
             }
             if (inbyte == 0)
             {
                 ++bytePos;
-                Data[bytePos] = 0;
+                BYTESTORE(0);
                 return;
             }
-            Data[bytePos++] |= (byte)(inbyte >> bitPos);
-            Data[bytePos] = (byte)(inbyte << (8 - bitPos));
+            OR_BYTESTORE((byte)(inbyte >> bitPos));
+            ++bytePos;
+            OR_BYTESTORE((byte)(inbyte << (8 - bitPos)));
         }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PackBitsFromByte(byte inbyte, int count)
         {
+            if (count < 1)
+                return;
+
             if (count > 8) //should not happen
                 count = 7;
             else
                 --count;
 
-            while (count >= 0)
+            byte cur = READBYTE();
+            while (count > 0)
             {
                 if ((inbyte & (0x01 << count)) != 0)
-                    Data[bytePos] |= (byte)(0x80 >> bitPos);
+                    cur |= (byte)(0x80 >> bitPos);
 
                 --count;
                 ++bitPos;
 
                 if (bitPos >= MAX_BITS)
                 {
-                    bitPos = 0;
+                    BYTESTORE(cur);
                     ++bytePos;
-                    if (bytePos < Data.Length)
-                        Data[bytePos] = 0;
+                    cur = 0;
+                    bitPos = 0;
                 }
             }
-        }
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-        public void PackBitFromBit(byte inbyte)
-        {
-            if ((inbyte & 0x01) != 0)
-                Data[bytePos] |= (byte)(0x80 >> bitPos);
+            if ((inbyte & 0x01 ) != 0)
+                cur |= (byte)(0x80 >> bitPos);
 
             ++bitPos;
 
             if (bitPos >= MAX_BITS)
             {
                 bitPos = 0;
-                ++bytePos;
-                if (bytePos < Data.Length)
-                    Data[bytePos] = 0;
-            }
+
+            BYTESTORE(cur);
+            ++bytePos;
+            if (bytePos < Data.Length)
+                BYTESTORE(0);
         }
 
         /// <summary>
@@ -505,11 +528,11 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="bit">Bit to pack</param>
 
-        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PackBit(bool bit)
         {
             if (bit)
-                Data[bytePos] |= (byte)(0x80 >> bitPos);
+                OR_BYTESTORE((byte)(0x80 >> bitPos));
 
             ++bitPos;
 
@@ -518,7 +541,7 @@ namespace OpenMetaverse
                 bitPos = 0;
                 ++bytePos;
                 if (bytePos < Data.Length)
-                    Data[bytePos] = 0;
+                    BYTESTORE(0);
             }
         }
 

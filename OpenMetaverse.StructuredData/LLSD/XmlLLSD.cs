@@ -370,7 +370,7 @@ namespace OpenMetaverse.StructuredData
             switch (data.Type)
             {
                 case OSDType.Unknown:
-                    mb.Append(osUTF8Const.XMLundef);
+                    mb.Append("<undef/>"u8);
                     break;
                 case OSDType.Boolean:
                     if(data.AsBoolean())
