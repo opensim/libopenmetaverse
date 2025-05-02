@@ -476,7 +476,7 @@ namespace OpenMetaverse
             }
             OR_BYTESTORE((byte)(inbyte >> bitPos));
             ++bytePos;
-            OR_BYTESTORE((byte)(inbyte << (8 - bitPos)));
+            BYTESTORE((byte)(inbyte << (8 - bitPos)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -511,16 +511,16 @@ namespace OpenMetaverse
             if ((inbyte & 0x01 ) != 0)
                 cur |= (byte)(0x80 >> bitPos);
 
+            BYTESTORE(cur);
             ++bitPos;
 
             if (bitPos >= MAX_BITS)
             {
                 bitPos = 0;
-
-            BYTESTORE(cur);
-            ++bytePos;
-            if (bytePos < Data.Length)
-                BYTESTORE(0);
+                ++bytePos;
+                if (bytePos < Data.Length)
+                    BYTESTORE(0);
+            }
         }
 
         /// <summary>
