@@ -3,14 +3,14 @@
 case "$1" in
 
  'clean')
-    dotnet bin/prebuild.dll /file prebuild.xml /clean
+    dotnet bin/prebuild.dll /file prebuildCoreLib.xml /clean
 
   ;;
 
 
   'autoclean')
 
-    echo y|dotnet bin/prebuild.dll /file prebuild.xml /clean
+    echo y|dotnet bin/prebuild.dll /file prebuildCoreLib.xml /clean
 
   ;;
 

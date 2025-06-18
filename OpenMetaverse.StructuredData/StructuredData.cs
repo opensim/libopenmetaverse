@@ -1756,6 +1756,222 @@ namespace OpenMetaverse.StructuredData
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetOSDMap(string key, out OSDMap ossd)
+        {
+            if (dicvalue.TryGetValue(key, out OSD tmp) && tmp is OSDMap map)
+            {
+                ossd = map;
+                return true;
+            }
+            ossd = null;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetOSDArray(string key, out OSDArray ossd)
+        {
+            if (dicvalue.TryGetValue(key, out OSD tmp) && tmp is OSDArray arr)
+            {
+                ossd = arr;
+                return true;
+            }
+            ossd = null;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetBool(string key, out bool ossd)
+        {
+            if (dicvalue.TryGetValue(key, out OSD tmp))
+            {
+                ossd = tmp.AsBoolean();
+                return true;
+            }
+            ossd = false;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetInt(string key, out int ossd)
+        {
+            if (dicvalue.TryGetValue(key, out OSD tmp))
+            {
+                ossd = tmp.AsInteger();
+                return true;
+            }
+            ossd = 0;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetLong(string key, out long ossd)
+        {
+            if (dicvalue.TryGetValue(key, out OSD tmp))
+            {
+                ossd = tmp.AsLong();
+                return true;
+            }
+            ossd = 0;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetFloat(string key, out float ossd)
+        {
+            if (dicvalue.TryGetValue(key, out OSD tmp))
+            {
+                ossd = (float)tmp.AsReal();
+                return true;
+            }
+            ossd = 0f;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetDouble(string key, out double ossd)
+        {
+            if (dicvalue.TryGetValue(key, out OSD tmp))
+            {
+                ossd = tmp.AsReal();
+                return true;
+            }
+            ossd = 0.0;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetString(string key, out string ossd)
+        {
+            if (dicvalue.TryGetValue(key, out OSD tmp))
+            {
+                ossd = tmp.AsString();
+                return true;
+            }
+            ossd = string.Empty;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetUUID(string key, out UUID ossd)
+        {
+            if (dicvalue.TryGetValue(key, out OSD tmp))
+            {
+                ossd = tmp.AsUUID();
+                return true;
+            }
+            ossd = UUID.Zero;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetDate(string key, out DateTime ossd)
+        {
+            if (dicvalue.TryGetValue(key, out OSD tmp))
+            {
+                ossd = tmp.AsDate();
+                return true;
+            }
+            ossd = Utils.Epoch;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetUri(string key, out Uri ossd)
+        {
+            if (dicvalue.TryGetValue(key, out OSD tmp))
+            {
+                ossd = tmp.AsUri();
+                return true;
+            }
+            ossd = null;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetBinary(string key, out byte[] ossd)
+        {
+            if (dicvalue.TryGetValue(key, out OSD tmp))
+            {
+                ossd = tmp.AsBinary();
+                return true;
+            }
+            ossd = null;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetVector2(string key, out Vector2 ossd)
+        {
+            if (dicvalue.TryGetValue(key, out OSD tmp))
+            {
+                ossd = tmp.AsVector2();
+                return true;
+            }
+            ossd = Vector2.Zero;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetVector3(string key, out Vector3 ossd)
+        {
+            if (dicvalue.TryGetValue(key, out OSD tmp))
+            {
+                ossd = tmp.AsVector3();
+                return true;
+            }
+            ossd = Vector3.Zero;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetVector3d(string key, out Vector3d ossd)
+        {
+            if (dicvalue.TryGetValue(key, out OSD tmp))
+            {
+                ossd = tmp.AsVector3d();
+                return true;
+            }
+            ossd = Vector3d.Zero;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetVector4(string key, out Vector4 ossd)
+        {
+            if (dicvalue.TryGetValue(key, out OSD tmp))
+            {
+                ossd = tmp.AsVector4();
+                return true;
+            }
+            ossd = Vector4.Zero;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetQuat(string key, out Quaternion ossd)
+        {
+            if (dicvalue.TryGetValue(key, out OSD tmp))
+            {
+                ossd = tmp.AsQuaternion();
+                return true;
+            }
+            ossd = Quaternion.Identity;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetColor4(string key, out Color4 ossd)
+        {
+            if (dicvalue.TryGetValue(key, out OSD tmp))
+            {
+                ossd = tmp.AsColor4();
+                return true;
+            }
+            ossd = Color4.Black;
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Clear()
         {
             dicvalue.Clear();

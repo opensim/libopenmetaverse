@@ -69,9 +69,9 @@ namespace OpenMetaverse.Assets
         {
             try
             {
-                MeshData = new OSDMap();
+                MeshData = [];
 
-                using (MemoryStream data = new MemoryStream(AssetData))
+                using (MemoryStream data = new(AssetData))
                 {
                     OSDMap header = (OSDMap)OSDParser.DeserializeLLSDBinary(data);
                     MeshData["asset_header"] = header;
