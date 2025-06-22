@@ -29,6 +29,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Globalization;
 using System.Text;
+using System.Runtime.Intrinsics.X86;
+using System.Runtime.Intrinsics;
 
 namespace OpenMetaverse
 {
@@ -170,7 +172,14 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float LengthSquared()
         {
-            return (X * X) + (Y * Y) + (Z * Z) + (W * W);
+            if(Sse41.IsSupported)
+            {
+                Vector128<float> ma = Vector128.LoadUnsafe(ref X);
+                ma = Sse41.DotProduct(ma, ma, 0xf1);
+                return ma.ToScalar();
+            }
+            else
+                return (X * X) + (Y * Y) + (Z * Z) + (W * W);
         }
 
         public void Normalize()

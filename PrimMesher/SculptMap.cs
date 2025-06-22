@@ -25,16 +25,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// to build without references to System.Drawing, comment this out
-#define SYSTEM_DRAWING
-
 using System;
 using System.Collections.Generic;
-using System.Text;
+using OpenMetaverse;
 
-#if SYSTEM_DRAWING
 using System.Drawing;
-using System.Drawing.Imaging;
 
 namespace PrimMesher
 {
@@ -142,12 +137,12 @@ namespace PrimMesher
             }
         }
 
-        public List<List<Coord>> ToRows(bool mirror)
+        public List<List<Vector3>> ToRows(bool mirror)
         {
             int numRows = height;
             int numCols = width;
 
-            List<List<Coord>> rows = new List<List<Coord>>(numRows);
+            List<List<Vector3>> rows = new List<List<Vector3>>(numRows);
 
             float pixScale = 1.0f / 255;
 
@@ -156,13 +151,13 @@ namespace PrimMesher
 
             for (rowNdx = 0; rowNdx < numRows; rowNdx++)
             {
-                List<Coord> row = new List<Coord>(numCols);
+                List<Vector3> row = new List<Vector3>(numCols);
                 for (colNdx = 0; colNdx < numCols; colNdx++)
                 {
                     if (mirror)
-                        row.Add(new Coord(-(redBytes[smNdx] * pixScale - 0.5f), (greenBytes[smNdx] * pixScale - 0.5f), blueBytes[smNdx] * pixScale - 0.5f));
+                        row.Add(new Vector3(-(redBytes[smNdx] * pixScale - 0.5f), (greenBytes[smNdx] * pixScale - 0.5f), blueBytes[smNdx] * pixScale - 0.5f));
                     else
-                        row.Add(new Coord(redBytes[smNdx] * pixScale - 0.5f, greenBytes[smNdx] * pixScale - 0.5f, blueBytes[smNdx] * pixScale - 0.5f));
+                        row.Add(new Vector3(redBytes[smNdx] * pixScale - 0.5f, greenBytes[smNdx] * pixScale - 0.5f, blueBytes[smNdx] * pixScale - 0.5f));
 
                     ++smNdx;
                 }
@@ -190,4 +185,4 @@ namespace PrimMesher
         }
     }
 }
-#endif
+

@@ -102,8 +102,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Quaternion(byte[] byteArray, int pos, bool normalized)
         {
-            X = Y = Z = 0;
-            W = 1;
+            Unsafe.SkipInit(out this);
             FromBytes(byteArray, pos, normalized);
         }
 
@@ -114,8 +113,22 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Quaternion(Vector128<float> q) : this()
+        public Quaternion(ref readonly Quaternion q)
         {
+            this = q;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Quaternion(Vector128<float> q)
+        {
+            Unsafe.SkipInit(out this);
+            Unsafe.As<Quaternion, Vector128<float>>(ref this) = q;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Quaternion(ref readonly Vector128<float> q)
+        {
+            Unsafe.SkipInit(out this);
             Unsafe.As<Quaternion, Vector128<float>>(ref this) = q;
         }
 
@@ -219,11 +232,11 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly unsafe float Length()
+        public unsafe float Length()
         {
             if (Sse41.IsSupported)
             {
-                Vector128<float> q = Unsafe.As<Quaternion, Vector128<float>>(ref Unsafe.AsRef(this));
+                Vector128<float> q = Vector128.LoadUnsafe(ref X);
                 q = Sse41.DotProduct(q, q, 0xf1);
                 return MathF.Sqrt(q.ToScalar());
             }
@@ -232,11 +245,11 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly unsafe float LengthSquared()
+        public unsafe readonly float LengthSquared()
         {
             if (Sse41.IsSupported)
             {
-                Vector128<float> q = Unsafe.As<Quaternion, Vector128<float>>(ref Unsafe.AsRef(this));
+                Vector128<float> q = Vector128.LoadUnsafe(in X);
                 q = Sse41.DotProduct(q, q, 0xf1);
                 return q.ToScalar();
             }
@@ -252,15 +265,13 @@ namespace OpenMetaverse
         {
             if (Sse41.IsSupported)
             {
-                Vector128<float> q = Unsafe.As<Quaternion, Vector128<float>>(ref Unsafe.AsRef(this));
+                Vector128<float> q = Vector128.LoadUnsafe(ref X);
                 Vector128<float> d = Sse41.DotProduct(q, q, 0xff);
                 float m = d.ToScalar();
                 if (m > 1e-6f)
                 {
                     d = Sse.Sqrt(d);
                     q = Sse.Divide(q, d);
-                    //d = Sse.ReciprocalSqrt(d);
-                    //q = Sse.Multiply(q, d);
                     Unsafe.As<Quaternion, Vector128<float>>(ref this) = q;
                     return;
                 }
@@ -317,46 +328,45 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly float Dot(Quaternion q2)
+        public readonly float Dot(ref readonly Quaternion q2)
         {
             if (Sse41.IsSupported)
             {
-                Vector128<float> q = Unsafe.As<Quaternion, Vector128<float>>(ref Unsafe.AsRef(this));
-                Vector128<float> d = Unsafe.As<Quaternion, Vector128<float>>(ref q2);
-                d = Sse41.DotProduct(q, d, 0xf1);
-                return d.ToScalar();
+                Vector128<float> q = Vector128.LoadUnsafe(in X);
+                Vector128<float> d = Vector128.LoadUnsafe(in q2.X);
+                return Sse41.DotProduct(q, d, 0xf1).ToScalar();
             }
             return (X * q2.X) + (Y * q2.Y) + (Z * q2.Z) + (W * q2.W);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Add(in Quaternion quaternion2)
+        public void Add(ref readonly Quaternion q2)
         {
             if (Sse41.IsSupported)
             {
-                Vector128<float> q = Unsafe.As<Quaternion, Vector128<float>>(ref Unsafe.AsRef(this));
-                Vector128<float> d = Unsafe.As<Quaternion, Vector128<float>>(ref Unsafe.AsRef(quaternion2));
+                Vector128<float> q = Vector128.LoadUnsafe(in X);
+                Vector128<float> d = Vector128.LoadUnsafe(in q2.X);
                 d = Sse.Add(q, d);
-                Unsafe.As<Quaternion, Vector128<float>>(ref Unsafe.AsRef(this)) = d;
+                Unsafe.As<Quaternion, Vector128<float>>(ref this) = d;
             }
             else
             {
-                X += quaternion2.X;
-                Y += quaternion2.Y;
-                Z += quaternion2.Z;
-                W += quaternion2.W;
+                X += q2.X;
+                Y += q2.Y;
+                Z += q2.Z;
+                W += q2.W;
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Sub(in Quaternion quaternion2)
+        public void Sub(ref readonly Quaternion quaternion2)
         {
             if (Sse41.IsSupported)
             {
-                Vector128<float> q = Unsafe.As<Quaternion, Vector128<float>>(ref Unsafe.AsRef(this));
-                Vector128<float> d = Unsafe.As<Quaternion, Vector128<float>>(ref Unsafe.AsRef(quaternion2));
+                Vector128<float> q = Vector128.LoadUnsafe(in X);
+                Vector128<float> d = Vector128.LoadUnsafe(in quaternion2.X);
                 d = Sse.Subtract(q, d);
-                Unsafe.As<Quaternion, Vector128<float>>(ref Unsafe.AsRef(this)) = d;
+                Unsafe.As<Quaternion, Vector128<float>>(ref this) = d;
             }
             else
             {
@@ -670,14 +680,14 @@ namespace OpenMetaverse
         #region Static Methods
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Quaternion Add(in Quaternion quaternion1, in Quaternion quaternion2)
+        public static Quaternion Add(ref readonly Quaternion quaternion1, ref readonly Quaternion quaternion2)
         {
             if (Sse.IsSupported)
             {
-                Vector128<float> a = Unsafe.As<Quaternion, Vector128<float>>(ref Unsafe.AsRef(quaternion1));
-                Vector128<float> b = Unsafe.As<Quaternion, Vector128<float>>(ref Unsafe.AsRef(quaternion2));
+                Vector128<float> a = Vector128.LoadUnsafe(in quaternion1.X);
+                Vector128<float> b = Vector128.LoadUnsafe(in quaternion2.X);
                 a = Sse.Add(a, b);
-                return new Quaternion(a);
+                return new Quaternion(ref a);
             }
 
             return new Quaternion(
@@ -698,7 +708,7 @@ namespace OpenMetaverse
                 Vector128<float> d = Unsafe.As<Quaternion, Vector128<float>>(ref Unsafe.AsRef(quaternion));
                 Vector128<float> Mask = Vector128.Create(0x80000000, 0x80000000, 0x80000000, 0).AsSingle();
                 d = Sse.Xor(d, Mask);
-                return new Quaternion(d);
+                return new Quaternion(ref d);
             }
             return new Quaternion(-quaternion.X, -quaternion.Y, -quaternion.Z, quaternion.W);
         }
@@ -1029,8 +1039,21 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Quaternion Normalize(Quaternion q)
+        public static Quaternion Normalize(ref readonly Quaternion q)
         {
+            if(Sse41.IsSupported)
+            {
+                Vector128<float> t = Vector128.LoadUnsafe(in q.X);
+                Vector128<float> d  = Sse41.DotProduct(t, t, 0xff);
+                float m = d.ToScalar();
+                if (m > 1e-6f)
+                {
+                    t = Sse.Divide(t, Sse.Sqrt(d));
+                    return new(ref t);
+                }
+                return Identity;
+            }
+
             float mag = q.LengthSquared();
             if (mag > 1e-6f)
             {
@@ -1041,7 +1064,7 @@ namespace OpenMetaverse
                     q.Z * oomag,
                     q.W * oomag);
             }
-            return Quaternion.Identity;
+            return Identity;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

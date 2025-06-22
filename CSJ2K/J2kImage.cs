@@ -38,7 +38,6 @@ using CSJ2K.Util;
 
 namespace CSJ2K
 {
-    
     public class J2kImage
     {
 

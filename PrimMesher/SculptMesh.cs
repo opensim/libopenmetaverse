@@ -30,24 +30,21 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.IO;
 
-#if SYSTEM_DRAWING
+using OpenMetaverse;
 using System.Drawing;
-using System.Drawing.Imaging;
-#endif
 
 namespace PrimMesher
 {
 
     public class SculptMesh
     {
-        public List<Coord> coords;
+        public List<Vector3> coords;
         public List<Face> faces;
 
         public List<ViewerFace> viewerFaces;
-        public List<Coord> normals;
+        public List<Vector3> normals;
         public List<UVCoord> uvs;
 
         public enum SculptType { sphere = 1, torus = 2, plane = 3, cylinder = 4 };
@@ -102,12 +99,12 @@ namespace PrimMesher
                 return;
             }
 
-            coords = new List<Coord>();
-            faces = new List<Face>();
-            normals = new List<Coord>();
-            uvs = new List<UVCoord>();
+            coords = [];
+            faces = [];
+            normals = [];
+            uvs = [];
 
-            viewerFaces = new List<ViewerFace>();
+            viewerFaces = [];
 
             int p1, p2, p3, p4;
 
@@ -134,12 +131,12 @@ namespace PrimMesher
                     p2 = p4 - numXElements;
                     p1 = p3 - numXElements;
 
-                    Coord c = new Coord(xBegin + x * xStep, yBegin + y * yStep, zMap[y, x]);
+                    Vector3 c = new(xBegin + x * xStep, yBegin + y * yStep, zMap[y, x]);
                     this.coords.Add(c);
                     if (viewerMode)
                     {
-                        this.normals.Add(new Coord());
-                        this.uvs.Add(new UVCoord(uStep * x, 1.0f - vStep * y));
+                        normals.Add(Vector3.Zero);
+                        uvs.Add(new UVCoord(uStep * x, 1.0f - vStep * y));
                     }
 
                     if (y > 0 && x > 0)
@@ -164,8 +161,8 @@ namespace PrimMesher
                             f2 = new Face(p1, p2, p4);
                         }
 
-                        this.faces.Add(f1);
-                        this.faces.Add(f2);
+                        faces.Add(f1);
+                        faces.Add(f2);
                     }
                 }
             }
@@ -174,7 +171,6 @@ namespace PrimMesher
                 calcVertexNormals(SculptType.plane, numXElements, numYElements);
         }
 
-#if SYSTEM_DRAWING
         public SculptMesh(Bitmap sculptBitmap, SculptType sculptType, int lod, bool viewerMode)
         {
             _SculptMesh(sculptBitmap, sculptType, lod, viewerMode, false, false);
@@ -184,14 +180,12 @@ namespace PrimMesher
         {
             _SculptMesh(sculptBitmap, sculptType, lod, viewerMode, mirror, invert);
         }
-#endif
 
-        public SculptMesh(List<List<Coord>> rows, SculptType sculptType, bool viewerMode, bool mirror, bool invert)
+        public SculptMesh(List<List<Vector3>> rows, SculptType sculptType, bool viewerMode, bool mirror, bool invert)
         {
             _SculptMesh(rows, sculptType, viewerMode, mirror, invert);
         }
 
-#if SYSTEM_DRAWING
         /// <summary>
         /// converts a bitmap to a list of lists of coords, while scaling the image.
         /// the scaling is done in floating point so as to allow for reduced vertex position
@@ -202,11 +196,11 @@ namespace PrimMesher
         /// <param name="scale"></param>
         /// <param name="mirror"></param>
         /// <returns></returns>
-        private List<List<Coord>> bitmap2Coords(Bitmap bitmap, int scale, bool mirror)
+        private List<List<Vector3>> bitmap2Coords(Bitmap bitmap, int scale, bool mirror)
         {
             int numRows = bitmap.Height / scale;
             int numCols = bitmap.Width / scale;
-            List<List<Coord>> rows = new List<List<Coord>>(numRows);
+            List<List<Vector3>> rows = new List<List<Vector3>>(numRows);
 
             float pixScale = 1.0f / (scale * scale);
             pixScale /= 255;
@@ -217,7 +211,7 @@ namespace PrimMesher
 
             for (rowNdx = 0; rowNdx < numRows; rowNdx++)
             {
-                List<Coord> row = new List<Coord>(numCols);
+                List<Vector3> row = new List<Vector3>(numCols);
                 for (colNdx = 0; colNdx < numCols; colNdx++)
                 {
                     imageX = colNdx * scale;
@@ -243,9 +237,9 @@ namespace PrimMesher
                         }
                     }
                     if (mirror)
-                        row.Add(new Coord(-(rSum * pixScale - 0.5f), gSum * pixScale - 0.5f, bSum * pixScale - 0.5f));
+                        row.Add(new(-(rSum * pixScale - 0.5f), gSum * pixScale - 0.5f, bSum * pixScale - 0.5f));
                     else
-                        row.Add(new Coord(rSum * pixScale - 0.5f, gSum * pixScale - 0.5f, bSum * pixScale - 0.5f));
+                        row.Add(new(rSum * pixScale - 0.5f, gSum * pixScale - 0.5f, bSum * pixScale - 0.5f));
 
                 }
                 rows.Add(row);
@@ -253,11 +247,11 @@ namespace PrimMesher
             return rows;
         }
 
-        private List<List<Coord>> bitmap2CoordsSampled(Bitmap bitmap, int scale, bool mirror)
+        private List<List<Vector3>> bitmap2CoordsSampled(Bitmap bitmap, int scale, bool mirror)
         {
             int numRows = bitmap.Height / scale;
             int numCols = bitmap.Width / scale;
-            List<List<Coord>> rows = new List<List<Coord>>(numRows);
+            List<List<Vector3>> rows = new List<List<Vector3>>(numRows);
 
             float pixScale = 1.0f / 256.0f;
 
@@ -267,7 +261,7 @@ namespace PrimMesher
 
             for (rowNdx = 0; rowNdx <= numRows; rowNdx++)
             {
-                List<Coord> row = new List<Coord>(numCols);
+                List<Vector3> row = new List<Vector3>(numCols);
                 imageY = rowNdx * scale;
                 if (rowNdx == numRows) imageY--;
                 for (colNdx = 0; colNdx <= numCols; colNdx++)
@@ -283,9 +277,9 @@ namespace PrimMesher
                     }
 
                     if (mirror)
-                        row.Add(new Coord(-(c.R * pixScale - 0.5f), c.G * pixScale - 0.5f, c.B * pixScale - 0.5f));
+                        row.Add(new(-(c.R * pixScale - 0.5f), c.G * pixScale - 0.5f, c.B * pixScale - 0.5f));
                     else
-                        row.Add(new Coord(c.R * pixScale - 0.5f, c.G * pixScale - 0.5f, c.B * pixScale - 0.5f));
+                        row.Add(new(c.R * pixScale - 0.5f, c.G * pixScale - 0.5f, c.B * pixScale - 0.5f));
 
                 }
                 rows.Add(row);
@@ -298,14 +292,13 @@ namespace PrimMesher
         {
             _SculptMesh(new SculptMap(sculptBitmap, lod).ToRows(mirror), sculptType, viewerMode, mirror, invert);
         }
-#endif
 
-        void _SculptMesh(List<List<Coord>> rows, SculptType sculptType, bool viewerMode, bool mirror, bool invert)
+        void _SculptMesh(List<List<Vector3>> rows, SculptType sculptType, bool viewerMode, bool mirror, bool invert)
         {
-            coords = new List<Coord>();
-            faces = new List<Face>();
-            normals = new List<Coord>();
-            uvs = new List<UVCoord>();
+            coords = [];
+            faces = [];
+            normals = [];
+            uvs = [];
 
             sculptType = (SculptType)(((int)sculptType) & 0x07);
 
@@ -336,16 +329,16 @@ namespace PrimMesher
                 }
             }
 
-            Coord topPole = rows[0][width / 2];
-            Coord bottomPole = rows[rows.Count - 1][width / 2];
+            Vector3 topPole = rows[0][width / 2];
+            Vector3 bottomPole = rows[rows.Count - 1][width / 2];
 
             if (sculptType == SculptType.sphere)
             {
                 if (rows.Count % 2 == 0)
                 {
                     int count = rows[0].Count;
-                    List<Coord> topPoleRow = new List<Coord>(count);
-                    List<Coord> bottomPoleRow = new List<Coord>(count);
+                    List<Vector3> topPoleRow = [];
+                    List<Vector3> bottomPoleRow = [];
 
                     for (int i = 0; i < count; i++)
                     {
@@ -359,8 +352,8 @@ namespace PrimMesher
                 {
                     int count = rows[0].Count;
 
-                    List<Coord> topPoleRow = rows[0];
-                    List<Coord> bottomPoleRow = rows[rows.Count - 1];
+                    List<Vector3> topPoleRow = rows[0];
+                    List<Vector3> bottomPoleRow = rows[rows.Count - 1];
 
                     for (int i = 0; i < count; i++)
                     {
@@ -400,11 +393,11 @@ namespace PrimMesher
                     p2 = p4 - coordsAcross;
                     p1 = p3 - coordsAcross;
 
-                    this.coords.Add(rows[imageY][imageX]);
+                    coords.Add(rows[imageY][imageX]);
                     if (viewerMode)
                     {
-                        this.normals.Add(new Coord());
-                        this.uvs.Add(new UVCoord(widthUnit * imageX, heightUnit * imageY));
+                        normals.Add(Vector3.Zero);
+                        uvs.Add(new(widthUnit * imageX, heightUnit * imageY));
                     }
 
                     if (imageY > 0 && imageX > 0)
@@ -473,60 +466,65 @@ namespace PrimMesher
 
         public SculptMesh(SculptMesh sm)
         {
-            coords = new List<Coord>(sm.coords);
+            coords = new List<Vector3>(sm.coords);
             faces = new List<Face>(sm.faces);
             viewerFaces = new List<ViewerFace>(sm.viewerFaces);
-            normals = new List<Coord>(sm.normals);
+            normals = new List<Vector3>(sm.normals);
             uvs = new List<UVCoord>(sm.uvs);
         }
 
         private void calcVertexNormals(SculptType sculptType, int xSize, int ySize)
         {  // compute vertex normals by summing all the surface normals of all the triangles sharing
             // each vertex and then normalizing
-            int numFaces = this.faces.Count;
-            for (int i = 0; i < numFaces; i++)
+            for (int i = 0; i < faces.Count; i++)
             {
-                Face face = this.faces[i];
-                Coord surfaceNormal = face.SurfaceNormal(this.coords);
-                this.normals[face.n1] += surfaceNormal;
-                this.normals[face.n2] += surfaceNormal;
-                this.normals[face.n3] += surfaceNormal;
+                Face face = faces[i];
+                Vector3 surfaceNormal = face.SurfaceNormal(coords);
+                normals[face.n1] += surfaceNormal;
+                normals[face.n2] += surfaceNormal;
+                normals[face.n3] += surfaceNormal;
             }
 
-            int numNormals = this.normals.Count;
-            for (int i = 0; i < numNormals; i++)
-                this.normals[i] = this.normals[i].Normalize();
+            for (int i = 0; i < normals.Count; i++)
+            {
+                Vector3 n = normals[i];
+                n.Normalize();
+                normals[i] = n;
+            }
 
             if (sculptType != SculptType.plane)
             { // blend the vertex normals at the cylinder seam
-                for (int y = 0; y < ySize; y++)
+                for (int rowOffsetA = 0; rowOffsetA < xSize * ySize; rowOffsetA += xSize)
                 {
-                    int rowOffset = y * xSize;
-
-                    this.normals[rowOffset] = this.normals[rowOffset + xSize - 1] = (this.normals[rowOffset] + this.normals[rowOffset + xSize - 1]).Normalize();
+                    int rowOffsetB = rowOffsetA + xSize - 1;
+                    Vector3 v = normals[rowOffsetA] + normals[rowOffsetB];
+                    v.Normalize();
+                    normals[rowOffsetA] = normals[rowOffsetB] = v;
                 }
             }
 
-            foreach (Face face in this.faces)
+            foreach (Face face in faces)
             {
-                ViewerFace vf = new ViewerFace(0);
-                vf.v1 = this.coords[face.v1];
-                vf.v2 = this.coords[face.v2];
-                vf.v3 = this.coords[face.v3];
+                ViewerFace vf = new(0)
+                {
+                    v1 = coords[face.v1],
+                    v2 = coords[face.v2],
+                    v3 = coords[face.v3],
 
-                vf.coordIndex1 = face.v1;
-                vf.coordIndex2 = face.v2;
-                vf.coordIndex3 = face.v3;
+                    coordIndex1 = face.v1,
+                    coordIndex2 = face.v2,
+                    coordIndex3 = face.v3,
 
-                vf.n1 = this.normals[face.n1];
-                vf.n2 = this.normals[face.n2];
-                vf.n3 = this.normals[face.n3];
+                    n1 = normals[face.n1],
+                    n2 = normals[face.n2],
+                    n3 = normals[face.n3],
 
-                vf.uv1 = this.uvs[face.uv1];
-                vf.uv2 = this.uvs[face.uv2];
-                vf.uv3 = this.uvs[face.uv3];
+                    uv1 = uvs[face.uv1],
+                    uv2 = uvs[face.uv2],
+                    uv3 = uvs[face.uv3]
+                };
 
-                this.viewerFaces.Add(vf);
+                viewerFaces.Add(vf);
             }
         }
 
@@ -538,28 +536,17 @@ namespace PrimMesher
         /// <param name="z"></param>
         public void AddPos(float x, float y, float z)
         {
-            int i;
-            int numVerts = this.coords.Count;
-            Coord vert;
+            Vector3 v = new(x, y, z);
+            for (int i = 0; i < coords.Count; i++)
+                coords[i] += v;
 
-            for (i = 0; i < numVerts; i++)
+            if (viewerFaces != null)
             {
-                vert = this.coords[i];
-                vert.X += x;
-                vert.Y += y;
-                vert.Z += z;
-                this.coords[i] = vert;
-            }
-
-            if (this.viewerFaces != null)
-            {
-                int numViewerFaces = this.viewerFaces.Count;
-
-                for (i = 0; i < numViewerFaces; i++)
+                for (int i = 0; i < viewerFaces.Count; i++)
                 {
-                    ViewerFace v = this.viewerFaces[i];
-                    v.AddPos(x, y, z);
-                    this.viewerFaces[i] = v;
+                    ViewerFace vf = viewerFaces[i];
+                    vf.AddPos(v);
+                    viewerFaces[i] = vf;
                 }
             }
         }
@@ -568,57 +555,40 @@ namespace PrimMesher
         /// Rotates the mesh
         /// </summary>
         /// <param name="q"></param>
-        public void AddRot(Quat q)
+        public void AddRot(Quaternion q)
         {
-            int i;
-            int numVerts = this.coords.Count;
+            if(q.IsIdentity())
+                return;
+            for (int i = 0; i < coords.Count; i++)
+                coords[i] *= q;
 
-            for (i = 0; i < numVerts; i++)
-                this.coords[i] *= q;
+            for (int i = 0; i < normals.Count; i++)
+                normals[i] *= q;
 
-            int numNormals = this.normals.Count;
-            for (i = 0; i < numNormals; i++)
-                this.normals[i] *= q;
-
-            if (this.viewerFaces != null)
+            if (viewerFaces != null)
             {
-                int numViewerFaces = this.viewerFaces.Count;
-
-                for (i = 0; i < numViewerFaces; i++)
+                for (int i = 0; i < viewerFaces.Count; i++)
                 {
-                    ViewerFace v = this.viewerFaces[i];
-                    v.v1 *= q;
-                    v.v2 *= q;
-                    v.v3 *= q;
-
-                    v.n1 *= q;
-                    v.n2 *= q;
-                    v.n3 *= q;
-
-                    this.viewerFaces[i] = v;
+                    ViewerFace vf = viewerFaces[i];
+                    vf.AddRot(q);
+                    viewerFaces[i] = vf;
                 }
             }
         }
 
         public void Scale(float x, float y, float z)
         {
-            int i;
-            int numVerts = this.coords.Count;
+            Vector3 m = new(x, y, z);
+            for (int i = 0; i < coords.Count; i++)
+                coords[i] *= m;
 
-            Coord m = new Coord(x, y, z);
-            for (i = 0; i < numVerts; i++)
-                this.coords[i] *= m;
-
-            if (this.viewerFaces != null)
+            if (viewerFaces != null)
             {
-                int numViewerFaces = this.viewerFaces.Count;
-                for (i = 0; i < numViewerFaces; i++)
+                for (int i = 0; i < viewerFaces.Count; i++)
                 {
-                    ViewerFace v = this.viewerFaces[i];
-                    v.v1 *= m;
-                    v.v2 *= m;
-                    v.v3 *= m;
-                    this.viewerFaces[i] = v;
+                    ViewerFace vf = viewerFaces[i];
+                    vf.Scale(m);
+                    viewerFaces[i] = vf;
                 }
             }
         }
@@ -631,12 +601,10 @@ namespace PrimMesher
             String completePath = System.IO.Path.Combine(path, fileName);
             StreamWriter sw = new StreamWriter(completePath);
 
-            for (int i = 0; i < this.faces.Count; i++)
+            for (int i = 0; i < faces.Count; i++)
             {
-                string s = this.coords[this.faces[i].v1].ToString();
-                s += " " + this.coords[this.faces[i].v2].ToString();
-                s += " " + this.coords[this.faces[i].v3].ToString();
-
+                Face face = faces[i];
+                string s = $"{coords[face.v1]} {coords[face.v2]} {coords[face.v3]}";
                 sw.WriteLine(s);
             }
 

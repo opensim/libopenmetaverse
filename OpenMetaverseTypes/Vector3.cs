@@ -44,7 +44,7 @@ namespace OpenMetaverse
     {
         /// <summary>x value</summary>
         public float X;
-        /// <summary>Y value</summary>
+        /// <summary>Y value</summary>       
         public float Y;
         /// <summary>Z value</summary>
         public float Z;
@@ -54,6 +54,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector3(float x, float y, float z)
         {
+            Unsafe.SkipInit(out this);
             X = x;
             Y = y;
             Z = z;
@@ -62,6 +63,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector3(float value)
         {
+            Unsafe.SkipInit(out this);
             X = value;
             Y = value;
             Z = value;
@@ -70,6 +72,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector3(Vector2 value, float z)
         {
+            Unsafe.SkipInit(out this);
             X = value.X;
             Y = value.Y;
             Z = z;
@@ -78,6 +81,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector3(Vector3d vector)
         {
+            Unsafe.SkipInit(out this);
             X = (float)vector.X;
             Y = (float)vector.Y;
             Z = (float)vector.Z;
@@ -86,20 +90,18 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector3(Vector3 vector)
         {
+            Unsafe.SkipInit(out this);
             X = vector.X;
             Y = vector.Y;
             Z = vector.Z;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector3(Vector128<float> v)
+        public unsafe Vector3(ref readonly Vector128<float> v)
         {
             Unsafe.SkipInit(out this);
-            unsafe
-            {
-                Sse2.StoreScalar((double*)Unsafe.AsPointer(ref X), v.AsDouble());
-                Sse2.StoreScalar((float*)Unsafe.AsPointer(ref Z), Sse2.Shuffle(v.AsInt32(), 0x02).AsSingle());
-            }
+            Unsafe.As<float, double>(ref X) = v.AsDouble().ToScalar();
+            Z = Sse41.Extract(v, 0x02);
         }
 
         /// <summary>
@@ -192,31 +194,76 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly float Length()
         {
-            return MathF.Sqrt(X * X + Y * Y + Z * Z);
+            if(Sse41.IsSupported)
+            {
+                Vector128<float> ma = Vector128.LoadUnsafe(in X);
+                ma = Sse41.DotProduct(ma, ma, 0x71);
+                return MathF.Sqrt(ma.ToScalar());
+            }
+            else
+                return MathF.Sqrt(X * X + Y * Y + Z * Z);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly float LengthSquared()
         {
-            return (X * X + Y * Y + Z * Z);
+            if(Sse41.IsSupported)
+            {
+                unsafe
+                {
+                    Vector128<float> ma = Sse2.LoadScalarVector128((double *)Unsafe.AsPointer(ref Unsafe.AsRef(in X))).AsSingle();
+                    ma = Sse41.Insert(ma.AsUInt32(),Unsafe.As<float, uint>(ref Unsafe.AsRef(in Z)),0x02).AsSingle();
+                    ma = Sse41.DotProduct(ma, ma, 0x71);
+                    return ma.ToScalar();
+                }
+            }
+            else
+                 return (X * X + Y * Y + Z * Z);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Normalize()
         {
-            float factor = X * X + Y * Y + Z * Z;
-            if (factor > 1e-6f)
+           if(Sse41.IsSupported)
             {
-                factor = 1f / MathF.Sqrt(factor);
-                X *= factor;
-                Y *= factor;
-                Z *= factor;
-            }
-            else
-            {
+                unsafe
+                {
+                    Vector128<float> ma = Sse2.LoadScalarVector128((double*)Unsafe.AsPointer(ref Unsafe.AsRef(in X))).AsSingle();
+                    ma = Sse41.Insert(ma.AsUInt32(),Unsafe.As<float, uint>(ref Unsafe.AsRef(in Z)),0x02).AsSingle();
+
+                    Vector128<float> mb = Sse41.DotProduct(ma, ma, 0x7f);
+                    if(mb.ToScalar() > 1e-6f)
+                    {
+                        mb = Sse.Sqrt(mb);
+                        ma = Sse.Divide(ma, mb);
+
+                        Unsafe.As<float, double>(ref X) = ma.AsDouble().ToScalar();
+                        Z = Sse41.Extract(ma,0x02);
+                        return;
+                    }
+                }
+
                 X = 0f;
                 Y = 0f;
                 Z = 0f;
+                return;
+            }
+            else
+            {
+                float factor = X * X + Y * Y + Z * Z;
+                if (factor > 1e-6f)
+                {
+                    factor = 1f / MathF.Sqrt(factor);
+                    X *= factor;
+                    Y *= factor;
+                    Z *= factor;
+                }
+                else
+                {
+                    X = 0f;
+                    Y = 0f;
+                    Z = 0f;
+                }
             }
         }
 
@@ -759,15 +806,43 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Vector3 Normalize(Vector3 value)
+        public static Vector3 Normalize(float x, float y, float z)
         {
-            float factor = value.LengthSquared();
-            if (factor > 1e-6f)
+            Vector3 tmp = new(x, y, z);
+            tmp.Normalize();
+            return tmp;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector3 Normalize(ref readonly Vector3 value)
+        {
+           if(Sse41.IsSupported)
             {
-                factor = 1f / MathF.Sqrt(factor);
-                return value * factor;
+                unsafe
+                {
+                    Vector128<float> ma = Sse2.LoadScalarVector128((double *)Unsafe.AsPointer(ref Unsafe.AsRef(in value.X))).AsSingle();
+                    ma = Sse41.Insert(ma.AsUInt32(),Unsafe.As<float, uint>(ref Unsafe.AsRef(in value.Z)),0x02).AsSingle();
+
+                    Vector128<float> mb = Sse41.DotProduct(ma, ma, 0x7f);
+                    if(mb.ToScalar() > 1e-6f)
+                    {
+                        mb = Sse.Sqrt(mb);
+                        ma = Sse.Divide(ma, mb);
+                        return new(in ma);
+                    }
+                    return new();
+                }
             }
-            return new Vector3();
+            else
+            {
+                float factor = value.LengthSquared();
+                if (factor > 1e-6f)
+                {
+                    factor = 1f / MathF.Sqrt(factor);
+                    return value * factor;
+                }
+                return new();
+            }
         }
 
         /// <summary>
@@ -1240,7 +1315,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Vector3 TransformPositionOffset(ref Matrix3x3 ParentRot, ref Vector3 ParentPos)
         {
-            if (Sse.IsSupported)
+            if (Sse41.IsSupported)
             {
                 unsafe
                 {
@@ -1295,7 +1370,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 TransformPositionOffset(ref Matrix3x3 ParentRot, ref Vector3 ParentPos, ref Vector3 Partoffset)
         {
-            if (Sse.IsSupported)
+            if (Sse41.IsSupported)
             {
                 unsafe
                 {
@@ -1316,7 +1391,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 TransformPositionOffset(Matrix3x3 ParentRot, Vector3 ParentPos, Vector3 Partoffset)
         {
-            if (Sse.IsSupported)
+            if (Sse41.IsSupported)
             {
                 unsafe
                 {

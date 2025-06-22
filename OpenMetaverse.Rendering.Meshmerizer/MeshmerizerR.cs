@@ -56,16 +56,15 @@ namespace OpenMetaverse.Rendering
             if (newPrim == null)
                 return null;
 
-            SimpleMesh mesh = new SimpleMesh();
-            mesh.Path = new Path();
-            mesh.Prim = prim;
-            mesh.Profile = new Profile();
-            mesh.Vertices = new List<Vertex>(newPrim.coords.Count);
-            for (int i = 0; i < newPrim.coords.Count; i++)
+            SimpleMesh mesh = new()
             {
-                PrimMesher.Coord c = newPrim.coords[i];
-                mesh.Vertices.Add(new Vertex { Position = new Vector3(c.X, c.Y, c.Z) });
-            }
+                Path = new Path(),
+                Prim = prim,
+                Profile = new Profile(),
+                Vertices = new List<Vertex>(newPrim.coords.Count)
+            };
+            for (int i = 0; i < newPrim.coords.Count; i++)
+                mesh.Vertices.Add(new Vertex { Position = newPrim.coords[i] });
 
             mesh.Indices = new List<ushort>(newPrim.faces.Count * 3);
             for (int i = 0; i < newPrim.faces.Count; i++)
@@ -117,35 +116,36 @@ namespace OpenMetaverse.Rendering
         /// <returns>The generated mesh</returns >
         public OMVR.FacetedMesh GenerateFacetedMesh(OMV.Primitive prim, OMVR.DetailLevel lod)
         {
-            bool isSphere = ((OMV.ProfileCurve)(prim.PrimData.profileCurve & 0x07) == OMV.ProfileCurve.HalfCircle);
             PrimMesher.PrimMesh newPrim = GeneratePrimMesh(prim, lod, true);
             if (newPrim == null)
                 return null;
 
             // copy the vertex information into OMVR.IRendering structures
-            OMVR.FacetedMesh omvrmesh = new OMVR.FacetedMesh();
-            omvrmesh.Faces = new List<OMVR.Face>();
-            omvrmesh.Prim = prim;
-            omvrmesh.Profile = new OMVR.Profile();
-            omvrmesh.Profile.Faces = new List<OMVR.ProfileFace>();
-            omvrmesh.Profile.Positions = new List<OMV.Vector3>();
-            omvrmesh.Path = new OMVR.Path();
-            omvrmesh.Path.Points = new List<OMVR.PathPoint>();
+            OMVR.FacetedMesh omvrmesh = new()
+            {
+                Faces = [],
+                Prim = prim,
+                Profile = new() { Faces = [], Positions = [] },
+                Path = new() { Points = [] }
+            };
+
             var indexer = newPrim.GetVertexIndexer();
 
             for (int i = 0; i < indexer.numPrimFaces; i++)
             {
-                OMVR.Face oface = new OMVR.Face();
-                oface.Vertices = new List<OMVR.Vertex>();
-                oface.Indices = new List<ushort>();
-                oface.TextureFace = prim.Textures.GetFace((uint)i);
+                OMVR.Face oface = new()
+                {
+                    Vertices = [],
+                    Indices = [],
+                    TextureFace = prim.Textures.GetFace((uint)i)
+                };
 
                 for (int j = 0; j < indexer.viewerVertices[i].Count; j++)
                 {
                     var vert = new OMVR.Vertex();
                     var m = indexer.viewerVertices[i][j];
-                    vert.Position = new Vector3(m.v.X, m.v.Y, m.v.Z);
-                    vert.Normal = new Vector3(m.n.X, m.n.Y, m.n.Z);
+                    vert.Position = m.v;
+                    vert.Normal = m.n;
                     vert.TexCoord = new OMV.Vector2(m.uv.U, 1.0f - m.uv.V);
                     oface.Vertices.Add(vert);
                 }

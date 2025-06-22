@@ -25,229 +25,30 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using OpenMetaverse;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace PrimMesher
 {
-    public struct Quat
+    public struct UVCoord(float u, float v)
     {
-        /// <summary>X value</summary>
-        public float X;
-        /// <summary>Y value</summary>
-        public float Y;
-        /// <summary>Z value</summary>
-        public float Z;
-        /// <summary>W value</summary>
-        public float W;
+        public float U = u;
+        public float V = v;
 
-        public Quat(float x, float y, float z, float w)
-        {
-            X = x;
-            Y = y;
-            Z = z;
-            W = w;
-        }
-
-        public Quat(Coord axis, float angle)
-        {
-            axis = axis.Normalize();
-
-            angle *= 0.5f;
-            float c = (float)Math.Cos(angle);
-            float s = (float)Math.Sin(angle);
-
-            X = axis.X * s;
-            Y = axis.Y * s;
-            Z = axis.Z * s;
-            W = c;
-
-            Normalize();
-        }
-
-        public float Length()
-        {
-            return (float)Math.Sqrt(X * X + Y * Y + Z * Z + W * W);
-        }
-
-        public Quat Normalize()
-        {
-            const float MAG_THRESHOLD = 0.0000001f;
-            float mag = Length();
-
-            // Catch very small rounding errors when normalizing
-            if (mag > MAG_THRESHOLD)
-            {
-                float oomag = 1f / mag;
-                X *= oomag;
-                Y *= oomag;
-                Z *= oomag;
-                W *= oomag;
-            }
-            else
-            {
-                X = 0f;
-                Y = 0f;
-                Z = 0f;
-                W = 1f;
-            }
-
-            return this;
-        }
-
-        public static Quat operator *(Quat q1, Quat q2)
-        {
-            float x = q1.W * q2.X + q1.X * q2.W + q1.Y * q2.Z - q1.Z * q2.Y;
-            float y = q1.W * q2.Y - q1.X * q2.Z + q1.Y * q2.W + q1.Z * q2.X;
-            float z = q1.W * q2.Z + q1.X * q2.Y - q1.Y * q2.X + q1.Z * q2.W;
-            float w = q1.W * q2.W - q1.X * q2.X - q1.Y * q2.Y - q1.Z * q2.Z;
-            return new Quat(x, y, z, w);
-        }
-
-        public override string ToString()
-        {
-            return "< X: " + this.X.ToString() + ", Y: " + this.Y.ToString() + ", Z: " + this.Z.ToString() + ", W: " + this.W.ToString() + ">";
-        }
-    }
-
-    public struct Coord
-    {
-        public float X;
-        public float Y;
-        public float Z;
-
-        public Coord(float x, float y, float z)
-        {
-            this.X = x;
-            this.Y = y;
-            this.Z = z;
-        }
-
-        public float Length()
-        {
-            return (float)Math.Sqrt(this.X * this.X + this.Y * this.Y + this.Z * this.Z);
-        }
-
-        public Coord Invert()
-        {
-            this.X = -this.X;
-            this.Y = -this.Y;
-            this.Z = -this.Z;
-
-            return this;
-        }
-
-        public Coord Normalize()
-        {
-            const float MAG_THRESHOLD = 0.0000001f;
-            float mag = Length();
-
-            // Catch very small rounding errors when normalizing
-            if (mag > MAG_THRESHOLD)
-            {
-                float oomag = 1.0f / mag;
-                this.X *= oomag;
-                this.Y *= oomag;
-                this.Z *= oomag;
-            }
-            else
-            {
-                this.X = 0.0f;
-                this.Y = 0.0f;
-                this.Z = 0.0f;
-            }
-
-            return this;
-        }
-
-        public override string ToString()
-        {
-            return this.X.ToString() + " " + this.Y.ToString() + " " + this.Z.ToString();
-        }
-
-        public static Coord Cross(Coord c1, Coord c2)
-        {
-            return new Coord(
-                c1.Y * c2.Z - c2.Y * c1.Z,
-                c1.Z * c2.X - c2.Z * c1.X,
-                c1.X * c2.Y - c2.X * c1.Y
-                );
-        }
-
-        public static Coord operator +(Coord v, Coord a)
-        {
-            return new Coord(v.X + a.X, v.Y + a.Y, v.Z + a.Z);
-        }
-
-        public static Coord operator *(Coord v, Coord m)
-        {
-            return new Coord(v.X * m.X, v.Y * m.Y, v.Z * m.Z);
-        }
-
-        public static Coord operator *(Coord v, Quat q)
-        {
-            // From http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/transforms/
-
-            Coord c2 = new Coord(0.0f, 0.0f, 0.0f);
-
-            c2.X = q.W * q.W * v.X +
-                2f * q.Y * q.W * v.Z -
-                2f * q.Z * q.W * v.Y +
-                     q.X * q.X * v.X +
-                2f * q.Y * q.X * v.Y +
-                2f * q.Z * q.X * v.Z -
-                     q.Z * q.Z * v.X -
-                     q.Y * q.Y * v.X;
-
-            c2.Y =
-                2f * q.X * q.Y * v.X +
-                     q.Y * q.Y * v.Y +
-                2f * q.Z * q.Y * v.Z +
-                2f * q.W * q.Z * v.X -
-                     q.Z * q.Z * v.Y +
-                     q.W * q.W * v.Y -
-                2f * q.X * q.W * v.Z -
-                     q.X * q.X * v.Y;
-
-            c2.Z =
-                2f * q.X * q.Z * v.X +
-                2f * q.Y * q.Z * v.Y +
-                     q.Z * q.Z * v.Z -
-                2f * q.W * q.Y * v.X -
-                     q.Y * q.Y * v.Z +
-                2f * q.W * q.X * v.Y -
-                     q.X * q.X * v.Z +
-                     q.W * q.W * v.Z;
-
-            return c2;
-        }
-    }
-
-    public struct UVCoord
-    {
-        public float U;
-        public float V;
-
-
-        public UVCoord(float u, float v)
-        {
-            this.U = u;
-            this.V = v;
-        }
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public UVCoord Flip()
         {
-            this.U = 1.0f - this.U;
-            this.V = 1.0f - this.V;
+            U = 1.0f - U;
+            V = 1.0f - V;
             return this;
         }
     }
 
     public struct Face
     {
-        public int primFace;
-
         // vertices
         public int v1;
         public int v2;
@@ -265,26 +66,21 @@ namespace PrimMesher
 
         public Face(int v1, int v2, int v3)
         {
-            primFace = 0;
-
             this.v1 = v1;
             this.v2 = v2;
             this.v3 = v3;
 
-            this.n1 = 0;
-            this.n2 = 0;
-            this.n3 = 0;
+            n1 = 0;
+            n2 = 0;
+            n3 = 0;
 
-            this.uv1 = 0;
-            this.uv2 = 0;
-            this.uv3 = 0;
-
+            uv1 = 0;
+            uv2 = 0;
+            uv3 = 0;
         }
 
         public Face(int v1, int v2, int v3, int n1, int n2, int n3)
         {
-            primFace = 0;
-
             this.v1 = v1;
             this.v2 = v2;
             this.v3 = v3;
@@ -293,21 +89,38 @@ namespace PrimMesher
             this.n2 = n2;
             this.n3 = n3;
 
-            this.uv1 = 0;
-            this.uv2 = 0;
-            this.uv3 = 0;
+            uv1 = 0;
+            uv2 = 0;
+            uv3 = 0;
         }
 
-        public Coord SurfaceNormal(List<Coord> coordList)
+        public Vector3 SurfaceNormal(List<Vector3> coordList)
         {
-            Coord c1 = coordList[this.v1];
-            Coord c2 = coordList[this.v2];
-            Coord c3 = coordList[this.v3];
+            Vector3 c1 = coordList[v1];
+            Vector3 c2 = coordList[v2];
+            Vector3 c3 = coordList[v3];
 
-            Coord edge1 = new Coord(c2.X - c1.X, c2.Y - c1.Y, c2.Z - c1.Z);
-            Coord edge2 = new Coord(c3.X - c1.X, c3.Y - c1.Y, c3.Z - c1.Z);
+            Vector3 edge1 = c2 - c1;
+            Vector3 edge2 = c3 - c1;
+            c1 = Vector3.Cross(edge1, edge2);
+            c1.Normalize();
+            return c1;
+        }
 
-            return Coord.Cross(edge1, edge2).Normalize();
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void AddVerticesIndexesOffset(int o)
+        {
+            v1 += o;
+            v2 += o;
+            v3 += o;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void AddNormalsIndexesOffset(int o)
+        {
+            n1 += o;
+            n2 += o;
+            n3 += o;
         }
     }
 
@@ -315,17 +128,17 @@ namespace PrimMesher
     {
         public int primFaceNumber;
 
-        public Coord v1;
-        public Coord v2;
-        public Coord v3;
+        public Vector3 v1;
+        public Vector3 v2;
+        public Vector3 v3;
 
         public int coordIndex1;
         public int coordIndex2;
         public int coordIndex3;
 
-        public Coord n1;
-        public Coord n2;
-        public Coord n3;
+        public Vector3 n1;
+        public Vector3 n2;
+        public Vector3 n3;
 
         public UVCoord uv1;
         public UVCoord uv2;
@@ -335,69 +148,99 @@ namespace PrimMesher
         {
             this.primFaceNumber = primFaceNumber;
 
-            this.v1 = new Coord();
-            this.v2 = new Coord();
-            this.v3 = new Coord();
+            v1 = new();
+            v2 = new();
+            v3 = new();
 
-            this.coordIndex1 = this.coordIndex2 = this.coordIndex3 = -1; // -1 means not assigned yet
+            coordIndex1 = coordIndex2 = coordIndex3 = -1; // -1 means not assigned yet
 
-            this.n1 = new Coord();
-            this.n2 = new Coord();
-            this.n3 = new Coord();
-
-            this.uv1 = new UVCoord();
-            this.uv2 = new UVCoord();
-            this.uv3 = new UVCoord();
+            n1 = new();
+            n2 = new();
+            n3 = new();
+            
+            uv1 = new();
+            uv2 = new();
+            uv3 = new();
         }
 
         public void Scale(float x, float y, float z)
         {
-            this.v1.X *= x;
-            this.v1.Y *= y;
-            this.v1.Z *= z;
+            v1.X *= x;
+            v1.Y *= y;
+            v1.Z *= z;
 
-            this.v2.X *= x;
-            this.v2.Y *= y;
-            this.v2.Z *= z;
+            v2.X *= x;
+            v2.Y *= y;
+            v2.Z *= z;
 
-            this.v3.X *= x;
-            this.v3.Y *= y;
-            this.v3.Z *= z;
+            v3.X *= x;
+            v3.Y *= y;
+            v3.Z *= z;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Scale(Vector3 scale)
+        {
+            v1 *= scale;
+            v2 *= scale;
+            v3 *= scale;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddPos(float x, float y, float z)
         {
-            this.v1.X += x;
-            this.v2.X += x;
-            this.v3.X += x;
+            v1.X += x;
+            v2.X += x;
+            v3.X += x;
 
-            this.v1.Y += y;
-            this.v2.Y += y;
-            this.v3.Y += y;
+            v1.Y += y;
+            v2.Y += y;
+            v3.Y += y;
 
-            this.v1.Z += z;
-            this.v2.Z += z;
-            this.v3.Z += z;
+            v1.Z += z;
+            v2.Z += z;
+            v3.Z += z;
         }
 
-        public void AddRot(Quat q)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void AddPos(Vector3 v)
         {
-            this.v1 *= q;
-            this.v2 *= q;
-            this.v3 *= q;
-
-            this.n1 *= q;
-            this.n2 *= q;
-            this.n3 *= q;
+            v1 += v;
+            v2 += v;
+            v3 += v;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void AddRot(Quaternion q)
+        {
+            v1 *= q;
+            v2 *= q;
+            v3 *= q;
+            
+            n1 *= q;
+            n2 *= q;
+            n3 *= q;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void CalcSurfaceNormal()
         {
+            Vector3 edge1 = v2 - v1;
+            Vector3 edge2 = v3 - v1;
+            n1= Vector3.Cross(edge1, edge2);
+            n1.Normalize();
 
-            Coord edge1 = new Coord(this.v2.X - this.v1.X, this.v2.Y - this.v1.Y, this.v2.Z - this.v1.Z);
-            Coord edge2 = new Coord(this.v3.X - this.v1.X, this.v3.Y - this.v1.Y, this.v3.Z - this.v1.Z);
+            n2 = n3 = n1;
+        }
 
-            this.n1 = this.n2 = this.n3 = Coord.Cross(edge1, edge2).Normalize();
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool IsValid()
+        {
+            return
+	            (MathF.Abs(n1.X) + MathF.Abs(n1.Y) + MathF.Abs(n1.Z) > 0.2f) &&
+	            (MathF.Abs(n2.X) + MathF.Abs(n2.Y) + MathF.Abs(n2.Z) > 0.2f) &&
+    	        (MathF.Abs(n3.X) + MathF.Abs(n3.Y) + MathF.Abs(n3.Z) > 0.2f)
+                ;
         }
     }
 
@@ -407,11 +250,19 @@ namespace PrimMesher
         internal float X;
         internal float Y;
 
-        internal Angle(float angle, float x, float y)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal Angle(float _angle, float x, float y)
         {
-            this.angle = angle;
-            this.X = x;
-            this.Y = y;
+            angle = _angle;
+            X = x;
+            Y = y;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal Angle(float _angle)
+        {
+            angle = _angle;
+            X = MathF.Cos(angle); // cos
+            Y = MathF.Sin(angle); // sin
         }
     }
 
@@ -419,115 +270,161 @@ namespace PrimMesher
     {
         private float iX, iY; // intersection point
 
-        private static Angle[] angles3 =
+        private static readonly Angle[] angles3 =
         {
-            new Angle(0.0f, 1.0f, 0.0f),
-            new Angle(0.33333333333333333f, -0.5f, 0.86602540378443871f),
-            new Angle(0.66666666666666667f, -0.5f, -0.86602540378443837f),
-            new Angle(1.0f, 1.0f, 0.0f)
+            new(0.0f, 1.0f, 0.0f),
+            new(0.33333333333333333f, -0.5f, 0.86602540378443871f),
+            new(0.66666666666666667f, -0.5f, -0.86602540378443837f),
+            new(1.0f, 1.0f, 0.0f)
         };
 
-        private static Coord[] normals3 =
+        private static Vector3[] normals3 =
         {
-            new Coord(0.25f, 0.4330127019f, 0.0f).Normalize(),
-            new Coord(-0.5f, 0.0f, 0.0f).Normalize(),
-            new Coord(0.25f, -0.4330127019f, 0.0f).Normalize(),
-            new Coord(0.25f, 0.4330127019f, 0.0f).Normalize()
+            Vector3.Normalize(0.25f, 0.4330127019f, 0.0f),
+            Vector3.Normalize(-0.5f, 0.0f, 0.0f),
+            Vector3.Normalize(0.25f, -0.4330127019f, 0.0f),
+            Vector3.Normalize(0.25f, 0.4330127019f, 0.0f)
         };
 
         private static Angle[] angles4 =
         {
-            new Angle(0.0f, 1.0f, 0.0f),
-            new Angle(0.25f, 0.0f, 1.0f),
-            new Angle(0.5f, -1.0f, 0.0f),
-            new Angle(0.75f, 0.0f, -1.0f),
-            new Angle(1.0f, 1.0f, 0.0f)
+            new(0.0f, 1.0f, 0.0f),
+            new(0.25f, 0.0f, 1.0f),
+            new(0.5f, -1.0f, 0.0f),
+            new(0.75f, 0.0f, -1.0f),
+            new(1.0f, 1.0f, 0.0f)
         };
 
-        private static Coord[] normals4 = 
+        private static readonly Vector3[] normals4 = 
         {
-            new Coord(0.5f, 0.5f, 0.0f).Normalize(),
-            new Coord(-0.5f, 0.5f, 0.0f).Normalize(),
-            new Coord(-0.5f, -0.5f, 0.0f).Normalize(),
-            new Coord(0.5f, -0.5f, 0.0f).Normalize(),
-            new Coord(0.5f, 0.5f, 0.0f).Normalize()
+            Vector3.Normalize(0.5f, 0.5f, 0.0f),
+            Vector3.Normalize(-0.5f, 0.5f, 0.0f),
+            Vector3.Normalize(-0.5f, -0.5f, 0.0f),
+            Vector3.Normalize(0.5f, -0.5f, 0.0f),
+            Vector3.Normalize(0.5f, 0.5f, 0.0f)
         };
 
-        private static Angle[] angles24 =
+        private static readonly Angle[] angles6 =
         {
-            new Angle(0.0f, 1.0f, 0.0f),
-            new Angle(0.041666666666666664f, 0.96592582628906831f, 0.25881904510252074f),
-            new Angle(0.083333333333333329f, 0.86602540378443871f, 0.5f),
-            new Angle(0.125f, 0.70710678118654757f, 0.70710678118654746f),
-            new Angle(0.16666666666666667f, 0.5f, 0.8660254037844386f),
-            new Angle(0.20833333333333331f, 0.25881904510252096f, 0.9659258262890682f),
-            new Angle(0.25f, 0.0f, 1.0f),
-            new Angle(0.29166666666666663f, -0.25881904510252063f, 0.96592582628906831f),
-            new Angle(0.33333333333333333f, -0.5f, 0.86602540378443871f),
-            new Angle(0.375f, -0.70710678118654746f, 0.70710678118654757f),
-            new Angle(0.41666666666666663f, -0.86602540378443849f, 0.5f),
-            new Angle(0.45833333333333331f, -0.9659258262890682f, 0.25881904510252102f),
-            new Angle(0.5f, -1.0f, 0.0f),
-            new Angle(0.54166666666666663f, -0.96592582628906842f, -0.25881904510252035f),
-            new Angle(0.58333333333333326f, -0.86602540378443882f, -0.5f),
-            new Angle(0.62499999999999989f, -0.70710678118654791f, -0.70710678118654713f),
-            new Angle(0.66666666666666667f, -0.5f, -0.86602540378443837f),
-            new Angle(0.70833333333333326f, -0.25881904510252152f, -0.96592582628906809f),
-            new Angle(0.75f, 0.0f, -1.0f),
-            new Angle(0.79166666666666663f, 0.2588190451025203f, -0.96592582628906842f),
-            new Angle(0.83333333333333326f, 0.5f, -0.86602540378443904f),
-            new Angle(0.875f, 0.70710678118654735f, -0.70710678118654768f),
-            new Angle(0.91666666666666663f, 0.86602540378443837f, -0.5f),
-            new Angle(0.95833333333333326f, 0.96592582628906809f, -0.25881904510252157f),
-            new Angle(1.0f, 1.0f, 0.0f)
+            new(0.0f, 1.0f, 0.0f),
+            new(0.16666666666666667f, 0.5f, 0.8660254037844386f),
+            new(0.33333333333333333f, -0.5f, 0.86602540378443871f),
+            new(0.5f, -1.0f, 0.0f),
+            new(0.66666666666666667f, -0.5f, -0.86602540378443837f),
+            new(0.83333333333333326f, 0.5f, -0.86602540378443904f),
+            new(1.0f, 1.0f, 0.0f)
         };
 
+        private static readonly Angle[] angles12 =
+        {
+            new(0.0f, 1.0f, 0.0f),
+            new(0.083333333333333329f, 0.86602540378443871f, 0.5f),
+            new(0.16666666666666667f, 0.5f, 0.8660254037844386f),
+            new(0.25f, 0.0f, 1.0f),
+            new(0.33333333333333333f, -0.5f, 0.86602540378443871f),
+            new(0.41666666666666663f, -0.86602540378443849f, 0.5f),
+            new(0.5f, -1.0f, 0.0f),
+            new(0.58333333333333326f, -0.86602540378443882f, -0.5f),
+            new(0.66666666666666667f, -0.5f, -0.86602540378443837f),
+            new(0.75f, 0.0f, -1.0f),
+            new(0.83333333333333326f, 0.5f, -0.86602540378443904f),
+            new(0.91666666666666663f, 0.86602540378443837f, -0.5f),
+            new(1.0f, 1.0f, 0.0f)
+        };
+
+        private static readonly Angle[] angles24 =
+        {
+            new(0.0f, 1.0f, 0.0f),
+            new(0.041666666666666664f, 0.96592582628906831f, 0.25881904510252074f),
+            new(0.083333333333333329f, 0.86602540378443871f, 0.5f),
+            new(0.125f, 0.70710678118654757f, 0.70710678118654746f),
+            new(0.16666666666666667f, 0.5f, 0.8660254037844386f),
+            new(0.20833333333333331f, 0.25881904510252096f, 0.9659258262890682f),
+            new(0.25f, 0.0f, 1.0f),
+            new(0.29166666666666663f, -0.25881904510252063f, 0.96592582628906831f),
+            new(0.33333333333333333f, -0.5f, 0.86602540378443871f),
+            new(0.375f, -0.70710678118654746f, 0.70710678118654757f),
+            new(0.41666666666666663f, -0.86602540378443849f, 0.5f),
+            new(0.45833333333333331f, -0.9659258262890682f, 0.25881904510252102f),
+            new(0.5f, -1.0f, 0.0f),
+            new(0.54166666666666663f, -0.96592582628906842f, -0.25881904510252035f),
+            new(0.58333333333333326f, -0.86602540378443882f, -0.5f),
+            new(0.62499999999999989f, -0.70710678118654791f, -0.70710678118654713f),
+            new(0.66666666666666667f, -0.5f, -0.86602540378443837f),
+            new(0.70833333333333326f, -0.25881904510252152f, -0.96592582628906809f),
+            new(0.75f, 0.0f, -1.0f),
+            new(0.79166666666666663f, 0.2588190451025203f, -0.96592582628906842f),
+            new(0.83333333333333326f, 0.5f, -0.86602540378443904f),
+            new(0.875f, 0.70710678118654735f, -0.70710678118654768f),
+            new(0.91666666666666663f, 0.86602540378443837f, -0.5f),
+            new(0.95833333333333326f, 0.96592582628906809f, -0.25881904510252157f),
+            new(1.0f, 1.0f, 0.0f)
+        };
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Angle interpolatePoints(float newPoint, Angle p1, Angle p2)
         {
             float m = (newPoint - p1.angle) / (p2.angle - p1.angle);
-            return new Angle(newPoint, p1.X + m * (p2.X - p1.X), p1.Y + m * (p2.Y - p1.Y));
+            return new(newPoint, p1.X + m * (p2.X - p1.X), p1.Y + m * (p2.Y - p1.Y));
         }
 
-        private void intersection(double x1, double y1, double x2, double y2, double x3, double y3, double x4, double y4)
-        { // ref: http://local.wasp.uwa.edu.au/~pbourke/geometry/lineline2d/
-            double denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
-            double uaNumerator = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3);
-
-            if (denom != 0.0)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void intersection(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4)
+        { // ref: https://paulbourke.net/geometry/pointlineplane/
+            float denom = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
+            if (denom != 0.0f)
             {
-                double ua = uaNumerator / denom;
-                iX = (float)(x1 + ua * (x2 - x1));
-                iY = (float)(y1 + ua * (y2 - y1));
+                float uaNumerator = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3);
+                float ua = uaNumerator / denom;
+                iX = x1 + ua * (x2 - x1);
+                iY = y1 + ua * (y2 - y1);
+            }
+        }
+
+        // if p3 is origin:
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void intersection(float x1, float y1, float x2, float y2, float x4, float y4)
+        { // https://paulbourke.net/geometry/pointlineplane/
+            float denom = y4 * (x2 - x1) - x4 * (y2 - y1);
+            if (denom != 0.0f)
+            {
+                float uaNumerator = x4 * y1 - y4 * x1;
+                float ua = uaNumerator / denom;
+                iX = x1 + ua * (x2 - x1);
+                iY = y1 + ua * (y2 - y1);
             }
         }
 
         internal List<Angle> angles;
-        internal List<Coord> normals;
+        internal List<Vector3> normals;
 
         internal void makeAngles(int sides, float startAngle, float stopAngle)
         {
             angles = new List<Angle>();
-            normals = new List<Coord>();
+            normals = new List<Vector3>();
 
-            double twoPi = System.Math.PI * 2.0;
-            float twoPiInv = 1.0f / (float)twoPi;
+            const float twoPi = MathF.PI * 2.0f;
+            const float twoPiInv = 1.0f / (float)twoPi;
 
             if (sides < 1)
                 throw new Exception("number of sides not greater than zero");
             if (stopAngle <= startAngle)
                 throw new Exception("stopAngle not greater than startAngle");
 
-            if ((sides == 3 || sides == 4 || sides == 24))
+            Angle[] sourceAngles = sides switch
+            {
+                3 => angles3,
+                4 => angles4,
+                6 => angles6,
+                12 => angles12,
+                24 => angles24,
+                _ => null
+            };
+
+            if (sourceAngles != null)
             {
                 startAngle *= twoPiInv;
                 stopAngle *= twoPiInv;
-
-                Angle[] sourceAngles;
-                if (sides == 3)
-                    sourceAngles = angles3;
-                else if (sides == 4)
-                    sourceAngles = angles4;
-                else sourceAngles = angles24;
 
                 int startAngleIndex = (int)(startAngle * sides);
                 int endAngleIndex = sourceAngles.Length - 1;
@@ -536,7 +433,7 @@ namespace PrimMesher
                 if (endAngleIndex == startAngleIndex)
                     endAngleIndex++;
 
-                for (int angleIndex = startAngleIndex; angleIndex < endAngleIndex + 1; angleIndex++)
+                for (int angleIndex = startAngleIndex; angleIndex <= endAngleIndex; angleIndex++)
                 {
                     angles.Add(sourceAngles[angleIndex]);
                     if (sides == 3)
@@ -559,7 +456,7 @@ namespace PrimMesher
                 double stepSize = twoPi / sides;
 
                 int startStep = (int)(startAngle / stepSize);
-                double angle = stepSize * startStep;
+                double angle = (float)(stepSize * startStep);
                 int step = startStep;
                 double stopAngleTest = stopAngle;
                 if (stopAngle < twoPi)
@@ -573,10 +470,7 @@ namespace PrimMesher
 
                 while (angle <= stopAngleTest)
                 {
-                    Angle newAngle;
-                    newAngle.angle = (float)angle;
-                    newAngle.X = (float)System.Math.Cos(angle);
-                    newAngle.Y = (float)System.Math.Sin(angle);
+                    Angle newAngle = new((float)angle);
                     angles.Add(newAngle);
                     step += 1;
                     angle = stepSize * step;
@@ -584,23 +478,16 @@ namespace PrimMesher
 
                 if (startAngle > angles[0].angle)
                 {
-                    Angle newAngle;
-                    intersection(angles[0].X, angles[0].Y, angles[1].X, angles[1].Y, 0.0f, 0.0f, (float)Math.Cos(startAngle), (float)Math.Sin(startAngle));
-                    newAngle.angle = startAngle;
-                    newAngle.X = iX;
-                    newAngle.Y = iY;
-                    angles[0] = newAngle;
+                    intersection(angles[0].X, angles[0].Y, angles[1].X, angles[1].Y, MathF.Cos(startAngle), MathF.Sin(startAngle));
+                    angles[0] = new(startAngle, iX, iY);
                 }
 
                 int index = angles.Count - 1;
                 if (stopAngle < angles[index].angle)
                 {
-                    Angle newAngle;
-                    intersection(angles[index - 1].X, angles[index - 1].Y, angles[index].X, angles[index].Y, 0.0f, 0.0f, (float)Math.Cos(stopAngle), (float)Math.Sin(stopAngle));
-                    newAngle.angle = stopAngle;
-                    newAngle.X = iX;
-                    newAngle.Y = iY;
-                    angles[index] = newAngle;
+                    int indxMinus1 = index - 1;
+                    intersection(angles[indxMinus1].X, angles[indxMinus1].Y, angles[index].X, angles[index].Y, MathF.Cos(stopAngle), MathF.Sin(stopAngle));
+                    angles[index] =  new(stopAngle, iX, iY);;
                 }
             }
         }
@@ -611,13 +498,13 @@ namespace PrimMesher
     /// </summary>
     public class Profile
     {
-        private const float twoPi = 2.0f * (float)Math.PI;
+        private const float twoPi = 2.0f * MathF.PI;
 
         public string errorMessage = null;
 
-        public List<Coord> coords;
+        public List<Vector3> coords;
         public List<Face> faces;
-        public List<Coord> vertexNormals;
+        public List<Vector3> vertexNormals;
         public List<float> us;
         public List<UVCoord> faceUVs;
         public List<int> faceNumbers;
@@ -628,9 +515,9 @@ namespace PrimMesher
         public List<int> cut1CoordIndices = null;
         public List<int> cut2CoordIndices = null;
 
-        public Coord faceNormal = new Coord(0.0f, 0.0f, 1.0f);
-        public Coord cutNormal1 = new Coord();
-        public Coord cutNormal2 = new Coord();
+        public Vector3 faceNormal = Vector3.UnitZ;
+        public Vector3 cutNormal1 = new();
+        public Vector3 cutNormal2 = new();
 
         public int numOuterVerts = 0;
         public int numHollowVerts = 0;
@@ -644,51 +531,54 @@ namespace PrimMesher
 
         public Profile()
         {
-            this.coords = new List<Coord>();
-            this.faces = new List<Face>();
-            this.vertexNormals = new List<Coord>();
-            this.us = new List<float>();
-            this.faceUVs = new List<UVCoord>();
-            this.faceNumbers = new List<int>();
+            coords = [];
+            faces = [];
+            vertexNormals = [];
+            us = [];
+            faceUVs = [];
+            faceNumbers = [];
         }
 
-        public Profile(int sides, float profileStart, float profileEnd, float hollow, int hollowSides, bool createFaces, bool calcVertexNormals)
+        public Profile(int sides, float profileStart, float profileEnd,
+            float hollow, int hollowSides, bool createFaces, bool calcVertexNormals)
         {
             this.calcVertexNormals = calcVertexNormals;
-            this.coords = new List<Coord>();
-            this.faces = new List<Face>();
-            this.vertexNormals = new List<Coord>();
-            this.us = new List<float>();
-            this.faceUVs = new List<UVCoord>();
-            this.faceNumbers = new List<int>();
+            coords = [];
+            faces = [];
+            vertexNormals = [];
+            us = [];
+            faceUVs = [];
+            faceNumbers = [];
 
-            Coord center = new Coord(0.0f, 0.0f, 0.0f);
-
-            List<Coord> hollowCoords = new List<Coord>();
-            List<Coord> hollowNormals = new List<Coord>();
+            List<Vector3> hollowCoords = [];
+            List<Vector3> hollowNormals = [];
             List<float> hollowUs = new List<float>();
 
             if (calcVertexNormals)
             {
-                this.outerCoordIndices = new List<int>();
-                this.hollowCoordIndices = new List<int>();
-                this.cut1CoordIndices = new List<int>();
-                this.cut2CoordIndices = new List<int>();
+                outerCoordIndices = [];
+                hollowCoordIndices = [];
+                cut1CoordIndices = [];
+                cut2CoordIndices = [];
             }
 
-            bool hasHollow = (hollow > 0.0f);
+            bool hasHollow = hollow > 0.0f;
+            bool hasProfileCut = profileStart > 0.0f || profileEnd < 1.0f;
 
-            bool hasProfileCut = (profileStart > 0.0f || profileEnd < 1.0f);
+            AngleList angles = new();
+            AngleList hollowAngles = new();
 
-            AngleList angles = new AngleList();
-            AngleList hollowAngles = new AngleList();
-
-            float xScale = 0.5f;
-            float yScale = 0.5f;
+            float xScale;
+            float yScale;
             if (sides == 4)  // corners of a square are sqrt(2) from center
             {
                 xScale = 0.707107f;
                 yScale = 0.707107f;
+            }
+            else
+            {
+                xScale = 0.5f;
+                yScale = 0.5f;
             }
 
             float startAngle = profileStart * twoPi;
@@ -704,10 +594,10 @@ namespace PrimMesher
                 return;
             }
 
-            this.numOuterVerts = angles.angles.Count;
+            numOuterVerts = angles.angles.Count;
 
             // flag to create as few triangles as possible for 3 or 4 side profile
-            bool simpleFace = (sides < 5 && !hasHollow && !hasProfileCut);
+            bool simpleFace = sides < 5 && !hasHollow && !hasProfileCut;
 
             if (hasHollow)
             {
@@ -724,37 +614,33 @@ namespace PrimMesher
                         return;
                     }
                 }
-                this.numHollowVerts = hollowAngles.angles.Count;
+                numHollowVerts = hollowAngles.angles.Count;
             }
             else if (!simpleFace)
             {
-                this.coords.Add(center);
-                if (this.calcVertexNormals)
-                    this.vertexNormals.Add(new Coord(0.0f, 0.0f, 1.0f));
-                this.us.Add(0.0f);
+                coords.Add(Vector3.Zero);
+                if (calcVertexNormals)
+                    vertexNormals.Add(Vector3.UnitZ);
+                us.Add(0.0f);
             }
 
-            float z = 0.0f;
-
             Angle angle;
-            Coord newVert = new Coord();
+            Vector3 newVert = new();
+
             if (hasHollow && hollowSides != sides)
             {
-                int numHollowAngles = hollowAngles.angles.Count;
-                for (int i = 0; i < numHollowAngles; i++)
+                for (int i = 0; i < hollowAngles.angles.Count; i++)
                 {
                     angle = hollowAngles.angles[i];
                     newVert.X = hollow * xScale * angle.X;
                     newVert.Y = hollow * yScale * angle.Y;
-                    newVert.Z = z;
 
-                    hollowCoords.Add(newVert);
-                    if (this.calcVertexNormals)
+                    if (calcVertexNormals)
                     {
                         if (hollowSides < 5)
-                            hollowNormals.Add(hollowAngles.normals[i].Invert());
+                            hollowNormals.Add(-hollowAngles.normals[i]);
                         else
-                            hollowNormals.Add(new Coord(-angle.X, -angle.Y, 0.0f));
+                            hollowNormals.Add(new Vector3(-angle.X, -angle.Y, 0.0f));
 
                         if (hollowSides == 4)
                             hollowUs.Add(angle.angle * hollow * 0.707107f);
@@ -765,29 +651,26 @@ namespace PrimMesher
             }
 
             int index = 0;
-            int numAngles = angles.angles.Count;
-
-            for (int i = 0; i < numAngles; i++)
+            for (int i = 0; i < angles.angles.Count; i++)
             {
                 angle = angles.angles[i];
                 newVert.X = angle.X * xScale;
                 newVert.Y = angle.Y * yScale;
-                newVert.Z = z;
-                this.coords.Add(newVert);
-                if (this.calcVertexNormals)
+                coords.Add(newVert);
+
+                if (calcVertexNormals)
                 {
-                    this.outerCoordIndices.Add(this.coords.Count - 1);
+                    outerCoordIndices.Add(coords.Count - 1);
 
                     if (sides < 5)
                     {
-                        this.vertexNormals.Add(angles.normals[i]);
-                        float u = angle.angle;
-                        this.us.Add(u);
+                        vertexNormals.Add(angles.normals[i]);
+                        us.Add(angle.angle);
                     }
                     else
                     {
-                        this.vertexNormals.Add(new Coord(angle.X, angle.Y, 0.0f));
-                        this.us.Add(angle.angle);
+                        vertexNormals.Add(new(angle.X, angle.Y, 0.0f));
+                        us.Add(angle.angle);
                     }
                 }
 
@@ -797,17 +680,16 @@ namespace PrimMesher
                     {
                         newVert.X *= hollow;
                         newVert.Y *= hollow;
-                        newVert.Z = z;
                         hollowCoords.Add(newVert);
-                        if (this.calcVertexNormals)
+                        if (calcVertexNormals)
                         {
                             if (sides < 5)
                             {
-                                hollowNormals.Add(angles.normals[i].Invert());
+                                hollowNormals.Add(-angles.normals[i]);
                             }
 
                             else
-                                hollowNormals.Add(new Coord(-angle.X, -angle.Y, 0.0f));
+                                hollowNormals.Add(new Vector3(-angle.X, -angle.Y, 0.0f));
 
                             hollowUs.Add(angle.angle * hollow);
                         }
@@ -815,12 +697,7 @@ namespace PrimMesher
                 }
                 else if (!simpleFace && createFaces && angle.angle > 0.0001f)
                 {
-                    Face newFace = new Face();
-                    newFace.v1 = 0;
-                    newFace.v2 = index;
-                    newFace.v3 = index + 1;
-
-                    this.faces.Add(newFace);
+                    faces.Add(new( 0, index, index + 1));
                 }
                 index += 1;
             }
@@ -828,7 +705,7 @@ namespace PrimMesher
             if (hasHollow)
             {
                 hollowCoords.Reverse();
-                if (this.calcVertexNormals)
+                if (calcVertexNormals)
                 {
                     hollowNormals.Reverse();
                     hollowUs.Reverse();
@@ -836,75 +713,56 @@ namespace PrimMesher
 
                 if (createFaces)
                 {
-                    int numTotalVerts = this.numOuterVerts + this.numHollowVerts;
+                    int numTotalVerts = numOuterVerts + numHollowVerts;
 
-                    if (this.numOuterVerts == this.numHollowVerts)
+                    if (numOuterVerts == numHollowVerts)
                     {
-                        Face newFace = new Face();
-
-                        for (int coordIndex = 0; coordIndex < this.numOuterVerts - 1; coordIndex++)
+                        for (int coordIndex = 0; coordIndex < numOuterVerts - 1; coordIndex++)
                         {
-                            newFace.v1 = coordIndex;
-                            newFace.v2 = coordIndex + 1;
-                            newFace.v3 = numTotalVerts - coordIndex - 1;
-                            this.faces.Add(newFace);
-
-                            newFace.v1 = coordIndex + 1;
-                            newFace.v2 = numTotalVerts - coordIndex - 2;
-                            newFace.v3 = numTotalVerts - coordIndex - 1;
-                            this.faces.Add(newFace);
+                            int fromTotal = numTotalVerts - coordIndex - 1;
+                            faces.Add(new( coordIndex, coordIndex + 1, fromTotal ));
+                            faces.Add(new( coordIndex + 1, fromTotal - 1, fromTotal ));
                         }
                     }
                     else
                     {
-                        if (this.numOuterVerts < this.numHollowVerts)
+                        if (numOuterVerts < numHollowVerts)
                         {
-                            Face newFace = new Face();
                             int j = 0; // j is the index for outer vertices
-                            int maxJ = this.numOuterVerts - 1;
-                            for (int i = 0; i < this.numHollowVerts; i++) // i is the index for inner vertices
+                            int maxJ = numOuterVerts - 1;
+                            for (int i = 0; i < numHollowVerts; i++) // i is the index for inner vertices
                             {
+                                int fromTotal = numTotalVerts - i - 1;
                                 if (j < maxJ)
+                                { 
                                     if (angles.angles[j + 1].angle - hollowAngles.angles[i].angle < hollowAngles.angles[i].angle - angles.angles[j].angle + 0.000001f)
                                     {
-                                        newFace.v1 = numTotalVerts - i - 1;
-                                        newFace.v2 = j;
-                                        newFace.v3 = j + 1;
-
-                                        this.faces.Add(newFace);
-                                        j += 1;
+                                        faces.Add(new( fromTotal, j, j + 1));
+                                        j++;
                                     }
+                                }
 
-                                newFace.v1 = j;
-                                newFace.v2 = numTotalVerts - i - 2;
-                                newFace.v3 = numTotalVerts - i - 1;
-
-                                this.faces.Add(newFace);
+                                faces.Add(new( j, fromTotal - 1, fromTotal));
                             }
                         }
                         else // numHollowVerts < numOuterVerts
                         {
-                            Face newFace = new Face();
                             int j = 0; // j is the index for inner vertices
-                            int maxJ = this.numHollowVerts - 1;
-                            for (int i = 0; i < this.numOuterVerts; i++)
+                            int maxJ = numHollowVerts - 1;
+                            for (int i = 0; i < numOuterVerts; i++)
                             {
+                                int fromTotal = numTotalVerts - j - 1;
                                 if (j < maxJ)
+                                { 
                                     if (hollowAngles.angles[j + 1].angle - angles.angles[i].angle < angles.angles[i].angle - hollowAngles.angles[j].angle + 0.000001f)
                                     {
-                                        newFace.v1 = i;
-                                        newFace.v2 = numTotalVerts - j - 2;
-                                        newFace.v3 = numTotalVerts - j - 1;
-
-                                        this.faces.Add(newFace);
-                                        j += 1;
+                                        faces.Add(new( i, fromTotal - 1, fromTotal ));
+                                        j++;
+                                        fromTotal--;
                                     }
+                                }
 
-                                newFace.v1 = numTotalVerts - j - 1;
-                                newFace.v2 = i;
-                                newFace.v3 = i + 1;
-
-                                this.faces.Add(newFace);
+                                faces.Add(new( fromTotal, i, i + 1 ));
                             }
                         }
                     }
@@ -912,77 +770,68 @@ namespace PrimMesher
 
                 if (calcVertexNormals)
                 {
-                    foreach (Coord hc in hollowCoords)
+                    foreach (Vector3 hc in hollowCoords)
                     {
-                        this.coords.Add(hc);
-                        hollowCoordIndices.Add(this.coords.Count - 1);
+                        hollowCoordIndices.Add(coords.Count);
+                        coords.Add(hc);
                     }
+                    vertexNormals.AddRange(hollowNormals);
+                    us.AddRange(hollowUs);
                 }
                 else
-                    this.coords.AddRange(hollowCoords);
-
-                if (this.calcVertexNormals)
-                {
-                    this.vertexNormals.AddRange(hollowNormals);
-                    this.us.AddRange(hollowUs);
-
-                }
+                    coords.AddRange(hollowCoords);
             }
 
             if (simpleFace && createFaces)
             {
                 if (sides == 3)
-                    this.faces.Add(new Face(0, 1, 2));
+                    faces.Add(new(0, 1, 2));
                 else if (sides == 4)
                 {
-                    this.faces.Add(new Face(0, 1, 2));
-                    this.faces.Add(new Face(0, 2, 3));
+                    faces.Add(new(0, 1, 2));
+                    faces.Add(new(0, 2, 3));
                 }
             }
 
             if (calcVertexNormals && hasProfileCut)
             {
-                int lastOuterVertIndex = this.numOuterVerts - 1;
+                int lastOuterVertIndex = numOuterVerts - 1;
 
                 if (hasHollow)
                 {
-                    this.cut1CoordIndices.Add(0);
-                    this.cut1CoordIndices.Add(this.coords.Count - 1);
+                    cut1CoordIndices.Add(0);
+                    cut1CoordIndices.Add(coords.Count - 1);
 
-                    this.cut2CoordIndices.Add(lastOuterVertIndex + 1);
-                    this.cut2CoordIndices.Add(lastOuterVertIndex);
+                    int lastOuterVertIndexPlus1 = lastOuterVertIndex + 1;
+                    cut2CoordIndices.Add(lastOuterVertIndexPlus1);
+                    cut2CoordIndices.Add(lastOuterVertIndex);
 
-                    this.cutNormal1.X = this.coords[0].Y - this.coords[this.coords.Count - 1].Y;
-                    this.cutNormal1.Y = -(this.coords[0].X - this.coords[this.coords.Count - 1].X);
+                    cutNormal1.X = coords[0].Y - coords[^1].Y;
+                    cutNormal1.Y = -(coords[0].X - coords[^1].X);
 
-                    this.cutNormal2.X = this.coords[lastOuterVertIndex + 1].Y - this.coords[lastOuterVertIndex].Y;
-                    this.cutNormal2.Y = -(this.coords[lastOuterVertIndex + 1].X - this.coords[lastOuterVertIndex].X);
+                    cutNormal2.X = coords[lastOuterVertIndexPlus1].Y - coords[lastOuterVertIndex].Y;
+                    cutNormal2.Y = -(coords[lastOuterVertIndexPlus1].X - coords[lastOuterVertIndex].X);
                 }
 
                 else
                 {
-                    this.cut1CoordIndices.Add(0);
-                    this.cut1CoordIndices.Add(1);
+                    cut1CoordIndices.Add(0);
+                    cut1CoordIndices.Add(1);
 
-                    this.cut2CoordIndices.Add(lastOuterVertIndex);
-                    this.cut2CoordIndices.Add(0);
+                    cut2CoordIndices.Add(lastOuterVertIndex);
+                    cut2CoordIndices.Add(0);
 
-                    this.cutNormal1.X = this.vertexNormals[1].Y;
-                    this.cutNormal1.Y = -this.vertexNormals[1].X;
+                    cutNormal1.X = vertexNormals[1].Y;
+                    cutNormal1.Y = -vertexNormals[1].X;
 
-                    this.cutNormal2.X = -this.vertexNormals[this.vertexNormals.Count - 2].Y;
-                    this.cutNormal2.Y = this.vertexNormals[this.vertexNormals.Count - 2].X;
-
+                    cutNormal2.X = -vertexNormals[^2].Y;
+                    cutNormal2.Y = vertexNormals[^2].X;
                 }
-                this.cutNormal1.Normalize();
-                this.cutNormal2.Normalize();
+                cutNormal1.Normalize();
+                cutNormal2.Normalize();
             }
 
-            this.MakeFaceUVs();
-
-            hollowCoords = null;
-            hollowNormals = null;
-            hollowUs = null;
+            MakeFaceUVs();
 
             if (calcVertexNormals)
             { // calculate prim face numbers
@@ -991,215 +840,204 @@ namespace PrimMesher
                 // I know it's ugly but so is the whole concept of prim face numbers
 
                 int faceNum = 1; // start with outer faces
-                this.outerFaceNumber = faceNum;
+                outerFaceNumber = faceNum;
 
-                int startVert = hasProfileCut && !hasHollow ? 1 : 0;
-                if (startVert > 0)
-                    this.faceNumbers.Add(-1);
-                for (int i = 0; i < this.numOuterVerts - 1; i++)
-                    this.faceNumbers.Add(sides < 5 && i <= sides ? faceNum++ : faceNum);
+                if (hasProfileCut && !hasHollow)
+                    faceNumbers.Add(-1);
 
-                this.faceNumbers.Add(hasProfileCut ? -1 : faceNum++);
+                if(sides < 5)
+                {
+                    for (int i = 0; i < numOuterVerts - 1; i++)
+                        faceNumbers.Add(i <= sides ? faceNum++ : faceNum);
+                }
+                else
+                {
+                    for (int i = 0; i < numOuterVerts - 1; i++)
+                        faceNumbers.Add(faceNum);
+                }
 
-                if (sides > 4 && (hasHollow || hasProfileCut))
-                    faceNum++;
+                faceNumbers.Add(hasProfileCut ? -1 : faceNum++);
 
-                if (sides < 5 && (hasHollow || hasProfileCut) && this.numOuterVerts < sides)
-                    faceNum++;
+                if(hasHollow || hasProfileCut)
+                { 
+                    if (sides > 4)
+                        faceNum++;
+
+                    if (sides < 5 && numOuterVerts < sides)
+                        faceNum++;
+                }
 
                 if (hasHollow)
                 {
-                    for (int i = 0; i < this.numHollowVerts; i++)
-                        this.faceNumbers.Add(faceNum);
+                    for (int i = 0; i < numHollowVerts; i++)
+                        faceNumbers.Add(faceNum);
 
-                    this.hollowFaceNumber = faceNum++;
+                    hollowFaceNumber = faceNum++;
                 }
 
-                this.bottomFaceNumber = faceNum++;
+                bottomFaceNumber = faceNum++;
 
                 if (hasHollow && hasProfileCut)
-                    this.faceNumbers.Add(faceNum++);
+                    faceNumbers.Add(faceNum++);
 
-                for (int i = 0; i < this.faceNumbers.Count; i++)
-                    if (this.faceNumbers[i] == -1)
-                        this.faceNumbers[i] = faceNum++;
+                for (int i = 0; i < faceNumbers.Count; i++)
+                    if (faceNumbers[i] == -1)
+                        faceNumbers[i] = faceNum++;
 
-                this.numPrimFaces = faceNum;
+                numPrimFaces = faceNum;
             }
 
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void MakeFaceUVs()
         {
-            this.faceUVs = new List<UVCoord>();
-            foreach (Coord c in this.coords)
-                this.faceUVs.Add(new UVCoord(1.0f - (0.5f + c.X), 1.0f - (0.5f - c.Y)));
+            faceUVs = new(coords.Count);
+            foreach (Vector3 c in coords)
+                faceUVs.Add(new UVCoord(0.5f - c.X, 0.5f + c.Y));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Profile Copy()
         {
-            return this.Copy(true);
+            return Copy(true);
         }
 
         public Profile Copy(bool needFaces)
         {
-            Profile copy = new Profile();
+            Profile copy = new();
 
-            copy.coords.AddRange(this.coords);
-            copy.faceUVs.AddRange(this.faceUVs);
+            copy.coords.AddRange(coords);
+            copy.faceUVs.AddRange(faceUVs);
+
+            copy.calcVertexNormals = calcVertexNormals;
 
             if (needFaces)
-                copy.faces.AddRange(this.faces);
-            if ((copy.calcVertexNormals = this.calcVertexNormals) == true)
-            {
-                copy.vertexNormals.AddRange(this.vertexNormals);
-                copy.faceNormal = this.faceNormal;
-                copy.cutNormal1 = this.cutNormal1;
-                copy.cutNormal2 = this.cutNormal2;
-                copy.us.AddRange(this.us);
-                copy.faceNumbers.AddRange(this.faceNumbers);
+                copy.faces.AddRange(faces);
 
-                copy.cut1CoordIndices = new List<int>(this.cut1CoordIndices);
-                copy.cut2CoordIndices = new List<int>(this.cut2CoordIndices);
-                copy.hollowCoordIndices = new List<int>(this.hollowCoordIndices);
-                copy.outerCoordIndices = new List<int>(this.outerCoordIndices);
+            if (calcVertexNormals)
+            {
+                copy.vertexNormals.AddRange(vertexNormals);
+                copy.faceNormal = faceNormal;
+                copy.cutNormal1 = cutNormal1;
+                copy.cutNormal2 = cutNormal2;
+                copy.us.AddRange(us);
+                copy.faceNumbers.AddRange(faceNumbers);
+
+                copy.cut1CoordIndices = new(cut1CoordIndices);
+                copy.cut2CoordIndices = new(cut2CoordIndices);
+                copy.hollowCoordIndices = new(hollowCoordIndices);
+                copy.outerCoordIndices = new(outerCoordIndices);
             }
-            copy.numOuterVerts = this.numOuterVerts;
-            copy.numHollowVerts = this.numHollowVerts;
+            copy.numOuterVerts = numOuterVerts;
+            copy.numHollowVerts = numHollowVerts;
 
             return copy;
         }
 
-        public void AddPos(Coord v)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void AddPos(Vector3 v)
         {
-            this.AddPos(v.X, v.Y, v.Z);
+           for (int i = 0; i < coords.Count; i++)
+               coords[i] += v;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddPos(float x, float y, float z)
         {
-            int i;
-            int numVerts = this.coords.Count;
-            Coord vert;
-
-            for (i = 0; i < numVerts; i++)
-            {
-                vert = this.coords[i];
-                vert.X += x;
-                vert.Y += y;
-                vert.Z += z;
-                this.coords[i] = vert;
-            }
+            Vector3 v = new(x, y, z);
+            AddPos(v);
         }
 
-        public void AddRot(Quat q)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void AddRot(Quaternion q)
         {
-            int i;
-            int numVerts = this.coords.Count;
+            if(q.IsIdentity()) return;
 
-            for (i = 0; i < numVerts; i++)
-                this.coords[i] *= q;
+            for (int i = 0; i < coords.Count; i++)
+                coords[i] *= q;
 
-            if (this.calcVertexNormals)
+            if (calcVertexNormals)
             {
-                int numNormals = this.vertexNormals.Count;
-                for (i = 0; i < numNormals; i++)
-                    this.vertexNormals[i] *= q;
+                for (int i = 0; i < vertexNormals.Count; i++)
+                    vertexNormals[i] *= q;
 
-                this.faceNormal *= q;
-                this.cutNormal1 *= q;
-                this.cutNormal2 *= q;
-
+                faceNormal *= q;
+                cutNormal1 *= q;
+                cutNormal2 *= q;
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Scale(float x, float y)
         {
-            int i;
-            int numVerts = this.coords.Count;
-            Coord vert;
-
-            for (i = 0; i < numVerts; i++)
+            Vector3 vert;
+            for (int i = 0; i < coords.Count; i++)
             {
-                vert = this.coords[i];
+                vert = coords[i];
                 vert.X *= x;
                 vert.Y *= y;
-                this.coords[i] = vert;
+                coords[i] = vert;
             }
         }
 
         /// <summary>
         /// Changes order of the vertex indices and negates the center vertex normal. Does not alter vertex normals of radial vertices
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FlipNormals()
         {
-            int i;
-            int numFaces = this.faces.Count;
             Face tmpFace;
             int tmp;
 
-            for (i = 0; i < numFaces; i++)
+            for (int i = 0; i < faces.Count; i++)
             {
-                tmpFace = this.faces[i];
+                tmpFace = faces[i];
                 tmp = tmpFace.v3;
                 tmpFace.v3 = tmpFace.v1;
                 tmpFace.v1 = tmp;
-                this.faces[i] = tmpFace;
+                faces[i] = tmpFace;
             }
 
-            if (this.calcVertexNormals)
+            if (calcVertexNormals)
             {
-                int normalCount = this.vertexNormals.Count;
-                if (normalCount > 0)
+                if (vertexNormals.Count > 0)
                 {
-                    Coord n = this.vertexNormals[normalCount - 1];
+                    Vector3 n = vertexNormals[^1];
                     n.Z = -n.Z;
-                    this.vertexNormals[normalCount - 1] = n;
+                    vertexNormals[^1] = n;
                 }
             }
 
-            this.faceNormal.X = -this.faceNormal.X;
-            this.faceNormal.Y = -this.faceNormal.Y;
-            this.faceNormal.Z = -this.faceNormal.Z;
+            faceNormal = -faceNormal;
 
-            int numfaceUVs = this.faceUVs.Count;
-            for (i = 0; i < numfaceUVs; i++)
+            for (int i = 0; i < faceUVs.Count; i++)
             {
-                UVCoord uv = this.faceUVs[i];
+                UVCoord uv = faceUVs[i];
                 uv.V = 1.0f - uv.V;
-                this.faceUVs[i] = uv;
+                faceUVs[i] = uv;
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddValue2FaceVertexIndices(int num)
         {
-            int numFaces = this.faces.Count;
-            Face tmpFace;
-            for (int i = 0; i < numFaces; i++)
+            for (int i = 0; i < faces.Count; i++)
             {
-                tmpFace = this.faces[i];
-                tmpFace.v1 += num;
-                tmpFace.v2 += num;
-                tmpFace.v3 += num;
-
-                this.faces[i] = tmpFace;
+                Face face = faces[i];
+                face.AddVerticesIndexesOffset(num);
+                faces[i] = face;
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddValue2FaceNormalIndices(int num)
         {
-            if (this.calcVertexNormals)
+            for (int i = 0; i < faces.Count; i++)
             {
-                int numFaces = this.faces.Count;
-                Face tmpFace;
-                for (int i = 0; i < numFaces; i++)
-                {
-                    tmpFace = this.faces[i];
-                    tmpFace.n1 += num;
-                    tmpFace.n2 += num;
-                    tmpFace.n3 += num;
-
-                    this.faces[i] = tmpFace;
-                }
+                Face face = faces[i];
+                faces[i].AddNormalsIndexesOffset(num);
+                faces[i] = face;
             }
         }
 
@@ -1209,16 +1047,10 @@ namespace PrimMesher
                 return;
             String fileName = name + "_" + title + ".raw";
             String completePath = System.IO.Path.Combine(path, fileName);
-            StreamWriter sw = new StreamWriter(completePath);
+            StreamWriter sw = new(completePath);
 
-            for (int i = 0; i < this.faces.Count; i++)
-            {
-                string s = this.coords[this.faces[i].v1].ToString();
-                s += " " + this.coords[this.faces[i].v2].ToString();
-                s += " " + this.coords[this.faces[i].v3].ToString();
-
-                sw.WriteLine(s);
-            }
+            for (int i = 0; i < faces.Count; i++)
+                sw.WriteLine($"{coords[faces[i].v1]} {coords[faces[i].v2]} {coords[faces[i].v3]}");
 
             sw.Close();
         }
@@ -1226,8 +1058,8 @@ namespace PrimMesher
 
     public struct PathNode
     {
-        public Coord position;
-        public Quat rotation;
+        public Vector3 position;
+        public Quaternion rotation;
         public float xScale;
         public float yScale;
         public float percentOfPath;
@@ -1237,7 +1069,7 @@ namespace PrimMesher
 
     public class Path
     {
-        public List<PathNode> pathNodes = new List<PathNode>();
+        public List<PathNode> pathNodes = [];
 
         public float twistBegin = 0.0f;
         public float twistEnd = 0.0f;
@@ -1256,82 +1088,82 @@ namespace PrimMesher
         public float revolutions = 1.0f;
         public int stepsPerRevolution = 24;
 
-        private const float twoPi = 2.0f * (float)Math.PI;
+        private const float twoPi = 2.0f * MathF.PI;
 
         public void Create(PathType pathType, int steps)
         {
-            if (this.taperX > 0.999f)
-                this.taperX = 0.999f;
-            if (this.taperX < -0.999f)
-                this.taperX = -0.999f;
-            if (this.taperY > 0.999f)
-                this.taperY = 0.999f;
-            if (this.taperY < -0.999f)
-                this.taperY = -0.999f;
+            if(taperX < -0.999f)
+                taperX = -0.999f;
+            else if(taperX > 0.999f)
+                taperX = 0.999f;
+
+            if(taperY < -0.999f)
+                taperY = -0.999f;
+            else if(taperY > 0.999f)
+                taperY = 0.999f;
 
             if (pathType == PathType.Linear || pathType == PathType.Flexible)
             {
                 int step = 0;
 
-                float length = this.pathCutEnd - this.pathCutBegin;
+                float length = pathCutEnd - pathCutBegin;
                 float twistTotal = twistEnd - twistBegin;
-                float twistTotalAbs = Math.Abs(twistTotal);
+                float twistTotalAbs = MathF.Abs(twistTotal);
                 if (twistTotalAbs > 0.01f)
-                    steps += (int)(twistTotalAbs * 3.66); //  dahlia's magic number
+                    steps += (int)(twistTotalAbs * 3.66f); //  dahlia's magic number
 
                 float start = -0.5f;
                 float stepSize = length / (float)steps;
                 float percentOfPathMultiplier = stepSize * 0.999999f;
-                float xOffset = this.topShearX * this.pathCutBegin;
-                float yOffset = this.topShearY * this.pathCutBegin;
+                float xOffset = topShearX * pathCutBegin;
+                float yOffset = topShearY * pathCutBegin;
                 float zOffset = start;
-                float xOffsetStepIncrement = this.topShearX * length / steps;
-                float yOffsetStepIncrement = this.topShearY * length / steps;
+                float xOffsetStepIncrement = topShearX * length / steps;
+                float yOffsetStepIncrement = topShearY * length / steps;
 
-                float percentOfPath = this.pathCutBegin;
+                float percentOfPath = pathCutBegin;
                 zOffset += percentOfPath;
 
                 // sanity checks
 
-                bool done = false;
-
-                while (!done)
+                while (true)
                 {
-                    PathNode newNode = new PathNode();
+                    PathNode newNode = new();
 
-                    newNode.xScale = 1.0f;
-                    if (this.taperX == 0.0f)
+                    if (taperX == 0.0f)
                         newNode.xScale = 1.0f;
-                    else if (this.taperX > 0.0f)
-                        newNode.xScale = 1.0f - percentOfPath * this.taperX;
-                    else newNode.xScale = 1.0f + (1.0f - percentOfPath) * this.taperX;
+                    else if (taperX > 0.0f)
+                        newNode.xScale = 1.0f - percentOfPath * taperX;
+                    else
+                        newNode.xScale = 1.0f + (1.0f - percentOfPath) * taperX;
 
-                    newNode.yScale = 1.0f;
-                    if (this.taperY == 0.0f)
+                    if (taperY == 0.0f)
                         newNode.yScale = 1.0f;
-                    else if (this.taperY > 0.0f)
-                        newNode.yScale = 1.0f - percentOfPath * this.taperY;
-                    else newNode.yScale = 1.0f + (1.0f - percentOfPath) * this.taperY;
+                    else if (taperY > 0.0f)
+                        newNode.yScale = 1.0f - percentOfPath * taperY;
+                    else
+                        newNode.yScale = 1.0f + (1.0f - percentOfPath) * taperY;
 
                     float twist = twistBegin + twistTotal * percentOfPath;
 
-                    newNode.rotation = new Quat(new Coord(0.0f, 0.0f, 1.0f), twist);
-                    newNode.position = new Coord(xOffset, yOffset, zOffset);
+                    newNode.rotation = twist == 0f ? Quaternion.Identity :
+                            new Quaternion(Quaternion.MainAxis.Z, twist);
+                    newNode.position = new Vector3(xOffset, yOffset, zOffset);
                     newNode.percentOfPath = percentOfPath;
 
                     pathNodes.Add(newNode);
 
-                    if (step < steps)
-                    {
-                        step += 1;
-                        percentOfPath += percentOfPathMultiplier;
-                        xOffset += xOffsetStepIncrement;
-                        yOffset += yOffsetStepIncrement;
-                        zOffset += stepSize;
-                        if (percentOfPath > this.pathCutEnd)
-                            done = true;
-                    }
-                    else done = true;
+                    if (step >= steps)
+                        break;
+
+                    percentOfPath += percentOfPathMultiplier;
+                    if (percentOfPath > pathCutEnd)
+                        break;
+
+                    step++;
+                    xOffset += xOffsetStepIncrement;
+                    yOffset += yOffsetStepIncrement;
+                    zOffset += stepSize;
                 }
             } // end of linear path code
 
@@ -1342,21 +1174,23 @@ namespace PrimMesher
                 // if the profile has a lot of twist, add more layers otherwise the layers may overlap
                 // and the resulting mesh may be quite inaccurate. This method is arbitrary and doesn't
                 // accurately match the viewer
-                float twistTotalAbs = Math.Abs(twistTotal);
+                /*
+                float twistTotalAbs = MathF.Abs(twistTotal);
                 if (twistTotalAbs > 0.01f)
                 {
-                    if (twistTotalAbs > Math.PI * 1.5f)
+                    if (twistTotalAbs > MathF.PI * 1.5f)
                         steps *= 2;
-                    if (twistTotalAbs > Math.PI * 3.0f)
+                    if (twistTotalAbs > MathF.PI * 3.0f)
                         steps *= 2;
                 }
+                */
 
-                float yPathScale = this.holeSizeY * 0.5f;
-                float pathLength = this.pathCutEnd - this.pathCutBegin;
-                float totalSkew = this.skew * 2.0f * pathLength;
-                float skewStart = this.pathCutBegin * 2.0f * this.skew - this.skew;
-                float xOffsetTopShearXFactor = this.topShearX * (0.25f + 0.5f * (0.5f - this.holeSizeY));
-                float yShearCompensation = 1.0f + Math.Abs(this.topShearY) * 0.25f;
+                float yPathScale = holeSizeY * 0.5f;
+                float pathLength = pathCutEnd - pathCutBegin;
+                float totalSkew = skew * 2.0f * pathLength;
+                float skewStart = pathCutBegin * 2.0f * skew - skew;
+                float xOffsetTopShearXFactor = topShearX * (0.25f + 0.5f * (0.5f - holeSizeY));
+                float yShearCompensation = 1.0f + MathF.Abs(topShearY) * 0.25f;
 
                 // It's not quite clear what pushY (Y top shear) does, but subtracting it from the start and end
                 // angles appears to approximate it's effects on path cut. Likewise, adding it to the angle used
@@ -1366,62 +1200,63 @@ namespace PrimMesher
                 // the meshes generated with this technique appear nearly identical in shape to the same prims when
                 // displayed by the viewer.
 
-                float startAngle = (twoPi * this.pathCutBegin * this.revolutions) - this.topShearY * 0.9f;
-                float endAngle = (twoPi * this.pathCutEnd * this.revolutions) - this.topShearY * 0.9f;
-                float stepSize = twoPi / this.stepsPerRevolution;
+                float startAngle = (twoPi * pathCutBegin * revolutions) - topShearY * 0.9f;
+                float endAngle = (twoPi * pathCutEnd * revolutions) - topShearY * 0.9f;
+                float stepSize = twoPi / stepsPerRevolution;
 
-                int step = (int)(startAngle / stepSize);
                 float angle = startAngle;
 
-                bool done = false;
-                while (!done) // loop through the length of the path and add the layers
+                while (true) // loop through the length of the path and add the layers
                 {
-                    PathNode newNode = new PathNode();
+                    PathNode newNode = new();
 
-                    float xProfileScale = (1.0f - Math.Abs(this.skew)) * this.holeSizeX;
-                    float yProfileScale = this.holeSizeY;
+                    float xProfileScale = (1.0f - MathF.Abs(skew)) * holeSizeX;
+                    float yProfileScale = holeSizeY;
 
-                    float percentOfPath = angle / (twoPi * this.revolutions);
+                    float percentOfPath = angle / (twoPi * revolutions);
                     float percentOfAngles = (angle - startAngle) / (endAngle - startAngle);
 
-                    if (this.taperX > 0.01f)
-                        xProfileScale *= 1.0f - percentOfPath * this.taperX;
-                    else if (this.taperX < -0.01f)
-                        xProfileScale *= 1.0f + (1.0f - percentOfPath) * this.taperX;
+                    if (taperX > 0.01f)
+                        xProfileScale *= 1.0f - percentOfPath * taperX;
+                    else if (taperX < -0.01f)
+                        xProfileScale *= 1.0f + (1.0f - percentOfPath) * taperX;
 
-                    if (this.taperY > 0.01f)
-                        yProfileScale *= 1.0f - percentOfPath * this.taperY;
-                    else if (this.taperY < -0.01f)
-                        yProfileScale *= 1.0f + (1.0f - percentOfPath) * this.taperY;
+                    if (taperY > 0.01f)
+                        yProfileScale *= 1.0f - percentOfPath * taperY;
+                    else if (taperY < -0.01f)
+                        yProfileScale *= 1.0f + (1.0f - percentOfPath) * taperY;
 
                     newNode.xScale = xProfileScale;
                     newNode.yScale = yProfileScale;
 
-                    float radiusScale = 1.0f;
-                    if (this.radius > 0.001f)
-                        radiusScale = 1.0f - this.radius * percentOfPath;
-                    else if (this.radius < 0.001f)
-                        radiusScale = 1.0f + this.radius * (1.0f - percentOfPath);
+                    float radiusScale;
+                    if (radius > 0.001f)
+                        radiusScale = 1.0f - radius * percentOfPath;
+                    else if (radius < 0.001f)
+                        radiusScale = 1.0f + radius * (1.0f - percentOfPath);
+                    else
+                        radiusScale = 1.0f;
 
                     float twist = twistBegin + twistTotal * percentOfPath;
 
                     float xOffset = 0.5f * (skewStart + totalSkew * percentOfAngles);
-                    xOffset += (float)Math.Sin(angle) * xOffsetTopShearXFactor;
+                    xOffset += MathF.Sin(angle) * xOffsetTopShearXFactor;
 
-                    float yOffset = yShearCompensation * (float)Math.Cos(angle) * (0.5f - yPathScale) * radiusScale;
+                    float yOffset = yShearCompensation * MathF.Cos(angle) * (0.5f - yPathScale) * radiusScale;
 
-                    float zOffset = (float)Math.Sin(angle + this.topShearY) * (0.5f - yPathScale) * radiusScale;
+                    float zOffset = MathF.Sin(angle + topShearY) * (0.5f - yPathScale) * radiusScale;
 
-                    newNode.position = new Coord(xOffset, yOffset, zOffset);
+                    newNode.position = new(xOffset, yOffset, zOffset);
 
                     // now orient the rotation of the profile layer relative to it's position on the path
                     // adding taperY to the angle used to generate the quat appears to approximate the viewer
 
-                    newNode.rotation = new Quat(new Coord(1.0f, 0.0f, 0.0f), angle + this.topShearY);
+                    newNode.rotation = angle + topShearY == 0f ? Quaternion.Identity :
+                            new Quaternion(Quaternion.MainAxis.X, angle + topShearY);
 
                     // next apply twist rotation to the profile layer
                     if (twistTotal != 0.0f || twistBegin != 0.0f)
-                        newNode.rotation *= new Quat(new Coord(0.0f, 0.0f, 1.0f), twist);
+                        newNode.rotation *= new Quaternion(Quaternion.MainAxis.Z, twist);
 
                     newNode.percentOfPath = percentOfPath;
 
@@ -1431,14 +1266,11 @@ namespace PrimMesher
                     // calculate the angle for the next iteration of the loop
 
                     if (angle >= endAngle - 0.01)
-                        done = true;
-                    else
-                    {
-                        step += 1;
-                        angle = stepSize * step;
-                        if (angle > endAngle)
-                            angle = endAngle;
-                    }
+                        break;
+                    
+                    angle += stepSize;
+                    if (angle > endAngle)
+                        angle = endAngle;
                 }
             }
         }
@@ -1447,19 +1279,20 @@ namespace PrimMesher
     public class PrimMesh
     {
         public string errorMessage = "";
-        private const float twoPi = 2.0f * (float)Math.PI;
+        private const float twoPi = 2.0f * MathF.PI;
+        private const float DegToRad = twoPi / 360f;
 
-        public List<Coord> coords;
-        public List<Coord> normals;
+        public List<Vector3> coords;
+        public List<Vector3> normals;
         public List<Face> faces;
 
         public List<ViewerFace> viewerFaces;
 
-        private int sides = 4;
-        private int hollowSides = 4;
-        private float profileStart = 0.0f;
-        private float profileEnd = 1.0f;
-        private float hollow = 0.0f;
+        private readonly int sides = 4;
+        private readonly int hollowSides = 4;
+        private readonly float profileStart = 0.0f;
+        private readonly float profileEnd = 1.0f;
+        private readonly float hollow = 0.0f;
         public int twistBegin = 0;
         public int twistEnd = 0;
         public float topShearX = 0.0f;
@@ -1496,52 +1329,56 @@ namespace PrimMesher
         public string ParamsToDisplayString()
         {
             string s = "";
-            s += "sides..................: " + this.sides.ToString();
-            s += "\nhollowSides..........: " + this.hollowSides.ToString();
-            s += "\nprofileStart.........: " + this.profileStart.ToString();
-            s += "\nprofileEnd...........: " + this.profileEnd.ToString();
-            s += "\nhollow...............: " + this.hollow.ToString();
-            s += "\ntwistBegin...........: " + this.twistBegin.ToString();
-            s += "\ntwistEnd.............: " + this.twistEnd.ToString();
-            s += "\ntopShearX............: " + this.topShearX.ToString();
-            s += "\ntopShearY............: " + this.topShearY.ToString();
-            s += "\npathCutBegin.........: " + this.pathCutBegin.ToString();
-            s += "\npathCutEnd...........: " + this.pathCutEnd.ToString();
-            s += "\ndimpleBegin..........: " + this.dimpleBegin.ToString();
-            s += "\ndimpleEnd............: " + this.dimpleEnd.ToString();
-            s += "\nskew.................: " + this.skew.ToString();
-            s += "\nholeSizeX............: " + this.holeSizeX.ToString();
-            s += "\nholeSizeY............: " + this.holeSizeY.ToString();
-            s += "\ntaperX...............: " + this.taperX.ToString();
-            s += "\ntaperY...............: " + this.taperY.ToString();
-            s += "\nradius...............: " + this.radius.ToString();
-            s += "\nrevolutions..........: " + this.revolutions.ToString();
-            s += "\nstepsPerRevolution...: " + this.stepsPerRevolution.ToString();
-            s += "\nsphereMode...........: " + this.sphereMode.ToString();
-            s += "\nhasProfileCut........: " + this.hasProfileCut.ToString();
-            s += "\nhasHollow............: " + this.hasHollow.ToString();
-            s += "\nviewerMode...........: " + this.viewerMode.ToString();
+            s += "sides..................: " + sides.ToString();
+            s += "\nhollowSides..........: " + hollowSides.ToString();
+            s += "\nprofileStart.........: " + profileStart.ToString();
+            s += "\nprofileEnd...........: " + profileEnd.ToString();
+            s += "\nhollow...............: " + hollow.ToString();
+            s += "\ntwistBegin...........: " + twistBegin.ToString();
+            s += "\ntwistEnd.............: " + twistEnd.ToString();
+            s += "\ntopShearX............: " + topShearX.ToString();
+            s += "\ntopShearY............: " + topShearY.ToString();
+            s += "\npathCutBegin.........: " + pathCutBegin.ToString();
+            s += "\npathCutEnd...........: " + pathCutEnd.ToString();
+            s += "\ndimpleBegin..........: " + dimpleBegin.ToString();
+            s += "\ndimpleEnd............: " + dimpleEnd.ToString();
+            s += "\nskew.................: " + skew.ToString();
+            s += "\nholeSizeX............: " + holeSizeX.ToString();
+            s += "\nholeSizeY............: " + holeSizeY.ToString();
+            s += "\ntaperX...............: " + taperX.ToString();
+            s += "\ntaperY...............: " + taperY.ToString();
+            s += "\nradius...............: " + radius.ToString();
+            s += "\nrevolutions..........: " + revolutions.ToString();
+            s += "\nstepsPerRevolution...: " + stepsPerRevolution.ToString();
+            s += "\nsphereMode...........: " + sphereMode.ToString();
+            s += "\nhasProfileCut........: " + hasProfileCut.ToString();
+            s += "\nhasHollow............: " + hasHollow.ToString();
+            s += "\nviewerMode...........: " + viewerMode.ToString();
 
             return s;
         }
 
         public int ProfileOuterFaceNumber
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return profileOuterFaceNumber; }
         }
 
         public int ProfileHollowFaceNumber
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return profileHollowFaceNumber; }
         }
 
         public bool HasProfileCut
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return hasProfileCut; }
         }
 
         public bool HasHollow
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return hasHollow; }
         }
 
@@ -1554,33 +1391,31 @@ namespace PrimMesher
         /// <param name="profileEnd"></param>
         /// <param name="hollow"></param>
         /// <param name="hollowSides"></param>
-        public PrimMesh(int sides, float profileStart, float profileEnd, float hollow, int hollowSides)
+        public PrimMesh(int _sides, float _profileStart, float _profileEnd, float _hollow, int _hollowSides)
         {
-            this.coords = new List<Coord>();
-            this.faces = new List<Face>();
+            coords = [];
+            faces = [];
 
-            this.sides = sides;
-            this.profileStart = profileStart;
-            this.profileEnd = profileEnd;
-            this.hollow = hollow;
-            this.hollowSides = hollowSides;
+            sides = _sides < 3 ? 3 : _sides;
+            hollowSides = _hollowSides < 3 ? 3 : _hollowSides;
+            profileStart = _profileStart;
+            profileEnd = _profileEnd;
+            hollow = _hollow;
 
-            if (sides < 3)
-                this.sides = 3;
-            if (hollowSides < 3)
-                this.hollowSides = 3;
+            if(hollow < 0f)
+                hollow = 0f;
+            else if(hollow > 0.99f)
+                hollow = 0.99f;
+
+            if(profileEnd < 0.02f)
+                profileEnd = 0.02f;
+            else if( profileEnd > 1f)
+                profileEnd = 1f;
+
             if (profileStart < 0.0f)
-                this.profileStart = 0.0f;
-            if (profileEnd > 1.0f)
-                this.profileEnd = 1.0f;
-            if (profileEnd < 0.02f)
-                this.profileEnd = 0.02f;
-            if (profileStart >= profileEnd)
-                this.profileStart = profileEnd - 0.02f;
-            if (hollow > 0.99f)
-                this.hollow = 0.99f;
-            if (hollow < 0.0f)
-                this.hollow = 0.0f;
+                profileStart = 0.0f;
+            else if (profileStart >= profileEnd)
+                profileStart = profileEnd - 0.02f;
         }
 
         /// <summary>
@@ -1588,72 +1423,63 @@ namespace PrimMesher
         /// </summary>
         public void Extrude(PathType pathType)
         {
-            bool needEndFaces = false;
 
-            this.coords = new List<Coord>();
-            this.faces = new List<Face>();
+            coords = [];
+            faces = [];
 
-            if (this.viewerMode)
+            if (viewerMode)
             {
-                this.viewerFaces = new List<ViewerFace>();
-                this.calcVertexNormals = true;
+                viewerFaces = [];
+                calcVertexNormals = true;
             }
 
-            if (this.calcVertexNormals)
-                this.normals = new List<Coord>();
+            if (calcVertexNormals)
+                normals = [];
 
-            int steps = 1;
-
-            float length = this.pathCutEnd - this.pathCutBegin;
             normalsProcessed = false;
 
-            if (this.viewerMode && this.sides == 3)
+            int steps = 1;
+            float length = pathCutEnd - pathCutBegin;
+
+            if (viewerMode && sides == 3)
             {
                 // prisms don't taper well so add some vertical resolution
                 // other prims may benefit from this but just do prisms for now
-                if (Math.Abs(this.taperX) > 0.01 || Math.Abs(this.taperY) > 0.01)
-                    steps = (int)(steps * 4.5 * length);
+                if (MathF.Abs(taperX) > 0.01f || MathF.Abs(taperY) > 0.01f)
+                    steps = (int)(steps * 4.5f * length);
             }
 
-            if (this.sphereMode)
-                this.hasProfileCut = this.profileEnd - this.profileStart < 0.4999f;
+            if (sphereMode)
+                hasProfileCut = profileEnd - profileStart < 0.4999f;
             else
-                this.hasProfileCut = this.profileEnd - this.profileStart < 0.9999f;
-            this.hasHollow = (this.hollow > 0.001f);
-
-            float twistBegin = this.twistBegin / 360.0f * twoPi;
-            float twistEnd = this.twistEnd / 360.0f * twoPi;
-            float twistTotal = twistEnd - twistBegin;
-            float twistTotalAbs = Math.Abs(twistTotal);
-            if (twistTotalAbs > 0.01f)
-                steps += (int)(twistTotalAbs * 3.66); //  dahlia's magic number
+                hasProfileCut = profileEnd - profileStart < 0.9999f;
 
             float hollow = this.hollow;
+            hasHollow = hollow > 0.001f;
 
-            if (pathType == PathType.Circular)
-            {
-                needEndFaces = false;
-                if (this.pathCutBegin > float.Epsilon || this.pathCutEnd < 1.0f - float.Epsilon)
-                    needEndFaces = true;
-                else if (this.taperX > 0.01f || this.taperY > 0.01f)
-                    needEndFaces = true;
-                else if (Math.Abs(this.skew) > 0.01f)
-                    needEndFaces = true;
-                else if (Math.Abs(twistTotal) > 0.001f)
-                    needEndFaces = true;
-                else if (Math.Abs(this.radius) > 0.0005f)
-                    needEndFaces = true;
-            }
-            else needEndFaces = true;
+            float twistBegin = this.twistBegin * DegToRad;
+            float twistEnd = this.twistEnd * DegToRad;
+            float twistTotal = twistEnd - twistBegin;
+            float twistTotalAbs = MathF.Abs(twistTotal);
+            if (twistTotalAbs > 0.01f)
+                steps += (int)(twistTotalAbs * 3.66f); //  dahlia's magic number
+
+            bool needEndFaces =
+                        pathType != PathType.Circular ||
+                        pathCutBegin > float.Epsilon || pathCutEnd < 1.0f - float.Epsilon ||
+                        taperX > 0.01f || taperY > 0.01f ||
+                        MathF.Abs(skew) > 0.01f ||
+                        MathF.Abs(twistTotal) > 0.001f ||
+                        MathF.Abs(radius) > 0.0005f;
 
             // sanity checks
             float initialProfileRot = 0.0f;
             if (pathType == PathType.Circular)
             {
-                if (this.sides == 3)
+                if (sides == 3)
                 {
-                    initialProfileRot = (float)Math.PI;
-                    if (this.hollowSides == 4)
+                    initialProfileRot = MathF.PI;
+                    if (hollowSides == 4)
                     {
                         if (hollow > 0.7f)
                             hollow = 0.7f;
@@ -1661,16 +1487,16 @@ namespace PrimMesher
                     }
                     else hollow *= 0.5f;
                 }
-                else if (this.sides == 4)
+                else if (sides == 4)
                 {
-                    initialProfileRot = 0.25f * (float)Math.PI;
-                    if (this.hollowSides != 4)
+                    initialProfileRot = 0.25f * MathF.PI;
+                    if (hollowSides != 4)
                         hollow *= 0.707f;
                 }
-                else if (this.sides > 4)
+                else if (sides > 4)
                 {
-                    initialProfileRot = (float)Math.PI;
-                    if (this.hollowSides == 4)
+                    initialProfileRot = MathF.PI;
+                    if (hollowSides == 4)
                     {
                         if (hollow > 0.7f)
                             hollow = 0.7f;
@@ -1680,9 +1506,9 @@ namespace PrimMesher
             }
             else
             {
-                if (this.sides == 3)
+                if (sides == 3)
                 {
-                    if (this.hollowSides == 4)
+                    if (hollowSides == 4)
                     {
                         if (hollow > 0.7f)
                             hollow = 0.7f;
@@ -1690,77 +1516,83 @@ namespace PrimMesher
                     }
                     else hollow *= 0.5f;
                 }
-                else if (this.sides == 4)
+                else if (sides == 4)
                 {
-                    initialProfileRot = 1.25f * (float)Math.PI;
-                    if (this.hollowSides != 4)
+                    initialProfileRot = 1.25f * MathF.PI;
+                    if (hollowSides != 4)
                         hollow *= 0.707f;
                 }
-                else if (this.sides == 24 && this.hollowSides == 4)
+                else if (sides > 4 && hollowSides == 4)
                     hollow *= 1.414f;
             }
 
-            Profile profile = new Profile(this.sides, this.profileStart, this.profileEnd, hollow, this.hollowSides, true, calcVertexNormals);
-            this.errorMessage = profile.errorMessage;
+            Profile profile = new(sides, profileStart, profileEnd, hollow, hollowSides, true, calcVertexNormals);
+            errorMessage = profile.errorMessage;
 
-            this.numPrimFaces = profile.numPrimFaces;
+            numPrimFaces = profile.numPrimFaces;
 
-            int cut1FaceNumber = profile.bottomFaceNumber + 1;
-            int cut2FaceNumber = cut1FaceNumber + 1;
-            if (!needEndFaces)
+            int cut1FaceNumber;
+            if(needEndFaces)
             {
-                cut1FaceNumber -= 2;
-                cut2FaceNumber -= 2;
+                cut1FaceNumber  = profile.bottomFaceNumber + 1;
+                profileOuterFaceNumber = profile.outerFaceNumber;
             }
-
-            profileOuterFaceNumber = profile.outerFaceNumber;
-            if (!needEndFaces)
-                profileOuterFaceNumber--;
+            else
+            { 
+                cut1FaceNumber  = profile.bottomFaceNumber - 1;
+                profileOuterFaceNumber = profile.outerFaceNumber - 1;
+            }
+            int cut2FaceNumber = cut1FaceNumber + 1;
 
             if (hasHollow)
             {
-                profileHollowFaceNumber = profile.hollowFaceNumber;
-                if (!needEndFaces)
-                    profileHollowFaceNumber--;
+                profileHollowFaceNumber = needEndFaces ? profile.hollowFaceNumber : profile.hollowFaceNumber - 1;
             }
 
-            int cut1Vert = -1;
-            int cut2Vert = -1;
+            int cut1Vert;
+            int cut2Vert;
             if (hasProfileCut)
             {
                 cut1Vert = hasHollow ? profile.coords.Count - 1 : 0;
                 cut2Vert = hasHollow ? profile.numOuterVerts - 1 : profile.numOuterVerts;
             }
+            else
+            {
+                cut1Vert = -1;
+                cut2Vert = -1;
+            }
 
             if (initialProfileRot != 0.0f)
             {
-                profile.AddRot(new Quat(new Coord(0.0f, 0.0f, 1.0f), initialProfileRot));
+                profile.AddRot(new Quaternion(Quaternion.MainAxis.Z, initialProfileRot));
                 if (viewerMode)
                     profile.MakeFaceUVs();
             }
 
-            Coord lastCutNormal1 = new Coord();
-            Coord lastCutNormal2 = new Coord();
-            float thisV = 0.0f;
+            Vector3 lastCutNormal1 = new();
+            Vector3 lastCutNormal2 = new();
             float lastV = 0.0f;
+            float thisV;
 
-            Path path = new Path();
-            path.twistBegin = twistBegin;
-            path.twistEnd = twistEnd;
-            path.topShearX = topShearX;
-            path.topShearY = topShearY;
-            path.pathCutBegin = pathCutBegin;
-            path.pathCutEnd = pathCutEnd;
-            path.dimpleBegin = dimpleBegin;
-            path.dimpleEnd = dimpleEnd;
-            path.skew = skew;
-            path.holeSizeX = holeSizeX;
-            path.holeSizeY = holeSizeY;
-            path.taperX = taperX;
-            path.taperY = taperY;
-            path.radius = radius;
-            path.revolutions = revolutions;
-            path.stepsPerRevolution = stepsPerRevolution;
+            Path path = new()
+            {
+                twistBegin = twistBegin,
+                twistEnd = twistEnd,
+                topShearX = topShearX,
+                topShearY = topShearY,
+                pathCutBegin = pathCutBegin,
+                pathCutEnd = pathCutEnd,
+                dimpleBegin = dimpleBegin,
+                dimpleEnd = dimpleEnd,
+                skew = skew,
+                holeSizeX = holeSizeX,
+                holeSizeY = holeSizeY,
+                taperX = taperX,
+                taperY = taperY,
+                radius = radius,
+                revolutions = revolutions,
+                stepsPerRevolution = stepsPerRevolution
+            };
 
             path.Create(pathType, steps);
 
@@ -1778,14 +1610,13 @@ namespace PrimMesher
                     newLayer.FlipNormals();
 
                     // add the bottom faces to the viewerFaces list
-                    if (this.viewerMode)
+                    if (viewerMode)
                     {
-                        Coord faceNormal = newLayer.faceNormal;
-                        ViewerFace newViewerFace = new ViewerFace(profile.bottomFaceNumber);
-                        int numFaces = newLayer.faces.Count;
+                        Vector3 faceNormal = newLayer.faceNormal;
+                        ViewerFace newViewerFace = new(profile.bottomFaceNumber);
                         List<Face> faces = newLayer.faces;
 
-                        for (int i = 0; i < numFaces; i++)
+                        for (int i = 0; i < faces.Count; i++)
                         {
                             Face face = faces[i];
                             newViewerFace.v1 = newLayer.coords[face.v1];
@@ -1811,208 +1642,209 @@ namespace PrimMesher
                                 newViewerFace.uv3.Flip();
                             }
 
-                            this.viewerFaces.Add(newViewerFace);
+                            viewerFaces.Add(newViewerFace);
                         }
                     }
                 } // if (nodeIndex == 0)
 
                 // append this layer
+                int coordsLen = coords.Count;
+                if(coordsLen > 0)
+                    newLayer.AddValue2FaceVertexIndices(coordsLen);
+                coords.AddRange(newLayer.coords);
 
-                int coordsLen = this.coords.Count;
-                newLayer.AddValue2FaceVertexIndices(coordsLen);
-
-                this.coords.AddRange(newLayer.coords);
-
-                if (this.calcVertexNormals)
+                if (calcVertexNormals)
                 {
-                    newLayer.AddValue2FaceNormalIndices(this.normals.Count);
-                    this.normals.AddRange(newLayer.vertexNormals);
+                    if(normals.Count > 0)
+                        newLayer.AddValue2FaceNormalIndices(normals.Count);
+                    normals.AddRange(newLayer.vertexNormals);
                 }
 
                 if (needEndFaces)
                 {
                     if (nodeIndex == 0 || nodeIndex == path.pathNodes.Count - 1) 
-                        this.faces.AddRange(newLayer.faces);
+                        faces.AddRange(newLayer.faces);
                 }
 
+                if(nodeIndex == 0)
+                {
+                    lastCutNormal1 = newLayer.cutNormal1;
+                    lastCutNormal2 = newLayer.cutNormal2;
+                    lastV = 1.0f - node.percentOfPath;
+                    continue;
+                }
                 // fill faces between layers
 
                 int numVerts = newLayer.coords.Count;
-                Face newFace1 = new Face();
-                Face newFace2 = new Face();
+                Face newFace1 = new();
+                Face newFace2 = new();
 
                 thisV = 1.0f - node.percentOfPath;
 
-                if (nodeIndex > 0)
+                int startVert = coordsLen + 1;
+                int endVert = coords.Count;
+
+                if (sides < 5 || hasProfileCut || hasHollow)
+                    startVert--;
+
+                for (int i = startVert; i < endVert; i++)
                 {
-                    int startVert = coordsLen + 1;
-                    int endVert = this.coords.Count;
+                    int iNext = i == endVert - 1 ? startVert : i + 1;
 
-                    if (sides < 5 || this.hasProfileCut || this.hasHollow)
-                        startVert--;
+                    newFace1.v1 = i;
+                    newFace1.v2 = i - numVerts;
+                    newFace1.v3 = iNext;
 
-                    for (int i = startVert; i < endVert; i++)
+                    newFace1.n1 = newFace1.v1;
+                    newFace1.n2 = newFace1.v2;
+                    newFace1.n3 = newFace1.v3;
+                    faces.Add(newFace1);
+
+                    newFace2.v1 = iNext;
+                    newFace2.v2 = i - numVerts;
+                    newFace2.v3 = iNext - numVerts;
+
+                    newFace2.n1 = newFace2.v1;
+                    newFace2.n2 = newFace2.v2;
+                    newFace2.n3 = newFace2.v3;
+                    faces.Add(newFace2);
+
+                    if (viewerMode)
                     {
-                        int iNext = i + 1;
-                        if (i == endVert - 1)
-                            iNext = startVert;
-
+                        // add the side faces to the list of viewerFaces here
                         int whichVert = i - startVert;
 
-                        newFace1.v1 = i;
-                        newFace1.v2 = i - numVerts;
-                        newFace1.v3 = iNext;
+                        int primFaceNum = profile.faceNumbers[whichVert];
+                        if (!needEndFaces)
+                            primFaceNum -= 1;
 
-                        newFace1.n1 = newFace1.v1;
-                        newFace1.n2 = newFace1.v2;
-                        newFace1.n3 = newFace1.v3;
-                        this.faces.Add(newFace1);
+                        ViewerFace newViewerFace1 = new(primFaceNum);
+                        ViewerFace newViewerFace2 = new(primFaceNum);
 
-                        newFace2.v1 = iNext;
-                        newFace2.v2 = i - numVerts;
-                        newFace2.v3 = iNext - numVerts;
-
-                        newFace2.n1 = newFace2.v1;
-                        newFace2.n2 = newFace2.v2;
-                        newFace2.n3 = newFace2.v3;
-                        this.faces.Add(newFace2);
-
-                        if (this.viewerMode)
+                        int uIndex = whichVert;
+                        if (!hasHollow && sides > 4 && uIndex < newLayer.us.Count - 1)
                         {
-                            // add the side faces to the list of viewerFaces here
-
-                            int primFaceNum = profile.faceNumbers[whichVert];
-                            if (!needEndFaces)
-                                primFaceNum -= 1;
-
-                            ViewerFace newViewerFace1 = new ViewerFace(primFaceNum);
-                            ViewerFace newViewerFace2 = new ViewerFace(primFaceNum);
-
-                            int uIndex = whichVert;
-                            if (!hasHollow && sides > 4 && uIndex < newLayer.us.Count - 1)
-                            {
-                                uIndex++;
-                            }
-
-                            float u1 = newLayer.us[uIndex];
-                            float u2 = 1.0f;
-                            if (uIndex < (int)newLayer.us.Count - 1)
-                                u2 = newLayer.us[uIndex + 1];
-
-                            if (whichVert == cut1Vert || whichVert == cut2Vert)
-                            {
-                                u1 = 0.0f;
-                                u2 = 1.0f;
-                            }
-                            else if (sides < 5)
-                            {
-                                if (whichVert < profile.numOuterVerts)
-                                { // boxes and prisms have one texture face per side of the prim, so the U values have to be scaled
-                                    // to reflect the entire texture width
-                                    u1 *= sides;
-                                    u2 *= sides;
-                                    u2 -= (int)u1;
-                                    u1 -= (int)u1;
-                                    if (u2 < 0.1f)
-                                        u2 = 1.0f;
-                                }
-                            }
-
-                            if (this.sphereMode)
-                            {
-                                if (whichVert != cut1Vert && whichVert != cut2Vert)
-                                {
-                                    u1 = u1 * 2.0f - 1.0f;
-                                    u2 = u2 * 2.0f - 1.0f;
-
-                                    if (whichVert >= newLayer.numOuterVerts)
-                                    {
-                                        u1 -= hollow;
-                                        u2 -= hollow;
-                                    }
-
-                                }
-                            }
-
-                            newViewerFace1.uv1.U = u1;
-                            newViewerFace1.uv2.U = u1;
-                            newViewerFace1.uv3.U = u2;
-
-                            newViewerFace1.uv1.V = thisV;
-                            newViewerFace1.uv2.V = lastV;
-                            newViewerFace1.uv3.V = thisV;
-
-                            newViewerFace2.uv1.U = u2;
-                            newViewerFace2.uv2.U = u1;
-                            newViewerFace2.uv3.U = u2;
-
-                            newViewerFace2.uv1.V = thisV;
-                            newViewerFace2.uv2.V = lastV;
-                            newViewerFace2.uv3.V = lastV;
-
-                            newViewerFace1.v1 = this.coords[newFace1.v1];
-                            newViewerFace1.v2 = this.coords[newFace1.v2];
-                            newViewerFace1.v3 = this.coords[newFace1.v3];
-
-                            newViewerFace2.v1 = this.coords[newFace2.v1];
-                            newViewerFace2.v2 = this.coords[newFace2.v2];
-                            newViewerFace2.v3 = this.coords[newFace2.v3];
-
-                            newViewerFace1.coordIndex1 = newFace1.v1;
-                            newViewerFace1.coordIndex2 = newFace1.v2;
-                            newViewerFace1.coordIndex3 = newFace1.v3;
-
-                            newViewerFace2.coordIndex1 = newFace2.v1;
-                            newViewerFace2.coordIndex2 = newFace2.v2;
-                            newViewerFace2.coordIndex3 = newFace2.v3;
-
-                            // profile cut faces
-                            if (whichVert == cut1Vert)
-                            {
-                                newViewerFace1.primFaceNumber = cut1FaceNumber;
-                                newViewerFace2.primFaceNumber = cut1FaceNumber;
-                                newViewerFace1.n1 = newLayer.cutNormal1;
-                                newViewerFace1.n2 = newViewerFace1.n3 = lastCutNormal1;
-
-                                newViewerFace2.n1 = newViewerFace2.n3 = newLayer.cutNormal1;
-                                newViewerFace2.n2 = lastCutNormal1;
-                            }
-                            else if (whichVert == cut2Vert)
-                            {
-                                newViewerFace1.primFaceNumber = cut2FaceNumber;
-                                newViewerFace2.primFaceNumber = cut2FaceNumber;
-                                newViewerFace1.n1 = newLayer.cutNormal2;
-                                newViewerFace1.n2 = lastCutNormal2;
-                                newViewerFace1.n3 = lastCutNormal2;
-
-                                newViewerFace2.n1 = newLayer.cutNormal2;
-                                newViewerFace2.n3 = newLayer.cutNormal2;
-                                newViewerFace2.n2 = lastCutNormal2;
-                            }
-
-                            else // outer and hollow faces
-                            {
-                                if ((sides < 5 && whichVert < newLayer.numOuterVerts) || (hollowSides < 5 && whichVert >= newLayer.numOuterVerts))
-                                { // looks terrible when path is twisted... need vertex normals here
-                                    newViewerFace1.CalcSurfaceNormal();
-                                    newViewerFace2.CalcSurfaceNormal();
-                                }
-                                else
-                                {
-                                    newViewerFace1.n1 = this.normals[newFace1.n1];
-                                    newViewerFace1.n2 = this.normals[newFace1.n2];
-                                    newViewerFace1.n3 = this.normals[newFace1.n3];
-
-                                    newViewerFace2.n1 = this.normals[newFace2.n1];
-                                    newViewerFace2.n2 = this.normals[newFace2.n2];
-                                    newViewerFace2.n3 = this.normals[newFace2.n3];
-                                }
-                            }
-
-                            this.viewerFaces.Add(newViewerFace1);
-                            this.viewerFaces.Add(newViewerFace2);
-
+                            uIndex++;
                         }
+
+                        float u1 = newLayer.us[uIndex];
+                        float u2 = 1.0f;
+                        if (uIndex < newLayer.us.Count - 1)
+                            u2 = newLayer.us[uIndex + 1];
+
+                        if (whichVert == cut1Vert || whichVert == cut2Vert)
+                        {
+                            u1 = 0.0f;
+                            u2 = 1.0f;
+                        }
+                        else if (sides < 5)
+                        {
+                            if (whichVert < profile.numOuterVerts)
+                            { // boxes and prisms have one texture face per side of the prim, so the U values have to be scaled
+                                // to reflect the entire texture width
+                                u1 *= sides;
+                                u2 *= sides;
+                                u2 -= (int)u1;
+                                u1 -= (int)u1;
+                                if (u2 < 0.1f)
+                                    u2 = 1.0f;
+                            }
+                        }
+
+                        if (sphereMode)
+                        {
+                            if (whichVert != cut1Vert && whichVert != cut2Vert)
+                            {
+                                u1 = u1 * 2.0f - 1.0f;
+                                u2 = u2 * 2.0f - 1.0f;
+
+                                if (whichVert >= newLayer.numOuterVerts)
+                                {
+                                    u1 -= hollow;
+                                    u2 -= hollow;
+                                }
+                            }
+                        }
+
+                        newViewerFace1.uv1.U = u1;
+                        newViewerFace1.uv2.U = u1;
+                        newViewerFace1.uv3.U = u2;
+
+                        newViewerFace1.uv1.V = thisV;
+                        newViewerFace1.uv2.V = lastV;
+                        newViewerFace1.uv3.V = thisV;
+
+                        newViewerFace2.uv1.U = u2;
+                        newViewerFace2.uv2.U = u1;
+                        newViewerFace2.uv3.U = u2;
+
+                        newViewerFace2.uv1.V = thisV;
+                        newViewerFace2.uv2.V = lastV;
+                        newViewerFace2.uv3.V = lastV;
+
+                        newViewerFace1.v1 = coords[newFace1.v1];
+                        newViewerFace1.v2 = coords[newFace1.v2];
+                        newViewerFace1.v3 = coords[newFace1.v3];
+                            
+                        newViewerFace2.v1 = coords[newFace2.v1];
+                        newViewerFace2.v2 = coords[newFace2.v2];
+                        newViewerFace2.v3 = coords[newFace2.v3];
+
+                        newViewerFace1.coordIndex1 = newFace1.v1;
+                        newViewerFace1.coordIndex2 = newFace1.v2;
+                        newViewerFace1.coordIndex3 = newFace1.v3;
+
+                        newViewerFace2.coordIndex1 = newFace2.v1;
+                        newViewerFace2.coordIndex2 = newFace2.v2;
+                        newViewerFace2.coordIndex3 = newFace2.v3;
+
+                        // profile cut faces
+                        if (whichVert == cut1Vert)
+                        {
+                            newViewerFace1.primFaceNumber = cut1FaceNumber;
+                            newViewerFace2.primFaceNumber = cut1FaceNumber;
+                            newViewerFace1.n1 = newLayer.cutNormal1;
+                            newViewerFace1.n2 = lastCutNormal1;
+                            newViewerFace1.n3 = lastCutNormal1;
+
+                            newViewerFace2.n1 = newLayer.cutNormal1;
+                            newViewerFace2.n3 = newLayer.cutNormal1;
+                            newViewerFace2.n2 = lastCutNormal1;
+                        }
+                        else if (whichVert == cut2Vert)
+                        {
+                            newViewerFace1.primFaceNumber = cut2FaceNumber;
+                            newViewerFace2.primFaceNumber = cut2FaceNumber;
+                            newViewerFace1.n1 = newLayer.cutNormal2;
+                            newViewerFace1.n2 = lastCutNormal2;
+                            newViewerFace1.n3 = lastCutNormal2;
+
+                            newViewerFace2.n1 = newLayer.cutNormal2;
+                            newViewerFace2.n3 = newLayer.cutNormal2;
+                            newViewerFace2.n2 = lastCutNormal2;
+                        }
+
+                        else // outer and hollow faces
+                        {
+                            if ((sides < 5 && whichVert < newLayer.numOuterVerts) || (hollowSides < 5 && whichVert >= newLayer.numOuterVerts))
+                            { // looks terrible when path is twisted... need vertex normals here
+                                newViewerFace1.CalcSurfaceNormal();
+                                newViewerFace2.CalcSurfaceNormal();
+                            }
+                            else
+                            {
+                                newViewerFace1.n1 = normals[newFace1.n1];
+                                newViewerFace1.n2 = normals[newFace1.n2];
+                                newViewerFace1.n3 = normals[newFace1.n3];
+                                    
+                                newViewerFace2.n1 = normals[newFace2.n1];
+                                newViewerFace2.n2 = normals[newFace2.n2];
+                                newViewerFace2.n3 = normals[newFace2.n3];
+                            }
+                        }
+
+                        viewerFaces.Add(newViewerFace1);
+                        viewerFaces.Add(newViewerFace2);
                     }
                 }
 
@@ -2023,12 +1855,11 @@ namespace PrimMesher
                 if (needEndFaces && nodeIndex == path.pathNodes.Count - 1 && viewerMode)
                 {
                     // add the top faces to the viewerFaces list here
-                    Coord faceNormal = newLayer.faceNormal;
-                    ViewerFace newViewerFace = new ViewerFace(0);
-                    int numFaces = newLayer.faces.Count;
+                    Vector3 faceNormal = newLayer.faceNormal;
+                    ViewerFace newViewerFace = new(0);
                     List<Face> faces = newLayer.faces;
 
-                    for (int i = 0; i < numFaces; i++)
+                    for (int i = 0; i < faces.Count; i++)
                     {
                         Face face = faces[i];
                         newViewerFace.v1 = newLayer.coords[face.v1 - coordsLen];
@@ -2054,7 +1885,7 @@ namespace PrimMesher
                             newViewerFace.uv3.Flip();
                         }
 
-                        this.viewerFaces.Add(newViewerFace);
+                        viewerFaces.Add(newViewerFace);
                     }
                 }
 
@@ -2063,44 +1894,34 @@ namespace PrimMesher
 
         }
 
-
-        /// <summary>
-        /// DEPRICATED - use Extrude(PathType.Linear) instead
-        /// Extrudes a profile along a straight line path. Used for prim types box, cylinder, and prism.
-        /// </summary>
-        /// 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ExtrudeLinear()
         {
-            this.Extrude(PathType.Linear);
+            Extrude(PathType.Linear);
         }
 
-
-        /// <summary>
-        /// DEPRICATED - use Extrude(PathType.Circular) instead
-        /// Extrude a profile into a circular path prim mesh. Used for prim types torus, tube, and ring.
-        /// </summary>
-        /// 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ExtrudeCircular()
         {
-            this.Extrude(PathType.Circular);
+            Extrude(PathType.Circular);
         }
 
-
-        private Coord SurfaceNormal(Coord c1, Coord c2, Coord c3)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector3 SurfaceNormal(Vector3 c1, Vector3 c2, Vector3 c3)
         {
-            Coord edge1 = new Coord(c2.X - c1.X, c2.Y - c1.Y, c2.Z - c1.Z);
-            Coord edge2 = new Coord(c3.X - c1.X, c3.Y - c1.Y, c3.Z - c1.Z);
+            Vector3 edge1 = c2 - c1;
+            Vector3 edge2 = c3 - c1;
 
-            Coord normal = Coord.Cross(edge1, edge2);
-
+            Vector3 normal = Vector3.Cross(edge1, edge2);
             normal.Normalize();
 
             return normal;
         }
 
-        private Coord SurfaceNormal(Face face)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Vector3 SurfaceNormal(Face face)
         {
-            return SurfaceNormal(this.coords[face.v1], this.coords[face.v2], this.coords[face.v3]);
+            return SurfaceNormal(coords[face.v1], coords[face.v2], coords[face.v3]);
         }
 
         /// <summary>
@@ -2108,13 +1929,13 @@ namespace PrimMesher
         /// </summary>
         /// <param name="faceIndex"></param>
         /// <returns></returns>
-        public Coord SurfaceNormal(int faceIndex)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Vector3 SurfaceNormal(int faceIndex)
         {
-            int numFaces = this.faces.Count;
-            if (faceIndex < 0 || faceIndex >= numFaces)
+            if (faceIndex < 0 || faceIndex >= faces.Count)
                 throw new Exception("faceIndex out of range");
 
-            return SurfaceNormal(this.faces[faceIndex]);
+            return SurfaceNormal(faces[faceIndex]);
         }
 
         /// <summary>
@@ -2123,33 +1944,35 @@ namespace PrimMesher
         /// <returns></returns>
         public PrimMesh Copy()
         {
-            PrimMesh copy = new PrimMesh(this.sides, this.profileStart, this.profileEnd, this.hollow, this.hollowSides);
-            copy.twistBegin = this.twistBegin;
-            copy.twistEnd = this.twistEnd;
-            copy.topShearX = this.topShearX;
-            copy.topShearY = this.topShearY;
-            copy.pathCutBegin = this.pathCutBegin;
-            copy.pathCutEnd = this.pathCutEnd;
-            copy.dimpleBegin = this.dimpleBegin;
-            copy.dimpleEnd = this.dimpleEnd;
-            copy.skew = this.skew;
-            copy.holeSizeX = this.holeSizeX;
-            copy.holeSizeY = this.holeSizeY;
-            copy.taperX = this.taperX;
-            copy.taperY = this.taperY;
-            copy.radius = this.radius;
-            copy.revolutions = this.revolutions;
-            copy.stepsPerRevolution = this.stepsPerRevolution;
-            copy.calcVertexNormals = this.calcVertexNormals;
-            copy.normalsProcessed = this.normalsProcessed;
-            copy.viewerMode = this.viewerMode;
-            copy.numPrimFaces = this.numPrimFaces;
-            copy.errorMessage = this.errorMessage;
+            PrimMesh copy = new(sides, profileStart, profileEnd, hollow, hollowSides)
+            {
+                twistBegin = twistBegin,
+                twistEnd = twistEnd,
+                topShearX = topShearX,
+                topShearY = topShearY,
+                pathCutBegin = pathCutBegin,
+                pathCutEnd = pathCutEnd,
+                dimpleBegin = dimpleBegin,
+                dimpleEnd = dimpleEnd,
+                skew = skew,
+                holeSizeX = holeSizeX,
+                holeSizeY = holeSizeY,
+                taperX = taperX,
+                taperY = taperY,
+                radius = radius,
+                revolutions = revolutions,
+                stepsPerRevolution = stepsPerRevolution,
+                calcVertexNormals = calcVertexNormals,
+                normalsProcessed = normalsProcessed,
+                viewerMode = viewerMode,
+                numPrimFaces = numPrimFaces,
+                errorMessage = errorMessage,
 
-            copy.coords = new List<Coord>(this.coords);
-            copy.faces = new List<Face>(this.faces);
-            copy.viewerFaces = new List<ViewerFace>(this.viewerFaces);
-            copy.normals = new List<Coord>(this.normals);
+                coords = new List<Vector3>(coords),
+                faces = new List<Face>(faces),
+                viewerFaces = new List<ViewerFace>(viewerFaces),
+                normals = new List<Vector3>(normals)
+            };
 
             return copy;
         }
@@ -2164,23 +1987,23 @@ namespace PrimMesher
 
             normalsProcessed = true;
 
-            int numFaces = faces.Count;
+            if (!calcVertexNormals)
+                normals = [];
 
-            if (!this.calcVertexNormals)
-                this.normals = new List<Coord>();
-
-            for (int i = 0; i < numFaces; i++)
+            for (int i = 0; i < faces.Count; i++)
             {
+                int normIndex = normals.Count;
+
                 Face face = faces[i];
+                Vector3 n = SurfaceNormal(face);
+                n.Normalize();
+                normals.Add(n);
 
-                this.normals.Add(SurfaceNormal(i).Normalize());
-
-                int normIndex = normals.Count - 1;
                 face.n1 = normIndex;
                 face.n2 = normIndex;
                 face.n3 = normIndex;
 
-                this.faces[i] = face;
+                faces[i] = face;
             }
         }
 
@@ -2190,30 +2013,21 @@ namespace PrimMesher
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <param name="z"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddPos(float x, float y, float z)
         {
-            int i;
-            int numVerts = this.coords.Count;
-            Coord vert;
+            Vector3 vert = new(x, y, z);
 
-            for (i = 0; i < numVerts; i++)
+            for (int i = 0; i < coords.Count; i++)
+                coords[i] += vert;
+
+            if (viewerFaces != null)
             {
-                vert = this.coords[i];
-                vert.X += x;
-                vert.Y += y;
-                vert.Z += z;
-                this.coords[i] = vert;
-            }
-
-            if (this.viewerFaces != null)
-            {
-                int numViewerFaces = this.viewerFaces.Count;
-
-                for (i = 0; i < numViewerFaces; i++)
+                for (int i = 0; i < viewerFaces.Count; i++)
                 {
-                    ViewerFace v = this.viewerFaces[i];
-                    v.AddPos(x, y, z);
-                    this.viewerFaces[i] = v;
+                    ViewerFace face = viewerFaces[i];
+                    face.AddPos(vert);
+                    viewerFaces[i] = face;
                 }
             }
         }
@@ -2222,45 +2036,35 @@ namespace PrimMesher
         /// Rotates the mesh
         /// </summary>
         /// <param name="q"></param>
-        public void AddRot(Quat q)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void AddRot(Quaternion q)
         {
-            int i;
-            int numVerts = this.coords.Count;
+            if(q.IsIdentity())
+                return;
 
-            for (i = 0; i < numVerts; i++)
-                this.coords[i] *= q;
+            for (int i = 0; i < coords.Count; i++)
+                coords[i] *= q;
 
-            if (this.normals != null)
+            if (normals != null)
             {
-                int numNormals = this.normals.Count;
-                for (i = 0; i < numNormals; i++)
-                    this.normals[i] *= q;
+                for (int i = 0; i < normals.Count; i++)
+                    normals[i] *= q;
             }
 
-            if (this.viewerFaces != null)
+            if (viewerFaces != null)
             {
-                int numViewerFaces = this.viewerFaces.Count;
-
-                for (i = 0; i < numViewerFaces; i++)
+                for (int i = 0; i < viewerFaces.Count; i++)
                 {
-                    ViewerFace v = this.viewerFaces[i];
-                    v.v1 *= q;
-                    v.v2 *= q;
-                    v.v3 *= q;
-
-                    v.n1 *= q;
-                    v.n2 *= q;
-                    v.n3 *= q;
-                    this.viewerFaces[i] = v;
+                    ViewerFace face = viewerFaces[i];
+                    face.AddRot(q);
+                    viewerFaces[i] = face;
                 }
             }
         }
 
         public VertexIndexer GetVertexIndexer()
         {
-            if (this.viewerMode && this.viewerFaces.Count > 0)
-                return new VertexIndexer(this);
-            return null;
+            return (viewerMode && viewerFaces.Count > 0) ? new VertexIndexer(this) : null;
         }
 
         /// <summary>
@@ -2271,24 +2075,17 @@ namespace PrimMesher
         /// <param name="z"></param>
         public void Scale(float x, float y, float z)
         {
-            int i;
-            int numVerts = this.coords.Count;
-            //Coord vert;
+            Vector3 scale = new(x, y, z);
+            for (int i = 0; i < coords.Count; i++)
+                coords[i] *= scale;
 
-            Coord m = new Coord(x, y, z);
-            for (i = 0; i < numVerts; i++)
-                this.coords[i] *= m;
-
-            if (this.viewerFaces != null)
+            if (viewerFaces != null)
             {
-                int numViewerFaces = this.viewerFaces.Count;
-                for (i = 0; i < numViewerFaces; i++)
+                for (int i = 0; i < viewerFaces.Count; i++)
                 {
-                    ViewerFace v = this.viewerFaces[i];
-                    v.v1 *= m;
-                    v.v2 *= m;
-                    v.v3 *= m;
-                    this.viewerFaces[i] = v;
+                    ViewerFace face = viewerFaces[i];
+                    face.Scale(scale);
+                    viewerFaces[i] = face;
                 }
 
             }
@@ -2307,18 +2104,15 @@ namespace PrimMesher
                 return;
             String fileName = name + "_" + title + ".raw";
             String completePath = System.IO.Path.Combine(path, fileName);
-            StreamWriter sw = new StreamWriter(completePath);
 
-            for (int i = 0; i < this.faces.Count; i++)
+            using StreamWriter sw = new(completePath);
+
+            for (int i = 0; i < faces.Count; i++)
             {
-                string s = this.coords[this.faces[i].v1].ToString();
-                s += " " + this.coords[this.faces[i].v2].ToString();
-                s += " " + this.coords[this.faces[i].v3].ToString();
-
+                Face face = faces[i];
+                string s = $"{coords[face.v1]} {coords[face.v2]} {coords[face.v3]}";
                 sw.WriteLine(s);
             }
-
-            sw.Close();
         }
     }
 }

@@ -116,7 +116,6 @@ namespace OpenMetaverse.Imaging
                 Bump = new byte[n];
         }
 
-#if !NO_UNSAFE
         /// <summary>
         /// 
         /// </summary>
@@ -218,7 +217,6 @@ namespace OpenMetaverse.Imaging
                 throw new NotSupportedException("Unrecognized pixel format: " + bitmap.PixelFormat.ToString());
             }
         }
-#endif
 
         /// <summary>
         /// Convert the channels in the image. Channels are created or destroyed as required.

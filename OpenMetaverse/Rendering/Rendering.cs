@@ -116,7 +116,7 @@ namespace OpenMetaverse.Rendering
 
         public override bool Equals(object obj)
         {
-            return (obj is Vertex) ? this == (Vertex)obj : false;
+            return (obj is Vertex) && this == (Vertex)obj;
         }
 
         public bool Equals(Vertex other)
@@ -246,162 +246,202 @@ namespace OpenMetaverse.Rendering
         /// <param name="LOD">Level of detail</param>
         /// <param name="mesh">Resulting decoded FacetedMesh</param>
         /// <returns>True if mesh asset decoding was successful</returns>
-        public static bool TryDecodeFromAsset(Primitive prim, AssetMesh meshAsset, DetailLevel LOD, out FacetedMesh mesh)
+        public static bool TryDecodeFromAsset(Primitive prim, AssetMesh meshAsset, DetailLevel LOD, out FacetedMesh mesh,
+                    bool skipNormals = false)
         {
             mesh = null;
 
             try
             {
                 if (!meshAsset.Decode())
-                {
                     return false;
-                }
 
                 OSDMap MeshData = meshAsset.MeshData;
 
-                mesh = new FacetedMesh();
-
-                mesh.Faces = new List<Face>();
-                mesh.Prim = prim;
-                mesh.Profile.Faces = new List<ProfileFace>();
-                mesh.Profile.Positions = new List<Vector3>();
-                mesh.Path.Points = new List<PathPoint>();
-
-                OSD facesOSD = null;
-
-                switch (LOD)
+                mesh = new FacetedMesh
                 {
-                    default:
-                    case DetailLevel.Highest:
-                        facesOSD = MeshData["high_lod"];
-                        break;
+                    Faces = [],
+                    Prim = prim
+                };
+                mesh.Profile.Faces = [];
+                mesh.Profile.Positions = [];
+                mesh.Path.Points = [];
 
-                    case DetailLevel.High:
-                        facesOSD = MeshData["medium_lod"];
-                        break;
-
-                    case DetailLevel.Medium:
-                        facesOSD = MeshData["low_lod"];
-                        break;
-
-                    case DetailLevel.Low:
-                        facesOSD = MeshData["lowest_lod"];
-                        break;
-                }
+                OSD facesOSD = LOD switch
+                {
+                    DetailLevel.High => MeshData["medium_lod"],
+                    DetailLevel.Medium => MeshData["low_lod"],
+                    DetailLevel.Low => MeshData["lowest_lod"],
+                    _ => MeshData["high_lod"]
+                };
 
                 if (facesOSD is not OSDArray decodedMeshOsdArray)
                     return false;
 
-                for (int faceNr = 0; faceNr < decodedMeshOsdArray.Count; faceNr++)
-                {
-                    if(decodedMeshOsdArray[faceNr] is not OSDMap subMeshMap)
-                        continue;
-
-                    // Decode each individual face
-
-                    Face oface = new Face();
-                    oface.ID = faceNr;
-                    oface.Vertices = new List<Vertex>();
-                    oface.Indices = new List<ushort>();
-                    oface.TextureFace = prim.Textures.GetFace((uint)faceNr);
-
-                    Vector3 posMax;
-                    Vector3 posMin;
-
-                    // If PositionDomain is not specified, the default is from -0.5 to 0.5
-                    if (subMeshMap.TryGetValue("PositionDomain", out OSD osdpd) && osdpd is OSDMap mappd)
-                    {
-                        posMax = mappd["Max"];
-                        posMin = mappd["Min"];
-                    }
-                    else
-                    {
-                        posMax = new Vector3(0.5f, 0.5f, 0.5f);
-                        posMin = new Vector3(-0.5f, -0.5f, -0.5f);
-                    }
-
-                    // Vertex positions
-                    byte[] posBytes = subMeshMap["Position"];
-
-                    // Normals
-                    byte[] norBytes = null;
-                    if (subMeshMap.TryGetValue("Normal", out OSD osdNormal))
-                    {
-                        norBytes = osdNormal;
-                    }
-
-                    // UV texture map
-                    Vector2 texPosMax = Vector2.Zero;
-                    Vector2 texPosMin = Vector2.Zero;
-                    byte[] texBytes = null;
-                    if (subMeshMap.TryGetValue("TexCoord0", out OSD osdtcord0))
-                    {
-                        texBytes = osdtcord0;
-                        texPosMax = ((OSDMap)subMeshMap["TexCoord0Domain"])["Max"];
-                        texPosMin = ((OSDMap)subMeshMap["TexCoord0Domain"])["Min"];
-                    }
-
-                    // Extract the vertex position data
-                    // If present normals and texture coordinates too
-                    for (int i = 0; i < posBytes.Length; i += 6)
-                    {
-                        ushort uX = Utils.BytesToUInt16(posBytes, i);
-                        ushort uY = Utils.BytesToUInt16(posBytes, i + 2);
-                        ushort uZ = Utils.BytesToUInt16(posBytes, i + 4);
-
-                        Vertex vx = new Vertex();
-
-                        vx.Position = new Vector3(
-                            Utils.UInt16ToFloat(uX, posMin.X, posMax.X),
-                            Utils.UInt16ToFloat(uY, posMin.Y, posMax.Y),
-                            Utils.UInt16ToFloat(uZ, posMin.Z, posMax.Z));
-
-                        if (norBytes is not null && norBytes.Length >= i + 4)
-                        {
-                            ushort nX = Utils.BytesToUInt16(norBytes, i);
-                            ushort nY = Utils.BytesToUInt16(norBytes, i + 2);
-                            ushort nZ = Utils.BytesToUInt16(norBytes, i + 4);
-
-                            vx.Normal = new Vector3(
-                                Utils.UInt16ToFloat(nX, posMin.X, posMax.X),
-                                Utils.UInt16ToFloat(nY, posMin.Y, posMax.Y),
-                                Utils.UInt16ToFloat(nZ, posMin.Z, posMax.Z));
-                        }
-
-                        var vertexIndexOffset = oface.Vertices.Count * 4;
-
-                        if (texBytes is not null && texBytes.Length >= vertexIndexOffset + 4)
-                        {
-                            ushort tX = Utils.BytesToUInt16(texBytes, vertexIndexOffset);
-                            ushort tY = Utils.BytesToUInt16(texBytes, vertexIndexOffset + 2);
-
-                            vx.TexCoord = new Vector2(
-                                Utils.UInt16ToFloat(tX, texPosMin.X, texPosMax.X),
-                                Utils.UInt16ToFloat(tY, texPosMin.Y, texPosMax.Y));
-                        }
-
-                        oface.Vertices.Add(vx);
-                    }
-
-                    byte[] triangleBytes = subMeshMap["TriangleList"];
-                    for (int i = 0; i < triangleBytes.Length; i += 6)
-                    {
-                        oface.Indices.Add(Utils.BytesToUInt16(triangleBytes, i));
-                        oface.Indices.Add(Utils.BytesToUInt16(triangleBytes, i + 2));
-                        oface.Indices.Add(Utils.BytesToUInt16(triangleBytes, i + 4));
-                    }
-
-                    mesh.Faces.Add(oface);
-                }
-
+                return TryDecodeOSDLODBlock(decodedMeshOsdArray, skipNormals, ref mesh);
             }
             catch (Exception ex)
             {
                 Logger.Log("Failed to decode mesh asset: " + ex.Message, Helpers.LogLevel.Warning);
                 return false;
             }
+        }
 
-            return true;
+        public static bool TryDecodeFromBytes(byte[] meshData, DetailLevel LOD, out FacetedMesh mesh, bool skipNormals = false)
+        {
+            mesh = null;
+
+            try
+            {
+                string layername = LOD switch
+                {
+                    DetailLevel.High =>"medium_lod",
+                    DetailLevel.Medium => "low_lod",
+                    DetailLevel.Low => "lowest_lod",
+                    _ => "high_lod"
+                };
+
+                OSD facesOSD = AssetMesh.DecodeBlock(meshData, layername);
+
+                if (facesOSD is not OSDArray decodedMeshOsdArray)
+                    return false;
+
+                mesh = new FacetedMesh
+                {
+                    Faces = []
+                };
+
+                return TryDecodeOSDLODBlock(decodedMeshOsdArray, skipNormals, ref mesh);
+            }
+
+            catch (Exception ex)
+            {
+                Logger.Log("Failed to decode mesh bytes: " + ex.Message, Helpers.LogLevel.Warning);
+                return false;
+            }
+        }
+
+        public static bool TryDecodeOSDLODBlock(OSDArray LODBlockOSDArray, bool skipNormals, ref FacetedMesh mesh)
+        { 
+            const float ONE_OVER_U16_MAX = 1.0f / ushort.MaxValue;
+
+            for (int faceNr = 0; faceNr < LODBlockOSDArray.Count; faceNr++)
+            {
+                if(LODBlockOSDArray[faceNr] is not OSDMap subMeshMap)
+                    continue;
+
+                // Decode each individual face
+                Face oface = new()
+                {
+                    ID = faceNr,
+                    Vertices = [],
+                    Indices = [],
+                };
+
+                if(subMeshMap.ContainsKey("NoGeometry"))
+                    continue;
+
+                // Vertex positions
+                if(!subMeshMap.TryGetBinary("Position", out byte[] posBytes))
+                    continue;
+
+                Vector3 posMin;
+                Vector3 posRange;
+                // If PositionDomain is not specified, the default is from -0.5 to 0.5
+                if (subMeshMap.TryGetOSDMap("PositionDomain", out OSDMap mappd))
+                {
+                    posMin = mappd["Min"];
+                    posRange = mappd["Max"] - posMin;
+                }
+                else
+                {
+                    posMin = new Vector3(-0.5f, -0.5f, -0.5f);
+                    posRange = new Vector3(1.0f, 1.0f, 1.0f);
+                }
+
+                // Normals
+                if(!skipNormals && subMeshMap.TryGetBinary("Normal", out byte[] norBytes))
+                {
+                    if(norBytes.Length != posBytes.Length)
+                        norBytes = null;
+                }
+                else
+                    norBytes = null;
+
+                // UV texture map
+                Vector2 texUVRange;
+                Vector2 texUVMin;
+                if (subMeshMap.TryGetBinary("TexCoord0", out byte[] texUVBytes))
+                {
+                    if(texUVBytes.Length * 3 != posBytes.Length * 2)
+                        texUVBytes = null;
+                    OSDMap UVdomain = (OSDMap)subMeshMap["TexCoord0Domain"];
+                    texUVMin = UVdomain["Min"];
+                    texUVRange = UVdomain["Max"] - texUVMin;
+                }
+                else
+                {
+                    texUVMin = Vector2.Zero;
+                    texUVRange = Vector2.Zero;
+                }
+
+                posRange *= ONE_OVER_U16_MAX;
+                float normRange = 2f * ONE_OVER_U16_MAX;
+                texUVRange *= ONE_OVER_U16_MAX;
+
+                // Extract the vertex position data
+                // If present normals and texture coordinates too
+
+                int vertexUVOffset = 0;
+                for (int i = 0; i < posBytes.Length; i += 6)
+                {
+                    Vertex vx = new();
+
+                    ushort uX = Utils.BytesToUInt16(posBytes, i);
+                    ushort uY = Utils.BytesToUInt16(posBytes, i + 2);
+                    ushort uZ = Utils.BytesToUInt16(posBytes, i + 4);
+
+                    vx.Position = new Vector3(
+                        uX * posRange.X + posMin.X,
+                        uY * posRange.Y + posMin.Y,
+                        uZ * posRange.Z + posMin.Z );
+
+                    if (norBytes is not null)
+                    {
+                        ushort nX = Utils.BytesToUInt16(norBytes, i);
+                        ushort nY = Utils.BytesToUInt16(norBytes, i + 2);
+                        ushort nZ = Utils.BytesToUInt16(norBytes, i + 4);
+
+                        vx.Normal = new Vector3(
+                            nX * normRange - 1.0f,
+                            nY * normRange - 1.0f,
+                            nZ * normRange - 1.0f);
+                    }
+
+                    if (texUVBytes is not null)
+                    {
+                        ushort tX = Utils.BytesToUInt16(texUVBytes, vertexUVOffset); vertexUVOffset += 2;
+                        ushort tY = Utils.BytesToUInt16(texUVBytes, vertexUVOffset); vertexUVOffset += 2;
+
+                        vx.TexCoord = new Vector2(
+                            tX * texUVRange.X + texUVMin.X,
+                            tY * texUVRange.Y + texUVMin.Y);
+                    }
+
+                    oface.Vertices.Add(vx);
+                }
+
+                byte[] triangleBytes = subMeshMap["TriangleList"];
+                for (int i = 0; i < triangleBytes.Length; i += 6)
+                {
+                    oface.Indices.Add(Utils.BytesToUInt16(triangleBytes, i));
+                    oface.Indices.Add(Utils.BytesToUInt16(triangleBytes, i + 2));
+                    oface.Indices.Add(Utils.BytesToUInt16(triangleBytes, i + 4));
+                }
+
+                mesh.Faces.Add(oface);
+            }
+        return true;
         }
     }
 
@@ -416,18 +456,18 @@ namespace OpenMetaverse.Rendering
 
         public SimpleMesh(SimpleMesh mesh)
         {
-            this.Indices = new List<ushort>(mesh.Indices);
-            this.Path.Open = mesh.Path.Open;
-            this.Path.Points = new List<PathPoint>(mesh.Path.Points);
-            this.Prim = mesh.Prim;
-            this.Profile.Concave = mesh.Profile.Concave;
-            this.Profile.Faces = new List<ProfileFace>(mesh.Profile.Faces);
-            this.Profile.MaxX = mesh.Profile.MaxX;
-            this.Profile.MinX = mesh.Profile.MinX;
-            this.Profile.Open = mesh.Profile.Open;
-            this.Profile.Positions = new List<Vector3>(mesh.Profile.Positions);
-            this.Profile.TotalOutsidePoints = mesh.Profile.TotalOutsidePoints;
-            this.Vertices = new List<Vertex>(mesh.Vertices);
+            Indices = new List<ushort>(mesh.Indices);
+            Path.Open = mesh.Path.Open;
+            Path.Points = new List<PathPoint>(mesh.Path.Points);
+            Prim = mesh.Prim;
+            Profile.Concave = mesh.Profile.Concave;
+            Profile.Faces = new List<ProfileFace>(mesh.Profile.Faces);
+            Profile.MaxX = mesh.Profile.MaxX;
+            Profile.MinX = mesh.Profile.MinX;
+            Profile.Open = mesh.Profile.Open;
+            Profile.Positions = new List<Vector3>(mesh.Profile.Positions);
+            Profile.TotalOutsidePoints = mesh.Profile.TotalOutsidePoints;
+            Vertices = new List<Vertex>(mesh.Vertices);
         }
     }
 

@@ -26,30 +26,29 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Text;
 using System.Text.RegularExpressions;
+using OpenMetaverse;
 
 namespace PrimMesher
 {
     public class ObjMesh
     {
-        List<Coord> coords = new List<Coord>();
-        List<Coord> normals = new List<Coord>();
-        List<UVCoord> uvs = new List<UVCoord>();
+        List<Vector3> coords = [];
+        List<Vector3> normals = [];
+        List<UVCoord> uvs = [];
 
         public string meshName = string.Empty;
-        public List<List<ViewerVertex>> viewerVertices = new List<List<ViewerVertex>>();
-        public List<List<ViewerPolygon>> viewerPolygons = new List<List<ViewerPolygon>>();
+        public List<List<ViewerVertex>> viewerVertices = [];
+        public List<List<ViewerPolygon>> viewerPolygons = [];
 
-        List<ViewerVertex> faceVertices = new List<ViewerVertex>();
-        List<ViewerPolygon> facePolygons = new List<ViewerPolygon>();
+        List<ViewerVertex> faceVertices = [];
+        List<ViewerPolygon> facePolygons = [];
         public int numPrimFaces;
 
-        Dictionary<int, int> viewerVertexLookup = new Dictionary<int, int>();
+        Dictionary<int, int> viewerVertexLookup = new();
 
         public ObjMesh(string path)
         {
@@ -82,9 +81,9 @@ namespace PrimMesher
         public VertexIndexer GetVertexIndexer()
         {
             VertexIndexer vi = new VertexIndexer();
-            vi.numPrimFaces = this.numPrimFaces;
-            vi.viewerPolygons = this.viewerPolygons;
-            vi.viewerVertices = this.viewerVertices;
+            vi.numPrimFaces = numPrimFaces;
+            vi.viewerPolygons = viewerPolygons;
+            vi.viewerVertices = viewerVertices;
 
             return vi;
         }
@@ -153,11 +152,11 @@ namespace PrimMesher
 
                         int hash = hashInts(positionIndex, texCoordIndex, normalIndex);
 
-                        if (viewerVertexLookup.ContainsKey(hash))
-                            vertIndices[vertexIndex - 1] = viewerVertexLookup[hash];
+                        if (viewerVertexLookup.TryGetValue(hash, out int hv))
+                            vertIndices[vertexIndex - 1] = hv;
                         else
                         {
-                            ViewerVertex vv = new ViewerVertex();
+                            ViewerVertex vv = new();
                             vv.v = coords[positionIndex];
                             if (normalIndex > -1)
                                 vv.n = normals[normalIndex];
@@ -206,9 +205,9 @@ namespace PrimMesher
                 float.Parse(tokens[1], CultureInfo.InvariantCulture));
         }
 
-        private Coord ParseCoord(string[] tokens)
+        private Vector3 ParseCoord(string[] tokens)
         {
-            return new Coord(
+            return new Vector3(
                 float.Parse(tokens[1], CultureInfo.InvariantCulture),
                 float.Parse(tokens[2], CultureInfo.InvariantCulture),
                 float.Parse(tokens[3], CultureInfo.InvariantCulture));
@@ -216,7 +215,7 @@ namespace PrimMesher
 
         private int hashInts(int i1, int i2, int i3)
         {
-            return (i1.ToString() + " " + i2.ToString() + " " + i3.ToString()).GetHashCode();
+            return HashCode.Combine(i1, i2, i3);
         }
     }
 }

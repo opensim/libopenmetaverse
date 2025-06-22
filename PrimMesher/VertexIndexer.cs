@@ -28,16 +28,17 @@
 
 using System;
 using System.Collections.Generic;
+using OpenMetaverse;
 
 namespace PrimMesher
 {
     public struct ViewerVertex
     {
-        public Coord v;
-        public Coord n;
+        public Vector3 v;
+        public Vector3 n;
         public UVCoord uv;
 
-        public ViewerVertex(Coord coord, Coord normal, UVCoord uv)
+        public ViewerVertex(Vector3 coord, Vector3 normal, UVCoord uv)
         {
             this.v = coord;
             this.n = normal;
