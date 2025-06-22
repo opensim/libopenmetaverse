@@ -67,8 +67,7 @@ namespace CSJ2K.j2k.util
 	/// 
 	/// </seealso>
 	//UPGRADE_ISSUE: Class hierarchy differences between 'java.util.Properties' and 'System.Collections.Specialized.NameValueCollection' may cause compilation errors. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1186'"
-	[Serializable]
-	public class ParameterList:System.Collections.Specialized.NameValueCollection
+	public class ParameterList:System.Collections.Generic.Dictionary<string, string>
 	{
         // COVNERSION PROBLEM?
         private ParameterList defaults;
@@ -287,14 +286,16 @@ namespace CSJ2K.j2k.util
 		{
 			System.String pval;
 			
-			pval = ((System.String) this[(System.String) pname]);
 			//UPGRADE_ISSUE: Field 'java.util.Properties.defaults' was not converted. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1000_javautilPropertiesdefaults_f'"
-			if (pval == null && defaults != null)
+			if (!TryGetValue(pname, out pval) && defaults != null)
 			{
 				// if parameter is not there
 				// Look in defaults
 				//UPGRADE_ISSUE: Field 'java.util.Properties.defaults' was not converted. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1000_javautilPropertiesdefaults_f'"
-				pval = defaults.Get(pname);
+				if (!defaults.TryGetValue(pname, out pval))
+				{
+					return null;
+				}
 			}
 			return pval;
 		}
@@ -450,10 +451,10 @@ namespace CSJ2K.j2k.util
 		/// starting with 'prfx' which is not in the valid list of parameter names.
 		/// 
 		/// </exception>
-		public virtual void  checkList(char prfx, System.String[] plist)
+		public virtual void  checkList(char prfx, string[] plist)
 		{
 			System.Collections.IEnumerator args;
-			System.String val;
+			string val;
 			int i;
 			bool isvalid;
 			
@@ -463,7 +464,7 @@ namespace CSJ2K.j2k.util
 			while (args.MoveNext())
 			{
 				//UPGRADE_TODO: Method 'java.util.Enumeration.nextElement' was converted to 'System.Collections.IEnumerator.Current' which has a different behavior. "ms-help://MS.VSCC.v80/dv_commoner/local/redirect.htm?index='!DefaultContextWindowIndex'&keyword='jlca1073_javautilEnumerationnextElement'"
-				val = ((System.String) args.Current);
+				val = (string) args.Current;
 				if (val.Length > 0 && val[0] == prfx)
 				{
 					isvalid = false;

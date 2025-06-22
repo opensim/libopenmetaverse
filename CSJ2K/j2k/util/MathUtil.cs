@@ -41,7 +41,6 @@
 * Copyright (c) 1999/2000 JJ2000 Partners.
 * */
 using System;
-using System.Runtime.CompilerServices;
 namespace CSJ2K.j2k.util
 {
 	
@@ -51,12 +50,34 @@ namespace CSJ2K.j2k.util
 	/// </summary>
 	public class MathUtil
 	{
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int log2(int x)
+		
+		/// <summary> Method that calculates the floor of the log, base 2, of 'x'. The
+		/// calculation is performed in integer arithmetic, therefore, it is exact.
+		/// 
+		/// </summary>
+		/// <param name="x">The value to calculate log2 on.
+		/// 
+		/// </param>
+		/// <returns> floor(log(x)/log(2)), calculated in an exact way.
+		/// 
+		/// </returns>
+		public static int log2(int x)
 		{
-            if (x <= 0)
-                throw new System.ArgumentException("" + x + " <= 0");
-            return System.Numerics.BitOperations.Log2((uint)x);
+			int y, v;
+			// No log of 0 or negative
+			if (x <= 0)
+			{
+				throw new System.ArgumentException("" + x + " <= 0");
+			}
+			// Calculate log2 (it's actually floor log2)
+			v = x;
+			y = - 1;
+			while (v > 0)
+			{
+				v >>= 1;
+				y++;
+			}
+			return y;
 		}
 		
 		/// <summary> Method that calculates the Least Common Multiple (LCM) of two strictly
@@ -93,7 +114,7 @@ namespace CSJ2K.j2k.util
 					return i * max;
 				}
 			}
-			throw new System.ApplicationException("Cannot find the least common multiple of numbers " + x1 + " and " + x2);
+			throw new System.InvalidOperationException("Cannot find the least common multiple of numbers " + x1 + " and " + x2);
 		}
 		
 		/// <summary> Method that calculates the Least Common Multiple (LCM) of several
@@ -107,7 +128,7 @@ namespace CSJ2K.j2k.util
 		{
 			if (x.Length < 2)
 			{
-				throw new System.ApplicationException("Do not use this method if there are less than" + " two numbers.");
+				throw new System.InvalidOperationException("Do not use this method if there are less than" + " two numbers.");
 			}
 			int tmp = lcm(x[x.Length - 1], x[x.Length - 2]);
 			for (int i = x.Length - 3; i >= 0; i--)
@@ -169,7 +190,7 @@ namespace CSJ2K.j2k.util
 		{
 			if (x.Length < 2)
 			{
-				throw new System.ApplicationException("Do not use this method if there are less than" + " two numbers.");
+				throw new System.InvalidOperationException("Do not use this method if there are less than" + " two numbers.");
 			}
 			int tmp = gcd(x[x.Length - 1], x[x.Length - 2]);
 			for (int i = x.Length - 3; i >= 0; i--)

@@ -79,6 +79,7 @@
 
       <ReferencePath>../bin/</ReferencePath>
       <Reference name="System.Drawing.Common"/>
+      <Reference name="OpenMetaverseTypes"/>
       <Files>
         <Match pattern="*.cs" recurse="true">
          <Exclude name="obj" pattern="obj"/>
