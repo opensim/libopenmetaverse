@@ -633,6 +633,7 @@ namespace PrimMesher
                     angle = hollowAngles.angles[i];
                     newVert.X = hollow * xScale * angle.X;
                     newVert.Y = hollow * yScale * angle.Y;
+                    hollowCoords.Add(newVert);
 
                     if (calcVertexNormals)
                     {
