@@ -4353,6 +4353,9 @@ version 2.0
 }
 
 // ScriptTeleportRequest
+// Interestingly, this message does not actually "Request a Teleport"
+// on the viewer. Instead it opens the world map and places a beacon
+// at the indicated location.
 // reliable
 {
 	ScriptTeleportRequest Low 195 Trusted Unencoded
@@ -4363,6 +4366,10 @@ version 2.0
 		{	SimPosition		LLVector3		}
 		{	LookAt			LLVector3		}
 	}
+    {
+        Options Variable
+        {   Flags           U32 }
+    }
 }
 
 

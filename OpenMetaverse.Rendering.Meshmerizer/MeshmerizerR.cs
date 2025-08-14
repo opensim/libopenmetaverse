@@ -31,6 +31,7 @@
  * using PrimMesher (http://forge.opensimulator.org/projects/primmesher).
  */
 
+using PrimMesher;
 using System;
 using System.Collections.Generic;
 using OMV = OpenMetaverse;
@@ -107,6 +108,95 @@ namespace OpenMetaverse.Rendering
             return null;
         }
 
+        public static FacetedMesh m_BasicBoxMesh = null;
+        private static readonly object m_BasicBoxMeshLock = new();
+        public static  List<ushort> m_indexs_012213 = [0, 1, 2, 2, 1, 3];
+        public static FacetedMesh GetBasicBoxMesh()
+        {
+            if(m_BasicBoxMesh == null)
+            {
+                lock (m_BasicBoxMeshLock)
+                {
+                    m_BasicBoxMesh ??= new()
+                    {
+                        Faces =
+                            [
+                                new Face()
+                                {
+                                    Vertices =
+                                    [
+                                        new() { Position = new(-0.5f, -0.5f, 0.5f), Normal = Vector3.UnitZ, TexCoord = new(0f, 0f)},
+                                        new() { Position = new( 0.5f, -0.5f, 0.5f), Normal = Vector3.UnitZ, TexCoord = new(1f, 0f)},
+                                        new() { Position = new( 0.5f,  0.5f, 0.5f), Normal = Vector3.UnitZ, TexCoord = new(1f, 1f)},
+                                        new() { Position = new(-0.5f,  0.5f, 0.5f), Normal = Vector3.UnitZ, TexCoord = new(0f, 1f)},
+                                    ],
+                                    Indices = [0, 1, 2, 0, 2, 3],
+                                },
+                                new Face()
+                                {
+                                    Vertices =
+                                    [
+                                        new() { Position = new(-0.5f, -0.5f,  0.5f), Normal = -Vector3.UnitY, TexCoord = new(0f, 1f)},
+                                        new() { Position = new(-0.5f, -0.5f, -0.5f), Normal = -Vector3.UnitY, TexCoord = new(0f, 0f)},
+                                        new() { Position = new( 0.5f, -0.5f,  0.5f), Normal = -Vector3.UnitY, TexCoord = new(1f, 1f)},
+                                        new() { Position = new( 0.5f, -0.5f, -0.5f), Normal = -Vector3.UnitY, TexCoord = new(1f, 0f)},
+                                    ],
+                                    Indices = m_indexs_012213,
+                                },
+                                new Face()
+                                {
+                                    Vertices =
+                                    [
+                                        new() { Position = new( 0.5f, -0.5f,  0.5f), Normal = Vector3.UnitX, TexCoord = new(0f, 1f)},
+                                        new() { Position = new( 0.5f, -0.5f, -0.5f), Normal = Vector3.UnitX, TexCoord = new(0f, 0f)},
+                                        new() { Position = new( 0.5f,  0.5f,  0.5f), Normal = Vector3.UnitX, TexCoord = new(1f, 1f)},
+                                        new() { Position = new( 0.5f,  0.5f, -0.5f), Normal = Vector3.UnitX, TexCoord = new(1f, 0f)},
+                                    ],
+                                    Indices = m_indexs_012213,
+                                },
+                                new Face()
+                                {
+                                    Vertices =
+                                    [
+                                        new() { Position = new(  0.5f,  0.5f,  0.5f), Normal = Vector3.UnitY, TexCoord = new(0f, 1f)},
+                                        new() { Position = new(  0.5f,  0.5f, -0.5f), Normal = Vector3.UnitY, TexCoord = new(0f, 0f)},
+                                        new() { Position = new( -0.5f,  0.5f,  0.5f), Normal = Vector3.UnitY, TexCoord = new(1f, 1f)},
+                                        new() { Position = new( -0.5f,  0.5f, -0.5f), Normal = Vector3.UnitY, TexCoord = new(1f, 0f)},
+                                    ],
+                                    Indices = m_indexs_012213,
+                                },
+                                new Face()
+                                {
+                                    Vertices =
+                                    [
+                                        new() { Position = new( -0.5f,  0.5f,  0.5f), Normal = -Vector3.UnitX, TexCoord = new(0f, 1f)},
+                                        new() { Position = new( -0.5f,  0.5f, -0.5f), Normal = -Vector3.UnitX, TexCoord = new(0f, 0f)},
+                                        new() { Position = new( -0.5f, -0.5f,  0.5f), Normal = -Vector3.UnitX, TexCoord = new(1f, 1f)},
+                                        new() { Position = new( -0.5f, -0.5f, -0.5f), Normal = -Vector3.UnitX, TexCoord = new(1f, 0f)},
+                                    ],
+                                    Indices = m_indexs_012213,
+                                },
+                                new Face()
+                                {
+                                    Vertices =
+                                    [
+                                        new() { Position = new(  0.5f,  0.5f, -0.5f), Normal = -Vector3.UnitZ, TexCoord = new(1f, 0f)},
+                                        new() { Position = new(  0.5f, -0.5f, -0.5f), Normal = -Vector3.UnitZ, TexCoord = new(1f, 1f)},
+                                        new() { Position = new( -0.5f, -0.5f, -0.5f), Normal = -Vector3.UnitZ, TexCoord = new(0f, 1f)},
+                                        new() { Position = new( -0.5f,  0.5f, -0.5f), Normal = -Vector3.UnitZ, TexCoord = new(0f, 0f)},
+                                    ],
+                                    Indices = [0, 1, 2, 3, 0, 2],
+                                },
+                            ]
+                    };
+                }
+            }
+
+            return m_BasicBoxMesh;
+        }
+
+
+
         /// <summary>
         /// Generates a a series of faces, each face containing a mesh and
         /// metadata
@@ -116,6 +206,22 @@ namespace OpenMetaverse.Rendering
         /// <returns>The generated mesh</returns >
         public OMVR.FacetedMesh GenerateFacetedMesh(OMV.Primitive prim, OMVR.DetailLevel lod)
         {
+            OMV.ProfileCurve profileCurve = (OMV.ProfileCurve)(prim.PrimData.profileCurve & 0x07);
+
+            if ( profileCurve == OMV.ProfileCurve.Square && prim.PrimData.PathCurve == OMV.PathCurve.Line)
+            {
+                if( prim.PrimData.ProfileHole == 0 &&
+                    prim.PrimData.ProfileBegin == 0f && prim.PrimData.ProfileEnd == 1f &&
+                    prim.PrimData.PathBegin == 0f && prim.PrimData.PathEnd == 1f &&
+                    prim.PrimData.PathScaleX == 1f && prim.PrimData.PathScaleY == 1f &&
+                    prim.PrimData.PathShearX == 0 && prim.PrimData.PathShearY == 0 &&
+                    prim.PrimData.PathRevolutions == 1f
+                    )
+                {
+                    return GetBasicBoxMesh();
+                }
+            }
+
             PrimMesher.PrimMesh newPrim = GeneratePrimMesh(prim, lod, true);
             if (newPrim == null)
                 return null;
@@ -322,16 +428,16 @@ namespace OpenMetaverse.Rendering
 
         private PrimMesher.PrimMesh GeneratePrimMesh(Primitive prim, DetailLevel lod, bool viewerMode)
         {
-            OMV.Primitive.ConstructionData primData = prim.PrimData;
             int sides = 4;
             int hollowsides = 4;
 
-            float profileBegin = primData.ProfileBegin;
-            float profileEnd = primData.ProfileEnd;
+            float profileBegin = prim.PrimData.ProfileBegin;
+            float profileEnd = prim.PrimData.ProfileEnd;
 
             bool isSphere = false;
 
-            if ((OMV.ProfileCurve)(primData.profileCurve & 0x07) == OMV.ProfileCurve.Circle)
+            OMV.ProfileCurve profileCurve = (OMV.ProfileCurve)(prim.PrimData.profileCurve & 0x07);
+            if (profileCurve == OMV.ProfileCurve.Circle)
             {
                 switch (lod)
                 {
@@ -346,9 +452,9 @@ namespace OpenMetaverse.Rendering
                         break;
                 }
             }
-            else if ((OMV.ProfileCurve)(primData.profileCurve & 0x07) == OMV.ProfileCurve.EqualTriangle)
+            else if (profileCurve == OMV.ProfileCurve.EqualTriangle)
                 sides = 3;
-            else if ((OMV.ProfileCurve)(primData.profileCurve & 0x07) == OMV.ProfileCurve.HalfCircle)
+            else if (profileCurve == OMV.ProfileCurve.HalfCircle)
             {
                 // half circle, prim is a sphere
                 isSphere = true;
@@ -368,9 +474,9 @@ namespace OpenMetaverse.Rendering
                 profileEnd = 0.5f * profileEnd + 0.5f;
             }
 
-            if ((OMV.HoleType)primData.ProfileHole == OMV.HoleType.Same)
+            if ((OMV.HoleType)prim.PrimData.ProfileHole == OMV.HoleType.Same)
                 hollowsides = sides;
-            else if ((OMV.HoleType)primData.ProfileHole == OMV.HoleType.Circle)
+            else if (prim.PrimData.ProfileHole == OMV.HoleType.Circle)
             {
                 switch (lod)
                 {
@@ -385,21 +491,21 @@ namespace OpenMetaverse.Rendering
                         break;
                 }
             }
-            else if ((OMV.HoleType)primData.ProfileHole == OMV.HoleType.Triangle)
+            else if (prim.PrimData.ProfileHole == OMV.HoleType.Triangle)
                 hollowsides = 3;
 
-            PrimMesher.PrimMesh newPrim = new PrimMesher.PrimMesh(sides, profileBegin, profileEnd, (float)primData.ProfileHollow, hollowsides);
+            PrimMesher.PrimMesh newPrim = new(sides, profileBegin, profileEnd, prim.PrimData.ProfileHollow, hollowsides);
             newPrim.viewerMode = viewerMode;
             newPrim.sphereMode = isSphere;
-            newPrim.holeSizeX = primData.PathScaleX;
-            newPrim.holeSizeY = primData.PathScaleY;
-            newPrim.pathCutBegin = primData.PathBegin;
-            newPrim.pathCutEnd = primData.PathEnd;
-            newPrim.topShearX = primData.PathShearX;
-            newPrim.topShearY = primData.PathShearY;
-            newPrim.radius = primData.PathRadiusOffset;
-            newPrim.revolutions = primData.PathRevolutions;
-            newPrim.skew = primData.PathSkew;
+            newPrim.holeSizeX = prim.PrimData.PathScaleX;
+            newPrim.holeSizeY = prim.PrimData.PathScaleY;
+            newPrim.pathCutBegin = prim.PrimData.PathBegin;
+            newPrim.pathCutEnd = prim.PrimData.PathEnd;
+            newPrim.topShearX = prim.PrimData.PathShearX;
+            newPrim.topShearY = prim.PrimData.PathShearY;
+            newPrim.radius = prim.PrimData.PathRadiusOffset;
+            newPrim.revolutions = prim.PrimData.PathRevolutions;
+            newPrim.skew = prim.PrimData.PathSkew;
             switch (lod)
             {
                 case OMVR.DetailLevel.Low:
@@ -413,20 +519,20 @@ namespace OpenMetaverse.Rendering
                     break;
             }
 
-            if ((primData.PathCurve == OMV.PathCurve.Line) || (primData.PathCurve == OMV.PathCurve.Flexible))
+            if ((prim.PrimData.PathCurve == OMV.PathCurve.Line) || (prim.PrimData.PathCurve == OMV.PathCurve.Flexible))
             {
-                newPrim.taperX = 1.0f - primData.PathScaleX;
-                newPrim.taperY = 1.0f - primData.PathScaleY;
-                newPrim.twistBegin = (int)(180 * primData.PathTwistBegin);
-                newPrim.twistEnd = (int)(180 * primData.PathTwist);
+                newPrim.taperX = 1.0f - prim.PrimData.PathScaleX;
+                newPrim.taperY = 1.0f - prim.PrimData.PathScaleY;
+                newPrim.twistBegin = (int)(180 * prim.PrimData.PathTwistBegin);
+                newPrim.twistEnd = (int)(180 * prim.PrimData.PathTwist);
                 newPrim.ExtrudeLinear();
             }
             else
             {
-                newPrim.taperX = primData.PathTaperX;
-                newPrim.taperY = primData.PathTaperY;
-                newPrim.twistBegin = (int)(360 * primData.PathTwistBegin);
-                newPrim.twistEnd = (int)(360 * primData.PathTwist);
+                newPrim.taperX = prim.PrimData.PathTaperX;
+                newPrim.taperY = prim.PrimData.PathTaperY;
+                newPrim.twistBegin = (int)(360 * prim.PrimData.PathTwistBegin);
+                newPrim.twistEnd = (int)(360 * prim.PrimData.PathTwist);
                 newPrim.ExtrudeCircular();
             }
 

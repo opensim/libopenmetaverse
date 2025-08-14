@@ -33858,20 +33858,61 @@ namespace OpenMetaverse.Packets
 
         }
 
+        /// <exclude/>
+        public sealed class OptionsBlock : PacketBlock
+        {
+            public uint Flags;
+
+            public override int Length
+            {
+                get
+                {
+                    return 4;
+                }
+            }
+
+            public OptionsBlock() { }
+            public OptionsBlock(byte[] bytes, ref int i)
+            {
+                FromBytes(bytes, ref i);
+            }
+
+            public override void FromBytes(byte[] bytes, ref int i)
+            {
+                try
+                {
+                    Flags = Utils.BytesToUIntSafepos(bytes, i); i += 4;
+                }
+                catch (Exception)
+                {
+                    throw new MalformedDataException();
+                }
+            }
+
+            public override void ToBytes(byte[] bytes, ref int i)
+            {
+                Utils.UIntToBytesSafepos(Flags, bytes, i); i += 4;
+            }
+
+        }
+
         public override int Length
         {
             get
             {
-                int length = 10;
+                int length = 11;
                 length += Data.Length;
+                for (int j = 0; j < Options.Length; j++)
+                    length += Options[j].Length;
                 return length;
             }
         }
         public DataBlock Data;
+        public OptionsBlock[] Options;
 
         public ScriptTeleportRequestPacket()
         {
-            HasVariableBlocks = false;
+            HasVariableBlocks = true;
             Type = PacketType.ScriptTeleportRequest;
             Header = new Header();
             Header.Frequency = PacketFrequency.Low;
@@ -33879,6 +33920,7 @@ namespace OpenMetaverse.Packets
             Header.Reliable = true;
             NeedValidateIDs = false;
             Data = new DataBlock();
+            Options = null;
         }
 
         public ScriptTeleportRequestPacket(byte[] bytes, ref int i) : this()
@@ -33896,6 +33938,14 @@ namespace OpenMetaverse.Packets
                 bytes = zeroBuffer;
             }
             Data.FromBytes(bytes, ref i);
+            int count = (int)bytes[i++];
+            if(Options == null || Options.Length != -1) {
+                Options = new OptionsBlock[count];
+                for(int j = 0; j < count; j++)
+                { Options[j] = new OptionsBlock(); }
+            }
+            for (int j = 0; j < count; j++)
+            { Options[j].FromBytes(bytes, ref i); }
         }
 
         public ScriptTeleportRequestPacket(Header head, byte[] bytes, ref int i): this()
@@ -33907,24 +33957,89 @@ namespace OpenMetaverse.Packets
         {
             Header = header;
             Data.FromBytes(bytes, ref i);
+            int count = (int)bytes[i++];
+            if(Options == null || Options.Length != count) {
+                Options = new OptionsBlock[count];
+                for(int j = 0; j < count; j++)
+                { Options[j] = new OptionsBlock(); }
+            }
+            for (int j = 0; j < count; j++)
+            { Options[j].FromBytes(bytes, ref i); }
         }
 
         public override byte[] ToBytes()
         {
             int length = 10;
             length += Data.Length;
+            length++;
+            for (int j = 0; j < Options.Length; j++) { length += Options[j].Length; }
             if (Header.AckList != null && Header.AckList.Length > 0) { length += Header.AckList.Length * 4 + 1; }
             byte[] bytes = new byte[length];
             int i = 0;
             Header.ToBytes(bytes, ref i);
             Data.ToBytes(bytes, ref i);
+            Utils.ByteToBytes((byte)Options.Length, bytes, ref i);
+            for (int j = 0; j < Options.Length; j++) { Options[j].ToBytes(bytes, ref i); }
             if (Header.AckList != null && Header.AckList.Length > 0) { Header.AcksToBytes(bytes, ref i); }
             return bytes;
         }
 
         public override byte[][] ToBytesMultiple()
         {
-            return new byte[][] { ToBytes() };
+            System.Collections.Generic.List<byte[]> packets = new System.Collections.Generic.List<byte[]>();
+            int i = 0;
+            int fixedLength = 10;
+
+            byte[] ackBytes = null;
+            int acksLength = 0;
+            if (Header.AckList != null && Header.AckList.Length > 0) {
+                Header.AppendedAcks = true;
+                ackBytes = new byte[Header.AckList.Length * 4 + 1];
+                Header.AcksToBytes(ackBytes, ref acksLength);
+            }
+
+            fixedLength += Data.Length;
+            byte[] fixedBytes = new byte[fixedLength];
+            Header.ToBytes(fixedBytes, ref i);
+            Data.ToBytes(fixedBytes, ref i);
+            fixedLength += 1;
+
+            int OptionsStart = 0;
+            do
+            {
+                int variableLength = 0;
+                int OptionsCount = 0;
+
+                i = OptionsStart;
+                while (fixedLength + variableLength + acksLength < Packet.MTU && i < Options.Length) {
+                    int blockLength = Options[i].Length;
+                    if (fixedLength + variableLength + blockLength + acksLength <= MTU || i == OptionsStart) {
+                        variableLength += blockLength;
+                        ++OptionsCount;
+                    }
+                    else { break; }
+                    ++i;
+                }
+
+                byte[] packet = new byte[fixedLength + variableLength + acksLength];
+                int length = fixedBytes.Length;
+                Buffer.BlockCopy(fixedBytes, 0, packet, 0, length);
+                if (packets.Count > 0) { packet[0] = (byte)(packet[0] & ~0x10); }
+
+                packet[length++] = (byte)OptionsCount;
+                for (i = OptionsStart; i < OptionsStart + OptionsCount; i++) { Options[i].ToBytes(packet, ref length); }
+                OptionsStart += OptionsCount;
+
+                if (acksLength > 0) {
+                    Buffer.BlockCopy(ackBytes, 0, packet, length, acksLength);
+                    acksLength = 0;
+                }
+
+                packets.Add(packet);
+            } while (
+                OptionsStart < Options.Length);
+
+            return packets.ToArray();
         }
     }
 

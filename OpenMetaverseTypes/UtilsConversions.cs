@@ -1219,7 +1219,6 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void Int16ToBytes(short value, byte* dest, int pos)
         {
-
             *(short*)dest[pos] = value;
         }
 
@@ -1328,6 +1327,7 @@ namespace OpenMetaverse
         {
             Unsafe.WriteUnaligned(ref dest, value);
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static void IntToBytes(int value, byte* dest, int pos)
         {
@@ -1947,7 +1947,7 @@ namespace OpenMetaverse
                 if (i != 0)
                     output.Append('\n');
 
-                if (!String.IsNullOrEmpty(fieldName))
+                if (!string.IsNullOrEmpty(fieldName))
                 {
                     output.Append(fieldName);
                     output.Append(": ");
@@ -1961,7 +1961,7 @@ namespace OpenMetaverse
                     if (j != 0)
                         output.Append(' ');
 
-                    output.Append(String.Format("{0:X2}", bytes[k]));
+                    output.Append(string.Format("{0:X2}", bytes[k]));
                 }
             }
 
@@ -2684,7 +2684,7 @@ namespace OpenMetaverse
         /// <returns>The converted byte array</returns>
         public unsafe static byte[] HexStringToBytes(string hexString, bool handleDirty)
         {
-            if (String.IsNullOrEmpty(hexString))
+            if (string.IsNullOrEmpty(hexString))
                 return EmptyBytes;
             if (handleDirty)
             {

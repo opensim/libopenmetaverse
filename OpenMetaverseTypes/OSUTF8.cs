@@ -346,7 +346,6 @@ namespace OpenMetaverse
             return true;
         }
 
-
         public unsafe bool ACSIILowerEquals(osUTF8Slice o)
         {
             if (o is null || m_len != o.m_len)

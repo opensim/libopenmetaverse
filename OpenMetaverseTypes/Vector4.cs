@@ -607,6 +607,7 @@ namespace OpenMetaverse
                 result = Zero;
                 return false;
             }
+
             int start = 0;
             int comma = 0;
             char c;

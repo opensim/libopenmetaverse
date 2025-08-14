@@ -309,7 +309,6 @@ namespace OpenMetaverse
 
         public static  Matrix3x3 CreateFromAxisAngle(Vector3 axis, float angle)
         {
-
             float x = axis.X;
             float y = axis.Y;
             float z = axis.Z;

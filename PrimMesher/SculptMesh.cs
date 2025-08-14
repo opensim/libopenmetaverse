@@ -26,7 +26,6 @@
  */
 
 // to build without references to System.Drawing, comment this out
-#define SYSTEM_DRAWING
 
 using System;
 using System.Collections.Generic;
@@ -37,7 +36,6 @@ using System.Drawing;
 
 namespace PrimMesher
 {
-
     public class SculptMesh
     {
         public List<Vector3> coords;
@@ -48,8 +46,6 @@ namespace PrimMesher
         public List<UVCoord> uvs;
 
         public enum SculptType { sphere = 1, torus = 2, plane = 3, cylinder = 4 };
-
-#if SYSTEM_DRAWING
 
         public SculptMesh SculptMeshFromFile(string fileName, SculptType sculptType, int lod, bool viewerMode)
         {
@@ -66,7 +62,6 @@ namespace PrimMesher
             _SculptMesh(bitmap, (SculptType)sculptType, lod, viewerMode != 0, mirror != 0, invert != 0);
             bitmap.Dispose();
         }
-#endif
 
         /// <summary>
         /// ** Experimental ** May disappear from future versions ** not recommeneded for use in applications
@@ -286,7 +281,6 @@ namespace PrimMesher
             }
             return rows;
         }
-
 
         void _SculptMesh(Bitmap sculptBitmap, SculptType sculptType, int lod, bool viewerMode, bool mirror, bool invert)
         {
@@ -592,13 +586,12 @@ namespace PrimMesher
                 }
             }
         }
-
-        public void DumpRaw(String path, String name, String title)
+        public void DumpRaw(string path, string name, string title)
         {
             if (path == null)
                 return;
-            String fileName = name + "_" + title + ".raw";
-            String completePath = System.IO.Path.Combine(path, fileName);
+            string fileName = name + "_" + title + ".raw";
+            string completePath = System.IO.Path.Combine(path, fileName);
             StreamWriter sw = new StreamWriter(completePath);
 
             for (int i = 0; i < faces.Count; i++)

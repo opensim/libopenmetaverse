@@ -292,7 +292,6 @@ namespace OpenMetaverse
                    Utils.ApproxEqual(Z, vec.Z, tolerance);
         }
 
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly bool ApproxZero()
         {

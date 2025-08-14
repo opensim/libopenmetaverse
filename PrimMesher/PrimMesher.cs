@@ -587,7 +587,6 @@ namespace PrimMesher
             try { angles.makeAngles(sides, startAngle, stopAngle); }
             catch (Exception ex)
             {
-
                 errorMessage = "makeAngles failed: Exception: " + ex.ToString()
                 + "\nsides: " + sides.ToString() + " startAngle: " + startAngle.ToString() + " stopAngle: " + stopAngle.ToString();
 
@@ -886,7 +885,6 @@ namespace PrimMesher
 
                 numPrimFaces = faceNum;
             }
-
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1041,12 +1039,12 @@ namespace PrimMesher
             }
         }
 
-        public void DumpRaw(String path, String name, String title)
+        public void DumpRaw(string path, string name, string title)
         {
             if (path == null)
                 return;
-            String fileName = name + "_" + title + ".raw";
-            String completePath = System.IO.Path.Combine(path, fileName);
+            string fileName = name + "_" + title + ".raw";
+            string completePath = System.IO.Path.Combine(path, fileName);
             StreamWriter sw = new(completePath);
 
             for (int i = 0; i < faces.Count; i++)
@@ -1474,6 +1472,7 @@ namespace PrimMesher
 
             // sanity checks
             float initialProfileRot = 0.0f;
+
             if (pathType == PathType.Circular)
             {
                 if (sides == 3)
@@ -1888,8 +1887,6 @@ namespace PrimMesher
                         viewerFaces.Add(newViewerFace);
                     }
                 }
-
-
             } // for (int nodeIndex = 0; nodeIndex < path.pathNodes.Count; nodeIndex++)
 
         }
@@ -2087,9 +2084,7 @@ namespace PrimMesher
                     face.Scale(scale);
                     viewerFaces[i] = face;
                 }
-
             }
-
         }
 
         /// <summary>
@@ -2098,12 +2093,12 @@ namespace PrimMesher
         /// <param name="path"></param>
         /// <param name="name"></param>
         /// <param name="title"></param>
-        public void DumpRaw(String path, String name, String title)
+        public void DumpRaw(string path, string name, string title)
         {
             if (path == null)
                 return;
-            String fileName = name + "_" + title + ".raw";
-            String completePath = System.IO.Path.Combine(path, fileName);
+            string fileName = name + "_" + title + ".raw";
+            string completePath = System.IO.Path.Combine(path, fileName);
 
             using StreamWriter sw = new(completePath);
 

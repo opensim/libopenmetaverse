@@ -55,12 +55,10 @@ namespace PrimMesher
             ProcessStream(new StreamReader(path));
         }
 
-
         public ObjMesh(StreamReader sr)
         {
             ProcessStream(sr);
         }
-
 
         private void ProcessStream(StreamReader s)
         {
@@ -87,7 +85,6 @@ namespace PrimMesher
 
             return vi;
         }
-
 
         private void ProcessTokens(string[] tokens)
         {
@@ -180,7 +177,6 @@ namespace PrimMesher
                     break;
             }
         }
-
 
         private void MakePrimFace()
         {

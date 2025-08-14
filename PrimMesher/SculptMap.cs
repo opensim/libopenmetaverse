@@ -144,7 +144,7 @@ namespace PrimMesher
 
             List<List<Vector3>> rows = new List<List<Vector3>>(numRows);
 
-            float pixScale = 1.0f / 255;
+            const float pixScale = 1.0f / 255.0f;
 
             int rowNdx, colNdx;
             int smNdx = 0;
