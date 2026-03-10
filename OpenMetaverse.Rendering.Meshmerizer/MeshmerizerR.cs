@@ -110,7 +110,9 @@ namespace OpenMetaverse.Rendering
 
         public static FacetedMesh m_BasicBoxMesh = null;
         private static readonly object m_BasicBoxMeshLock = new();
-        public static  List<ushort> m_indexs_012213 = [0, 1, 2, 2, 1, 3];
+        public static List<ushort> m_indexs_012023 = [0, 1, 2, 0, 2, 3];
+        public static List<ushort> m_indexs_012213 = [0, 1, 2, 2, 1, 3];
+        public static List<ushort> m_indexs_012302 = [0, 1, 2, 3, 0, 2];
         public static FacetedMesh GetBasicBoxMesh()
         {
             if(m_BasicBoxMesh == null)
@@ -130,7 +132,7 @@ namespace OpenMetaverse.Rendering
                                         new() { Position = new( 0.5f,  0.5f, 0.5f), Normal = Vector3.UnitZ, TexCoord = new(1f, 1f)},
                                         new() { Position = new(-0.5f,  0.5f, 0.5f), Normal = Vector3.UnitZ, TexCoord = new(0f, 1f)},
                                     ],
-                                    Indices = [0, 1, 2, 0, 2, 3],
+                                    Indices = m_indexs_012023,
                                 },
                                 new Face()
                                 {
@@ -185,7 +187,7 @@ namespace OpenMetaverse.Rendering
                                         new() { Position = new( -0.5f, -0.5f, -0.5f), Normal = -Vector3.UnitZ, TexCoord = new(0f, 1f)},
                                         new() { Position = new( -0.5f,  0.5f, -0.5f), Normal = -Vector3.UnitZ, TexCoord = new(0f, 0f)},
                                     ],
-                                    Indices = [0, 1, 2, 3, 0, 2],
+                                    Indices = m_indexs_012302,
                                 },
                             ]
                     };

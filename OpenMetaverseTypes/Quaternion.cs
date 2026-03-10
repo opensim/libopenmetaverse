@@ -377,6 +377,41 @@ namespace OpenMetaverse
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly Quaternion Multiply(ref readonly Quaternion b)
+        {
+            //if (MathF.Abs(W) > (1.0f - 1e-6f))
+            //    return b;
+
+            return new Quaternion(
+                W * b.X + X * b.W + Y * b.Z - Z * b.Y,
+                W * b.Y + Y * b.W + Z * b.X - X * b.Z,
+                W * b.Z + Z * b.W + X * b.Y - Y * b.X,
+                W * b.W - X * b.X - Y * b.Y - Z * b.Z
+            );
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void MultiplySelf(ref readonly Quaternion b)
+        {
+            if (MathF.Abs(W) > (1.0f - 1e-6f))
+
+            {
+                X = b.X;
+                Y = b.Y;
+                Z = b.Z;
+                W = b.W;
+                return;
+            }
+            float x = W * b.X + X * b.W + Y * b.Z - Z * b.Y;
+            float y = W * b.Y + Y * b.W + Z * b.X - X * b.Z;
+            float z = W * b.Z + Z * b.W + X * b.Y - Y * b.X;
+            W = W * b.W - X * b.X - Y * b.Y - Z * b.Z;
+            X = x;
+            Y = y;
+            Z = z;
+        }
+
         /// <summary>
         /// Builds a quaternion object from a byte array
         /// </summary>
@@ -701,11 +736,11 @@ namespace OpenMetaverse
         /// Returns the conjugate (spatial inverse) of a quaternion
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Quaternion Conjugate(in Quaternion quaternion)
+        public static Quaternion Conjugate(ref readonly Quaternion quaternion)
         {
             if (Sse.IsSupported)
             {
-                Vector128<float> d = Unsafe.As<Quaternion, Vector128<float>>(ref Unsafe.AsRef(quaternion));
+                Vector128<float> d = Unsafe.As<Quaternion, Vector128<float>>(ref Unsafe.AsRef(in quaternion));
                 Vector128<float> Mask = Vector128.Create(0x80000000, 0x80000000, 0x80000000, 0).AsSingle();
                 d = Sse.Xor(d, Mask);
                 return new Quaternion(ref d);
@@ -733,13 +768,14 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion CreateFromAxisAngle(Vector3 axis, float angle)
         {
-            axis.Normalize();
-
             angle *= 0.5f;
-            float c = MathF.Cos(angle);
             float s = MathF.Sin(angle);
 
-            return new Quaternion(axis.X * s, axis.Y * s, axis.Z * s, c);
+            axis.Normalize();
+            axis *= s;
+
+            float c = MathF.Cos(angle);
+            return new Quaternion(axis.X, axis.Y, axis.Z, c);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -834,7 +870,7 @@ namespace OpenMetaverse
             }
             if ((matrix.M11 >= matrix.M22) && (matrix.M11 >= matrix.M33))
             {
-                num = MathF.Sqrt((((1f + matrix.M11) - matrix.M22) - matrix.M33));
+                num = MathF.Sqrt(1f + matrix.M11 - matrix.M22 - matrix.M33);
                 n2 = 0.5f / num;
                 return new Quaternion(
                         0.5f * num,
@@ -844,7 +880,7 @@ namespace OpenMetaverse
             }
             if (matrix.M22 > matrix.M33)
             {
-                num = MathF.Sqrt((((1f + matrix.M22) - matrix.M11) - matrix.M33));
+                num = MathF.Sqrt(1f - matrix.M11 + matrix.M22 - matrix.M33);
                 n2 = 0.5f / num;
                 return new Quaternion(
                         (matrix.M21 + matrix.M12) * n2,
@@ -853,7 +889,7 @@ namespace OpenMetaverse
                         (matrix.M31 - matrix.M13) * n2);
             }
 
-            num = MathF.Sqrt((((1f + matrix.M33) - matrix.M11) - matrix.M22));
+            num = MathF.Sqrt(1f - matrix.M11 - matrix.M22 + matrix.M33 );
             n2 = 0.5f / num;
             return new Quaternion(
                         (matrix.M31 + matrix.M13) * n2,
@@ -868,7 +904,7 @@ namespace OpenMetaverse
             float n2;
             if (num >= 0f)
             {
-                num = MathF.Sqrt((num + 1f));
+                num = MathF.Sqrt(1f + num);
                 n2 = 0.5f / num;
                 return new Quaternion(
                         (matrix.M23 - matrix.M32) * n2,
@@ -878,7 +914,7 @@ namespace OpenMetaverse
             }
             if ((matrix.M11 >= matrix.M22) && (matrix.M11 >= matrix.M33))
             {
-                num = MathF.Sqrt((((1f + matrix.M11) - matrix.M22) - matrix.M33));
+                num = MathF.Sqrt(1f + matrix.M11 - matrix.M22 - matrix.M33);
                 n2 = 0.5f / num;
                 return new Quaternion(
                         0.5f * num,
@@ -888,7 +924,7 @@ namespace OpenMetaverse
             }
             if (matrix.M22 > matrix.M33)
             {
-                num = MathF.Sqrt((((1f + matrix.M22) - matrix.M11) - matrix.M33));
+                num = MathF.Sqrt(1f - matrix.M11 + matrix.M22 - matrix.M33);
                 n2 = 0.5f / num;
                 return new Quaternion(
                         (matrix.M21 + matrix.M12) * n2,
@@ -897,7 +933,7 @@ namespace OpenMetaverse
                         (matrix.M31 - matrix.M13) * n2);
             }
 
-            num = MathF.Sqrt((((1f + matrix.M33) - matrix.M11) - matrix.M22));
+            num = MathF.Sqrt(1f - matrix.M11 - matrix.M22 + matrix.M33);
             n2 = 0.5f / num;
             return new Quaternion(
                         (matrix.M31 + matrix.M13) * n2,
@@ -909,7 +945,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion Divide(Quaternion q1, Quaternion q2)
         {
-            return Quaternion.Inverse(q1) * q2;
+            return Inverse(q1) * q2;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -932,9 +968,8 @@ namespace OpenMetaverse
         public static Quaternion Inverse(Quaternion quaternion)
         {
             float normsq = quaternion.LengthSquared();
-
             if (normsq < 1e-6f)
-                return Quaternion.Identity;
+                return Identity;
 
             float oonorm = -1f / normsq;
             return new Quaternion(
@@ -1008,7 +1043,7 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Quaternion Multiply(Quaternion a, Quaternion b)
+        public static Quaternion Multiply(ref readonly Quaternion a, ref readonly Quaternion b)
         {
             return new Quaternion(
                 a.W * b.X + a.X * b.W + a.Y * b.Z - a.Z * b.Y,
@@ -1019,7 +1054,7 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Quaternion Multiply(Quaternion quaternion, float scaleFactor)
+        public static Quaternion Multiply(ref readonly Quaternion quaternion, float scaleFactor)
         {
             return new Quaternion(
                 quaternion.X * scaleFactor,
@@ -1401,6 +1436,8 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion operator *(Quaternion a, Quaternion b)
         {
+            if (MathF.Abs(a.W) > (1.0f - 1e-6f)) return b;
+            if (MathF.Abs(b.W) > (1.0f - 1e-6f)) return a;
             return new Quaternion(
                 a.W * b.X + a.X * b.W + a.Y * b.Z - a.Z * b.Y,
                 a.W * b.Y + a.Y * b.W + a.Z * b.X - a.X * b.Z,
