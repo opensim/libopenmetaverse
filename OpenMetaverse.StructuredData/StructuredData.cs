@@ -259,9 +259,17 @@ namespace OpenMetaverse.StructuredData
                 case OSDType.Binary:
                 {
                     byte[] b = ((OSDBinary)this).value;
+                    if(b.Length == 4)
+                    {
+                        return
+                            ((long)b[0] << 24) |
+                            ((long)b[1] << 16) |
+                            ((long)b[2] << 8)  |
+                            b[3];
+                    }
                     if(b.Length < 8)
                         return 0;
-                    return (
+                    return
                         ((long)b[0] << 56) |
                         ((long)b[1] << 48) |
                         ((long)b[2] << 40) |
@@ -269,11 +277,17 @@ namespace OpenMetaverse.StructuredData
                         ((long)b[4] << 24) |
                         ((long)b[5] << 16) |
                         ((long)b[6] << 8) |
-                        b[7]);
+                        b[7];
                 }
                 case OSDType.Array:
                 {
                     List<OSD> l = ((OSDArray)this).value;
+                    if (l.Count == 4)
+                    return 
+                        ((long)(byte)l[0].AsInteger() << 24) |
+                        ((long)(byte)l[1].AsInteger() << 16) |
+                        ((long)(byte)l[2].AsInteger() << 8) |
+                        (byte)l[3].AsInteger();
                     if (l.Count < 8)
                         return 0;
                     return 
@@ -323,6 +337,14 @@ namespace OpenMetaverse.StructuredData
                 case OSDType.Binary:
                 {
                     byte[] b = ((OSDBinary)this).value;
+                    if(b.Length == 4)
+                    {
+                        return
+                            ((ulong)b[0] << 24) |
+                            ((ulong)b[1] << 16) |
+                            ((ulong)b[2] << 8)  |
+                            b[3];
+                    }
                     if (b.Length < 8)
                         return 0;
                     return (
@@ -338,6 +360,12 @@ namespace OpenMetaverse.StructuredData
                 case OSDType.Array:
                 {
                     List<OSD> l = ((OSDArray)this).value;
+                    if (l.Count == 4)
+                    return 
+                        ((ulong)(byte)l[0].AsInteger() << 24) |
+                        ((ulong)(byte)l[1].AsInteger() << 16) |
+                        ((ulong)(byte)l[2].AsInteger() << 8) |
+                        (byte)l[3].AsInteger();
                     if (l.Count < 8)
                         return 0;
                     return (
