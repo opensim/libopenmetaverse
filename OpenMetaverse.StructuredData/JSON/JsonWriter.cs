@@ -267,7 +267,6 @@ namespace LitJson
         }
         #endregion
 
-
         public override string ToString()
         {
             if (inst_string_builder == null)

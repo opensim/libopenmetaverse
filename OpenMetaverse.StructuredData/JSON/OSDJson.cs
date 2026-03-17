@@ -97,6 +97,8 @@ namespace OpenMetaverse.StructuredData
                     return new JsonData(osd.AsBoolean());
                 case OSDType.Integer:
                     return new JsonData(osd.AsInteger());
+                case OSDType.NLong:
+                    return new JsonData(osd.AsLong());
                 case OSDType.Real:
                     return new JsonData(osd.AsReal());
                 case OSDType.String:
@@ -153,6 +155,10 @@ namespace OpenMetaverse.StructuredData
                         return null;
 
                     return new JsonData(v);
+
+                case OSDType.NLong:
+                    return new JsonData(osd.AsLong());
+
                 case OSDType.Real:
                     double d = osd.AsReal();
                     if (d == 0.0d)
@@ -240,6 +246,9 @@ namespace OpenMetaverse.StructuredData
                     break;
                 case OSDType.Integer:
                     sb.AppendInt(osd.AsInteger());
+                    break;
+                case OSDType.NLong:
+                    sb.AppendInt(osd.AsLong());
                     break;
                 case OSDType.Real:
                     string str = Convert.ToString(osd.AsReal(), NumberFormatInfo.InvariantInfo);
@@ -344,6 +353,18 @@ namespace OpenMetaverse.StructuredData
                         sb.AppendInt(oi);
                     }
                     break;
+                case OSDType.NLong:
+                    long ol = osd.AsLong();
+                    if(ol != 0)
+                    {
+                        if (mapcont++ > 0)
+                            sb.AppendASCII(',');
+                        appendJsonString(name, sb);
+                        sb.AppendASCII(':');
+                        sb.AppendInt(ol);
+                    }
+                    break;
+
                 case OSDType.Real:
                     double od = osd.AsReal();
                     if(od != 0)

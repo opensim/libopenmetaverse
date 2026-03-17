@@ -3434,7 +3434,7 @@ namespace OpenMetaverse
             if (value > 0)
             {
                 n = CountDigits((ulong)value);
-                UintToStrBytesFromEnd((uint)value, dst + n - 1);
+                ULongToStrBytesFromEnd((ulong)value, dst + n - 1);
                 return n;
             }
 
@@ -3447,7 +3447,7 @@ namespace OpenMetaverse
             *dst = ASCIIminus;
             value = -value;
             n = CountDigits((ulong)value);
-            UintToStrBytesFromEnd((uint)value, dst + n);
+            ULongToStrBytesFromEnd((ulong)value, dst + n);
             return n + 1;
         }
 
