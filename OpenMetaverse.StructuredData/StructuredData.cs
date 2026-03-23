@@ -63,7 +63,7 @@ namespace OpenMetaverse.StructuredData
         Array,
         LLSDxml,
         OSDUTF8,
-        NLong
+        Long
     }
 
     public enum OSDFormat
@@ -122,8 +122,8 @@ namespace OpenMetaverse.StructuredData
                     if (u.Equals('0') || u.ACSIILowerEquals("false"))
                         return false;
                     return true;
-                case OSDType.NLong:
-                    return ((OSDNLong)this).value != 0;
+                case OSDType.Long:
+                    return ((OSDLong)this).value != 0;
                 default:
                     return false;
             }
@@ -137,8 +137,8 @@ namespace OpenMetaverse.StructuredData
                     return ((OSDBoolean)this).value ? 1 : 0;
                 case OSDType.Integer:
                     return ((OSDInteger)this).value;
-                case OSDType.NLong:
-                    long nlv = ((OSDNLong)this).value;
+                case OSDType.Long:
+                    long nlv = ((OSDLong)this).value;
                     if (nlv >= Int32.MaxValue)
                         return Int32.MaxValue;
                     if (nlv <= Int32.MinValue)
@@ -194,8 +194,8 @@ namespace OpenMetaverse.StructuredData
                     return ((OSDBoolean)this).value ? 1U : 0;
                 case OSDType.Integer:
                     return (uint)((OSDInteger)this).value;
-                case OSDType.NLong:
-                    long nlv = ((OSDNLong)this).value;
+                case OSDType.Long:
+                    long nlv = ((OSDLong)this).value;
                     if (nlv >= UInt32.MaxValue)
                         return Int32.MaxValue;
                     if (nlv <= UInt32.MinValue)
@@ -250,8 +250,8 @@ namespace OpenMetaverse.StructuredData
                     return ((OSDBoolean)this).value ? 1 : 0;
                 case OSDType.Integer:
                     return ((OSDInteger)this).value;
-                case OSDType.NLong:
-                    return ((OSDNLong)this).value;
+                case OSDType.Long:
+                    return ((OSDLong)this).value;
                 case OSDType.Real:
                     double v = ((OSDReal)this).value;
                     if (Double.IsNaN(v))
@@ -331,8 +331,8 @@ namespace OpenMetaverse.StructuredData
                     return ((OSDBoolean)this).value ? 1UL : 0;
                 case OSDType.Integer:
                     return (ulong)((OSDInteger)this).value;
-                case OSDType.NLong:
-                    return (ulong)((OSDNLong)this).value;
+                case OSDType.Long:
+                    return (ulong)((OSDLong)this).value;
                 case OSDType.Real:
                     double v = ((OSDReal)this).value;
                     if (Double.IsNaN(v))
@@ -411,8 +411,8 @@ namespace OpenMetaverse.StructuredData
                     return ((OSDBoolean)this).value ? 1.0 : 0;
                 case OSDType.Integer:
                     return ((OSDInteger)this).value;
-                case OSDType.NLong:
-                    return ((OSDNLong)this).value;
+                case OSDType.Long:
+                    return ((OSDLong)this).value;
                 case OSDType.Real:
                     return ((OSDReal)this).value;
                 case OSDType.String:
@@ -438,8 +438,8 @@ namespace OpenMetaverse.StructuredData
                     return ((OSDBoolean)this).value ? "1" : "0";
                 case OSDType.Integer:
                     return ((OSDInteger)this).value.ToString();
-                case OSDType.NLong:
-                    return ((OSDNLong)this).value.ToString();
+                case OSDType.Long:
+                    return ((OSDLong)this).value.ToString();
                 case OSDType.Real:
                     return ((OSDReal)this).value.ToString("g", Utils.EnUsCulture);
                 case OSDType.String:
@@ -471,7 +471,7 @@ namespace OpenMetaverse.StructuredData
                 case OSDType.LLSDxml:
                     return ((OSDllsdxml)this).value;
                 default:
-                    return String.Empty;
+                    return string.Empty;
             }
         }
 
@@ -551,8 +551,8 @@ namespace OpenMetaverse.StructuredData
                     return ((OSDBoolean)this).value ? trueBinary : falseBinary;
                 case OSDType.Integer:
                     return Utils.IntToBytesBig(((OSDInteger)this).value);
-                case OSDType.NLong:
-                    return Utils.Int64ToBytes(((OSDNLong)this).value);
+                case OSDType.Long:
+                    return Utils.Int64ToBytesBig(((OSDLong)this).value);
                 case OSDType.Real:
                     return Utils.DoubleToBytesBig(((OSDReal)this).value);
                 case OSDType.String:
@@ -726,7 +726,7 @@ namespace OpenMetaverse.StructuredData
             {
                 OSDType.Boolean => new OSDBoolean(((OSDBoolean)this).value),
                 OSDType.Integer => new OSDInteger(((OSDInteger)this).value),
-                OSDType.NLong => new OSDNLong(((OSDNLong)this).value),
+                OSDType.Long => new OSDLong(((OSDLong)this).value),
                 OSDType.Real => new OSDReal(((OSDReal)this).value),
                 OSDType.String => new OSDString(((OSDString)this).value),
                 OSDType.OSDUTF8 => new OSDUTF8(((OSDUTF8)this).value),
@@ -749,8 +749,8 @@ namespace OpenMetaverse.StructuredData
                     return ((OSDBoolean)this).value ? "1" : "0";
                 case OSDType.Integer:
                     return ((OSDInteger)this).value.ToString();
-                case OSDType.NLong:
-                    return (((OSDNLong)this).value).ToString();
+                case OSDType.Long:
+                    return (((OSDLong)this).value).ToString();
                 case OSDType.Real:
                     return ((OSDReal)this).value.ToString("g", Utils.EnUsCulture);
                 case OSDType.String:
@@ -797,25 +797,22 @@ namespace OpenMetaverse.StructuredData
         public static OSD FromInteger(uint value) { return new OSDInteger((int)value); }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static OSD FromInteger(short value) { return new OSDInteger((int)value); }
+        public static OSD FromInteger(short value) { return new OSDInteger(value); }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static OSD FromInteger(ushort value) { return new OSDInteger((int)value); }
+        public static OSD FromInteger(ushort value) { return new OSDInteger(value); }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static OSD FromInteger(sbyte value) { return new OSDInteger((int)value); }
+        public static OSD FromInteger(sbyte value) { return new OSDInteger(value); }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static OSD FromInteger(byte value) { return new OSDInteger((int)value); }
+        public static OSD FromInteger(byte value) { return new OSDInteger(value); }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static OSD FromUInteger(uint value) { return new OSDBinary(value); }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static OSD FromLong(long value) { return new OSDBinary(value); }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static OSD FromNLong(long value) { return new OSDNLong((long)value); }
+        public static OSD FromLong(long value) { return new OSDLong(value); }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)] public static OSD FromULong(ulong value) { return new OSDBinary(value); }
         public static OSD FromReal(double value) { return new OSDReal(value); }
@@ -888,7 +885,7 @@ namespace OpenMetaverse.StructuredData
             else if (value is DateTime dtmv) { return new OSDDate(dtmv); }
             else if (value is Uri uriv) { return new OSDUri(uriv); }
             else if (value is byte[] btav) { return new OSDBinary(btav); }
-            else if (value is long lv) { return new OSDBinary(lv); }
+            else if (value is long lv) { return new OSDLong(lv); }
             else if (value is ulong ulv) { return new OSDBinary(ulv); }
             else if (value is Vector2 v2v) { return FromVector2(v2v); }
             else if (value is Vector3 v3v) { return FromVector3(v3v); }
@@ -957,6 +954,10 @@ namespace OpenMetaverse.StructuredData
             {
                 return value.AsInteger();
             }
+            else if (type == typeof(long))
+            {
+                return value.AsLong();
+            }
             else if (type == typeof(UUID))
             {
                 return value.AsUUID();
@@ -1019,7 +1020,7 @@ namespace OpenMetaverse.StructuredData
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator OSD(byte value) { return new OSDInteger((int)value); }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator OSD(long value) { return new OSDBinary(value); }
+        public static implicit operator OSD(long value) { return new OSDLong(value); }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator OSD(ulong value) { return new OSDBinary(value); }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1160,6 +1161,8 @@ namespace OpenMetaverse.StructuredData
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int AsInteger() { return value ? 1 : 0; }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override long AsLong() { return value ? 1 : 0; }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override double AsReal() { return value ? 1d : 0d; }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override string AsString() { return value ? "1" : "0"; }
@@ -1205,13 +1208,13 @@ namespace OpenMetaverse.StructuredData
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override string ToString() { return AsString(); }
     }
-    public sealed class OSDNLong : OSD
+    public sealed class OSDLong : OSD
     {
         public readonly long value;
 
-        public OSDNLong(long value)
+        public OSDLong(long value)
         {
-            Type = OSDType.NLong;
+            Type = OSDType.Long;
             this.value = value;
         }
 
@@ -1230,9 +1233,9 @@ namespace OpenMetaverse.StructuredData
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override string AsString() { return value.ToString(); }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override byte[] AsBinary() { return Utils.Int64ToBytes(value); }
+        public override byte[] AsBinary() { return Utils.Int64ToBytesBig(value); }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override OSD Copy() { return new OSDNLong(value); }
+        public override OSD Copy() { return new OSDLong(value); }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override string ToString() { return AsString(); }
     }

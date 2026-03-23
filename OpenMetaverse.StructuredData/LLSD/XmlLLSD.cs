@@ -207,6 +207,7 @@ namespace OpenMetaverse.StructuredData
                     sb.Append(data.AsString());
                     sb.Append("</uri>");
                     break;
+                case OSDType.Long:
                 case OSDType.Binary:
                     if(formal)
                         sb.Append("<binary encoding=\"base64\">");
@@ -408,6 +409,7 @@ namespace OpenMetaverse.StructuredData
                     EscapeToXML(mb, data.ToString());
                     mb.Append(osUTF8Const.XMLuriEnd);
                     break;
+                case OSDType.Long:
                 case OSDType.Binary:
                     if (formal)
                         mb.Append(osUTF8Const.XMLformalBinaryStart);

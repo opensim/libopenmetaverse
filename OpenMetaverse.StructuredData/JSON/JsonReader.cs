@@ -12,8 +12,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-
 
 namespace LitJson
 {
@@ -59,7 +57,6 @@ namespace LitJson
         private object token_value;
         private JsonToken token;
         #endregion
-
 
         #region Public Properties
         public bool AllowComments
@@ -264,17 +261,12 @@ namespace LitJson
         }
         #endregion
 
-
         #region Private Methods
         private void ProcessNumber(string number)
         {
-            if (number.IndexOf('.') != -1 ||
-                number.IndexOf('e') != -1 ||
-                number.IndexOf('E') != -1)
+            if (number.IndexOfAny(['.','e','E']) >= 0)
             {
-
-                double n_double;
-                if (Double.TryParse(number, out n_double))
+                if (double.TryParse(number, out double n_double))
                 {
                     token = JsonToken.Double;
                     token_value = n_double;
@@ -283,26 +275,23 @@ namespace LitJson
                 }
             }
 
-            int n_int32;
-            if (Int32.TryParse(number, out n_int32))
+            if (long.TryParse(number, out long n_int64))
             {
-                token = JsonToken.Int;
-                token_value = n_int32;
+                if(n_int64 >= int.MinValue &&  n_int64 <= int.MaxValue)
+                {
+                    token = JsonToken.Int;
+                    token_value = (int)n_int64;
+                }
+                else
+                {
+                    token = JsonToken.Long;
+                    token_value = n_int64;
+                }
 
                 return;
             }
 
-            long n_int64;
-            if (Int64.TryParse(number, out n_int64))
-            {
-                token = JsonToken.Long;
-                token_value = n_int64;
-
-                return;
-            }
-
-            ulong n_uint64;
-            if (UInt64.TryParse(number, out n_uint64))
+            if (ulong.TryParse(number, out ulong n_uint64))
             {
                 token = JsonToken.Long;
                 token_value = n_uint64;

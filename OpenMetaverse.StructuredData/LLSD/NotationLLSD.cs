@@ -473,6 +473,7 @@ namespace OpenMetaverse.StructuredData
                 case OSDType.LLSDxml:
                     writer.Write(osd.AsString());
                     break;
+                case OSDType.Long:
                 case OSDType.Binary:
                     writer.Write(binaryNotationMarker);
                     writer.Write("64");
@@ -613,6 +614,7 @@ namespace OpenMetaverse.StructuredData
                 case OSDType.LLSDxml:
                     writer.Write(osd.AsString());
                     break;
+                case OSDType.Long:
                 case OSDType.Binary:
                     writer.Write(binaryNotationMarker);
                     writer.Write("64");
