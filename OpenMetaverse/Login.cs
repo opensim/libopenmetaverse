@@ -1099,7 +1099,7 @@ namespace OpenMetaverse
 
             // Convert the password to MD5 if it isn't already
             if (loginParams.Password.Length != 35 && !loginParams.Password.StartsWith("$1$"))
-                loginParams.Password = Utils.MD5(loginParams.Password);
+                loginParams.Password = Utils.MD5llPassword(loginParams.Password);
 
             if (loginParams.ViewerDigest == null)
                 loginParams.ViewerDigest = String.Empty;

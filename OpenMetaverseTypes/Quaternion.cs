@@ -422,9 +422,9 @@ namespace OpenMetaverse
         /// be read.</param>
         public void FromBytes(byte[] byteArray, int pos, bool normalized)
         {
-            X = Utils.BytesToFloatSafepos(byteArray, pos);
-            Y = Utils.BytesToFloatSafepos(byteArray, pos + 4);
-            Z = Utils.BytesToFloatSafepos(byteArray, pos + 8);
+            X = Utils.BytesToFloat(byteArray, pos);
+            Y = Utils.BytesToFloat(byteArray, pos + 4);
+            Z = Utils.BytesToFloat(byteArray, pos + 8);
             if (normalized)
             {
                 float xyzsum = 1f - (X * X) - (Y * Y) - (Z * Z);
@@ -432,8 +432,17 @@ namespace OpenMetaverse
             }
             else
             {
-                W = Utils.BytesToFloatSafepos(byteArray, pos + 12);
+                W = Utils.BytesToFloat(byteArray, pos + 12);
             }
+        }
+
+        public void NormalizedFromBytes(byte[] byteArray, int pos)
+        {
+            X = Utils.BytesToFloat(byteArray, pos);
+            Y = Utils.BytesToFloat(byteArray, pos + 4);
+            Z = Utils.BytesToFloat(byteArray, pos + 8);
+            float xyzsum = 1f - (X * X) - (Y * Y) - (Z * Z);
+            W = (xyzsum > 1e-6f) ? MathF.Sqrt(xyzsum) : 0f;
         }
 
         /// <summary>
@@ -443,25 +452,24 @@ namespace OpenMetaverse
         /// point values in order using little endian byte ordering</returns>
         public readonly byte[] GetBytes()
         {
-            byte[] bytes = new byte[12];
+            if(MathF.Abs(W) > 0.9999f)
+                return new byte[12];
+
             float norm = LengthSquared();
-            if (norm > 1e-6f || W < 0.9999f)
+            if (norm > 1e-6f)
             {
                 if (W < 0f)
                     norm = -1f / MathF.Sqrt(norm);
                 else
                     norm = 1f / MathF.Sqrt(norm);
+                byte[] bytes = new byte[12];
                 Utils.FloatToBytesSafepos(norm * X, bytes, 0);
                 Utils.FloatToBytesSafepos(norm * Y, bytes, 4);
                 Utils.FloatToBytesSafepos(norm * Z, bytes, 8);
+            return bytes;
             }
             else
-            {
-                Utils.FloatToBytesSafepos(0, bytes, 0);
-                Utils.FloatToBytesSafepos(0, bytes, 4);
-                Utils.FloatToBytesSafepos(0, bytes, 8);
-            }
-            return bytes;
+                return new byte[12];
         }
 
         /// <summary>
@@ -470,160 +478,79 @@ namespace OpenMetaverse
         /// <param name="dest">Destination byte array</param>
         /// <param name="pos">Position in the destination array to start
         /// writing. Must be at least 12 bytes before the end of the array</param>
-        public readonly unsafe void ToBytes(byte[] dest, int pos)
+        public readonly void ToBytes(byte[] dest, int pos)
         {
+            if(MathF.Abs(W) > 0.9999f)
+            {
+                Utils.Int64ZeroToBytes(dest, pos);
+                Utils.IntZeroToBytes(dest, pos + 8);
+                return;
+            }
+
             float norm = LengthSquared();
-            if (norm > 1e-6f || norm < 0.9999f)
+            if (norm > 1e-6f)
             {
                 if (W < 0f)
                     norm = -1f / MathF.Sqrt(norm);
                 else
                     norm = 1f / MathF.Sqrt(norm);
-                if (Utils.CanDirectCopyLE)
-                {
-                    fixed (byte* d = &dest[0])
-                    {
-                        *(float*)(d + pos) = norm * X;
-                        *(float*)(d + pos + 4) = norm * Y;
-                        *(float*)(d + pos + 8) = norm * Z;
-                    }
-                }
-                else
-                {
-                    Utils.FloatToBytesSafepos(norm * X, dest, pos);
-                    Utils.FloatToBytesSafepos(norm * Y, dest, pos + 4);
-                    Utils.FloatToBytesSafepos(norm * Z, dest, pos + 8);
-                }
+
+                Utils.FloatToBytes(norm * X, dest, pos);
+                Utils.FloatToBytes(norm * Y, dest, pos + 4);
+                Utils.FloatToBytes(norm * Z, dest, pos + 8);
             }
             else
             {
-                if (Utils.CanDirectCopyLE)
-                {
-                    fixed (byte* d = &dest[0])
-                    {
-                        *(long*)(d + pos) = 0;
-                        *(int*)(d + pos + 8) = 0;
-                    }
-                }
-                else
-                {
-                    Utils.FloatToBytesSafepos(0, dest, pos);
-                    Utils.FloatToBytesSafepos(0, dest, pos + 4);
-                    Utils.FloatToBytesSafepos(0, dest, pos + 8);
-                }
+                Utils.Int64ZeroToBytes(dest, pos);
+                Utils.IntZeroToBytes(dest, pos + 8);
             }
         }
 
         public readonly unsafe void ToBytes(byte* dest)
         {
             float norm = LengthSquared();
-            if (norm > 1e-6f || norm < 0.9999f)
+            if (norm > 1e-6f)
             {
                 if (W < 0f)
                     norm = -1f / MathF.Sqrt(norm);
                 else
                     norm = 1f / MathF.Sqrt(norm);
-                if (Utils.CanDirectCopyLE)
-                {
-                    *(float*)(dest) = norm * X;
-                    *(float*)(dest + 4) = norm * Y;
-                    *(float*)(dest + 8) = norm * Z;
-                }
-                else
-                {
-                    Utils.FloatToBytes(norm * X, dest);
-                    Utils.FloatToBytes(norm * Y, dest + 4);
-                    Utils.FloatToBytes(norm * Z, dest + 8);
-                }
+                Utils.FloatToBytes(norm * X, dest);
+                Utils.FloatToBytes(norm * Y, dest + 4);
+                Utils.FloatToBytes(norm * Z, dest + 8);
             }
             else
             {
-                if (Utils.CanDirectCopyLE)
-                {
-                    *(long*)dest = 0;
-                    *(int*)(dest + 8) = 0;
-                }
-                else
-                {
-                    Utils.FloatToBytes(0, dest);
-                    Utils.FloatToBytes(0, dest + 4);
-                    Utils.FloatToBytes(0, dest + 8);
-                }
+                Utils.Int64ZeroToBytes(dest);
+                Utils.IntZeroToBytes(dest + 8);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly unsafe void ToShortsBytes(byte[] dest, int pos)
+        public readonly void ToShortsBytes(byte[] dest, int pos)
         {
-            ushort sx = Utils.FloatToUnitUInt16(X);
-            ushort sy = Utils.FloatToUnitUInt16(Y);
-            ushort sz = Utils.FloatToUnitUInt16(Z);
-            ushort sw = Utils.FloatToUnitUInt16(W);
-
-            if (Utils.CanDirectCopyLE)
-            {
-                fixed (byte* d = &dest[0])
-                {
-                    *(ushort*)(d + pos) = sx;
-                    *(ushort*)(d + pos + 2) = sy;
-                    *(ushort*)(d + pos + 4) = sz;
-                    *(ushort*)(d + pos + 6) = sw;
-                }
-            }
-            else
-            {
-                Utils.UInt16ToBytes(sx, dest, pos);
-                Utils.UInt16ToBytes(sy, dest, pos + 2);
-                Utils.UInt16ToBytes(sz, dest, pos + 4);
-                Utils.UInt16ToBytes(sw, dest, pos + 6);
-            }
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(X), dest, pos);
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(Y), dest, pos + 2);
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(Z), dest, pos + 4);
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(W), dest, pos + 6);
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly unsafe void ToShortsBytes(byte* dest, int pos)
         {
-            ushort sx = Utils.FloatToUnitUInt16(X);
-            ushort sy = Utils.FloatToUnitUInt16(Y);
-            ushort sz = Utils.FloatToUnitUInt16(Z);
-            ushort sw = Utils.FloatToUnitUInt16(W);
-
-            if (Utils.CanDirectCopyLE)
-            {
-                *(ushort*)(dest + pos) = sx;
-                *(ushort*)(dest + pos + 2) = sy;
-                *(ushort*)(dest + pos + 4) = sz;
-                *(ushort*)(dest + pos + 6) = sw;
-            }
-            else
-            {
-                Utils.UInt16ToBytes(sx, dest, pos);
-                Utils.UInt16ToBytes(sy, dest, pos + 2);
-                Utils.UInt16ToBytes(sz, dest, pos + 4);
-                Utils.UInt16ToBytes(sw, dest, pos + 6);
-            }
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(X), dest, pos);
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(Y), dest, pos + 2);
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(Z), dest, pos + 4);
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(W), dest, pos + 6);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly unsafe void ToShortsBytes(byte* dest)
         {
-            ushort sx = Utils.FloatToUnitUInt16(X);
-            ushort sy = Utils.FloatToUnitUInt16(Y);
-            ushort sz = Utils.FloatToUnitUInt16(Z);
-            ushort sw = Utils.FloatToUnitUInt16(W);
-
-            if (Utils.CanDirectCopyLE)
-            {
-                *(ushort*)(dest) = sx;
-                *(ushort*)(dest + 2) = sy;
-                *(ushort*)(dest + 4) = sz;
-                *(ushort*)(dest + 6) = sw;
-            }
-            else
-            {
-                Utils.UInt16ToBytes(sx, dest);
-                Utils.UInt16ToBytes(sy, dest + 2);
-                Utils.UInt16ToBytes(sz, dest + 4);
-                Utils.UInt16ToBytes(sw, dest + 6);
-            }
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(X), dest);
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(Y), dest + 2);
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(Z), dest + 4);
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(W), dest + 6);
         }
 
         /// <summary>
@@ -1418,7 +1345,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion operator +(Quaternion quaternion1, Quaternion quaternion2)
         {
-            return Add(quaternion1, quaternion2);
+            return Add(in quaternion1, in quaternion2);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

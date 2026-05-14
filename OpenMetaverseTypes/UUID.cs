@@ -31,6 +31,7 @@ using System.Runtime.InteropServices;
 using System.Xml.Serialization;
 using System.Runtime.Intrinsics.X86;
 using System.Runtime.Intrinsics;
+using System.Buffers.Binary;
 
 namespace OpenMetaverse
 {
@@ -608,17 +609,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly ulong GetULong()
         {
-            if (BitConverter.IsLittleEndian)
-                return ulongb;
-            else
-                return d +
-                    ((ulong)e << 8) +
-                    ((ulong)f << 16) +
-                    ((ulong)g << 24) +
-                    ((ulong)h << 32) +
-                    ((ulong)i << 40) +
-                    ((ulong)j << 48) +
-                    ((ulong)k << 56);
+            return BitConverter.IsLittleEndian ? ulongb : BinaryPrimitives.ReverseEndianness(ulongb);
         }
 
         #endregion Public Methods

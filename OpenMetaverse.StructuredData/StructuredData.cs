@@ -168,7 +168,7 @@ namespace OpenMetaverse.StructuredData
                     byte[] b = ((OSDBinary)this).value;
                     if (b.Length < 4)
                         return 0;
-                    return (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3];
+                    return Utils.BytesToIntBig(b);
                 case OSDType.Array:
                     List<OSD> l = ((OSDArray)this).value;
                     if (l.Count < 4)
@@ -226,8 +226,7 @@ namespace OpenMetaverse.StructuredData
                     byte[] b = ((OSDBinary)this).value;
                     if(b.Length < 4)
                         return 0;
-                    return (uint)(
-                        (b[0] << 24) | (b[1] << 16) | (b[2] << 8) | b[3]);
+                    return Utils.BytesToUIntBig(b);
                 case OSDType.Array:
                     List<OSD> l = ((OSDArray)this).value;
                     if (l.Count < 4)
@@ -279,23 +278,11 @@ namespace OpenMetaverse.StructuredData
                     byte[] b = ((OSDBinary)this).value;
                     if(b.Length == 4)
                     {
-                        return
-                            ((long)b[0] << 24) |
-                            ((long)b[1] << 16) |
-                            ((long)b[2] << 8)  |
-                            b[3];
+                        return Utils.BytesToIntBig(b);
                     }
                     if(b.Length < 8)
                         return 0;
-                    return
-                        ((long)b[0] << 56) |
-                        ((long)b[1] << 48) |
-                        ((long)b[2] << 40) |
-                        ((long)b[3] << 32) |
-                        ((long)b[4] << 24) |
-                        ((long)b[5] << 16) |
-                        ((long)b[6] << 8) |
-                        b[7];
+                    return Utils.BytesToInt64Big(b);
                 }
                 case OSDType.Array:
                 {
@@ -359,23 +346,11 @@ namespace OpenMetaverse.StructuredData
                     byte[] b = ((OSDBinary)this).value;
                     if(b.Length == 4)
                     {
-                        return
-                            ((ulong)b[0] << 24) |
-                            ((ulong)b[1] << 16) |
-                            ((ulong)b[2] << 8)  |
-                            b[3];
+                        return Utils.BytesToUIntBig(b);
                     }
                     if (b.Length < 8)
                         return 0;
-                    return (
-                        ((ulong)b[0] << 56) |
-                        ((ulong)b[1] << 48) |
-                        ((ulong)b[2] << 40) |
-                        ((ulong)b[3] << 32) |
-                        ((ulong)b[4] << 24) |
-                        ((ulong)b[5] << 16) |
-                        ((ulong)b[6] << 8) |
-                        b[7]);
+                    return Utils.BytesToUInt64Big(b);
                 }
                 case OSDType.Array:
                 {
@@ -1707,17 +1682,7 @@ namespace OpenMetaverse.StructuredData
         public OSDBinary(ulong value)
         {
             Type = OSDType.Binary;
-            this.value = new byte[]
-            {
-                (byte)((value >> 56) & 0xFF),
-                (byte)((value >> 48) & 0xFF),
-                (byte)((value >> 40) & 0xFF),
-                (byte)((value >> 32) & 0xFF),
-                (byte)((value >> 24) & 0xFF),
-                (byte)((value >> 16) & 0xFF),
-                (byte)((value >> 8) & 0xFF),
-                (byte)(value& 0xFF)
-            };
+            this.value = Utils.UInt64ToBytesBig(value);
         }
 
         public override OSD Copy() { return new OSDBinary(value); }
@@ -1726,37 +1691,22 @@ namespace OpenMetaverse.StructuredData
 
         public override int AsInteger()
         {
-            return ((value[0] << 24) | (value[1] << 16) | (value[2] << 8) |  (value[3] << 0));
+            return Utils.BytesToIntBig(value);
         }
 
         public override uint AsUInteger()
         {
-            return (uint)((value[0] << 24) | (value[1] << 16) | (value[2] << 8) | (value[3] << 0));}
+            return Utils.BytesToUIntBig(value);
+        }
 
         public override long AsLong()
         {
-            return (long)(
-                ((long)value[0] << 56) |
-                ((long)value[1] << 48) |
-                ((long)value[2] << 40) |
-                ((long)value[3] << 32) |
-                ((long)value[4] << 24) |
-                ((long)value[5] << 16) |
-                ((long)value[6] << 8) |
-                ((long)value[7] << 0));
+            return Utils.BytesToInt64Big(value);
         }
 
         public override ulong AsULong()
         {
-            return (ulong)(
-                ((ulong)value[0] << 56) |
-                ((ulong)value[1] << 48) |
-                ((ulong)value[2] << 40) |
-                ((ulong)value[3] << 32) |
-                ((ulong)value[4] << 24) |
-                ((ulong)value[5] << 16) |
-                ((ulong)value[6] << 8) |
-                ((ulong)value[7] << 0));
+            return Utils.BytesToUInt64Big(value);
         }
 
         public override string ToString()
@@ -2155,17 +2105,9 @@ namespace OpenMetaverse.StructuredData
             if (value.Count < 8)
                 return 0;
             byte[] b = new byte[8];
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < b.Length; i++)
                 b[i] = (byte)value[i].AsInteger();
-            return (
-                ((long)b[0] << 56) |
-                ((long)b[1] << 48) |
-                ((long)b[2] << 40) |
-                ((long)b[3] << 32) |
-                ((long)b[4] << 24) |
-                ((long)b[5] << 16) |
-                ((long)b[6] << 8) |
-                b[7]);
+            return Utils.BytesToInt64Big(b);
         }
 
         public override ulong AsULong()
@@ -2173,17 +2115,9 @@ namespace OpenMetaverse.StructuredData
             if (value.Count < 8)
                 return 0;
             byte[] b = new byte[8];
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < b.Length; i++)
                 b[i] = (byte)value[i].AsInteger();
-            return (
-                ((ulong)b[0] << 56) |
-                ((ulong)b[1] << 48) |
-                ((ulong)b[2] << 40) |
-                ((ulong)b[3] << 32) |
-                ((ulong)b[4] << 24) |
-                ((ulong)b[5] << 16) |
-                ((ulong)b[6] << 8) |
-                b[7]);
+            return Utils.BytesToUInt64Big(b);
         }
 
         public override int AsInteger()
@@ -2191,9 +2125,9 @@ namespace OpenMetaverse.StructuredData
             if (value.Count < 4)
                 return 0;
             byte[] by = new byte[4];
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < by.Length; i++)
                 by[i] = (byte)value[i].AsInteger();
-            return (by[0] << 24) | (by[1] << 16) | (by[2] << 8) | by[3];
+            return Utils.BytesToIntBig(by);
         }
 
         public override uint AsUInteger()
@@ -2203,7 +2137,7 @@ namespace OpenMetaverse.StructuredData
             byte[] by = new byte[4];
             for (int i = 0; i < 4; i++)
                 by[i] = (byte)value[i].AsInteger();
-            return (uint)((by[0] << 24) | (by[1] << 16) | (by[2] << 8) | by[3]);
+            return Utils.BytesToUIntBig(by);
         }
         /*
         public override Vector2 AsVector2()

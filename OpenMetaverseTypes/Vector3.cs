@@ -375,13 +375,27 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FromBytes(byte[] byteArray)
         {
-            this = Unsafe.ReadUnaligned<Vector3>(ref MemoryMarshal.GetArrayDataReference(byteArray));
+            if(BitConverter.IsLittleEndian)
+                this = Unsafe.ReadUnaligned<Vector3>(ref MemoryMarshal.GetArrayDataReference(byteArray));
+            else
+            {
+                X = Utils.BytesToFloat(byteArray);
+                Y = Utils.BytesToFloat(byteArray, 4);
+                Z = Utils.BytesToFloat(byteArray, 8);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void FromBytes(byte[] byteArray, int pos)
         {
-            this = Unsafe.ReadUnaligned<Vector3>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(byteArray), pos));
+            if(BitConverter.IsLittleEndian)
+                this = Unsafe.ReadUnaligned<Vector3>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(byteArray), pos));
+            else
+            {
+                X = Utils.BytesToFloat(byteArray, pos);
+                Y = Utils.BytesToFloat(byteArray, pos + 4);
+                Z = Utils.BytesToFloat(byteArray, pos + 8);
+            }
         }
 
         /// <summary>
@@ -392,7 +406,15 @@ namespace OpenMetaverse
         public readonly byte[] GetBytes()
         {
             byte[] dest = new byte[12];
-            Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), this);
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), this);
+            else
+            {
+                Utils.FloatToBytes(X, dest);
+                Utils.FloatToBytes(Y, dest, 4);
+                Utils.FloatToBytes(Z, dest, 8);
+            }
+
             return dest;
         }
 
@@ -403,24 +425,22 @@ namespace OpenMetaverse
         /// <param name="pos">Position in the destination array to start
         /// writing. Must be at least 12 bytes before the end of the array</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly unsafe void ToBytes(byte[] dest, int pos)
+        public readonly void ToBytes(byte[] dest, int pos)
         {
-            //if (Utils.CanDirectCopyLE)
-            //{
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), this);
-            //}
-            //else
-            //{
-            //    Utils.FloatToBytesSafepos(X, dest, pos);
-            //    Utils.FloatToBytesSafepos(Y, dest, pos + 4);
-            //    Utils.FloatToBytesSafepos(Z, dest, pos + 8);
-            //}
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), this);
+            else
+            {
+                Utils.FloatToBytes(X, dest, pos);
+                Utils.FloatToBytes(Y, dest, pos + 4);
+                Utils.FloatToBytes(Z, dest, pos + 8);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly unsafe void ToBytes(byte* dest)
         {
-            if (Utils.CanDirectCopyLE)
+            if(BitConverter.IsLittleEndian)
                 *(Vector3*)dest = this;
             else
             {
@@ -443,36 +463,14 @@ namespace OpenMetaverse
             if (b > a)
                 a = b;
 
-            ushort sx, sy, sz;
-            if (a > range)
-            {
-                a = range / a;
-                sx = Utils.FloatToUInt16(X * a, range);
-                sy = Utils.FloatToUInt16(Y * a, range);
-                sz = Utils.FloatToUInt16(Z * a, range);
-            }
-            else
-            {
-                sx = Utils.FloatToUInt16(X, range);
-                sy = Utils.FloatToUInt16(Y, range);
-                sz = Utils.FloatToUInt16(Z, range);
-            }
+            if (a < range)
+                a = range;
 
-            if (Utils.CanDirectCopyLE)
-            {
-                fixed (byte* d = &dest[0])
-                {
-                    *(ushort*)(d + pos) = sx;
-                    *(ushort*)(d + pos + 2) = sy;
-                    *(ushort*)(d + pos + 4) = sz;
-                }
-            }
-            else
-            {
-                Utils.UInt16ToBytes(sx, dest, pos);
-                Utils.UInt16ToBytes(sy, dest, pos + 2);
-                Utils.UInt16ToBytes(sz, dest, pos + 4);
-            }
+            a = 1.0f / a;
+
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(X * a), dest, pos);
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(Y * a), dest, pos + 2);
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(Z * a), dest, pos + 4);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -488,33 +486,14 @@ namespace OpenMetaverse
             if (b > a)
                 a = b;
 
-            ushort sx, sy, sz;
-            if (a > range)
-            {
-                a = range / a;
-                sx = Utils.FloatToUInt16(X * a, range);
-                sy = Utils.FloatToUInt16(Y * a, range);
-                sz = Utils.FloatToUInt16(Z * a, range);
-            }
-            else
-            {
-                sx = Utils.FloatToUInt16(X, range);
-                sy = Utils.FloatToUInt16(Y, range);
-                sz = Utils.FloatToUInt16(Z, range);
-            }
+            if (a < range)
+                a = range;
 
-            if (Utils.CanDirectCopyLE)
-            {
-                *(ushort*)(dest + pos) = sx;
-                *(ushort*)(dest + pos + 2) = sy;
-                *(ushort*)(dest + pos + 4) = sz;
-            }
-            else
-            {
-                Utils.UInt16ToBytes(sx, dest, pos);
-                Utils.UInt16ToBytes(sy, dest, pos + 2);
-                Utils.UInt16ToBytes(sz, dest, pos + 4);
-            }
+            a = 1.0f / a;
+
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(X * a), dest, pos);
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(Y * a), dest, pos + 2);
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(Z * a), dest, pos + 4);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -530,33 +509,14 @@ namespace OpenMetaverse
             if (b > a)
                 a = b;
 
-            ushort sx, sy, sc;
-            if (a > range)
-            {
-                a = range / a;
-                sx = Utils.FloatToUInt16(X * a, range);
-                sy = Utils.FloatToUInt16(Y * a, range);
-                sc = Utils.FloatToUInt16(Z * a, range);
-            }
-            else
-            {
-                sx = Utils.FloatToUInt16(X, range);
-                sy = Utils.FloatToUInt16(Y, range);
-                sc = Utils.FloatToUInt16(Z, range);
-            }
+            if (a < range)
+                a = range;
 
-            if (Utils.CanDirectCopyLE)
-            {
-                *(ushort*)(dest) = sx;
-                *(ushort*)(dest + 2) = sy;
-                *(ushort*)(dest + 4) = sc;
-            }
-            else
-            {
-                Utils.UInt16ToBytes(sx, dest);
-                Utils.UInt16ToBytes(sy, dest + 2);
-                Utils.UInt16ToBytes(sc, dest + 4);
-            }
+            a = 1.0f / a;
+
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(X * a), dest);
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(Y * a), dest + 2);
+            Utils.UInt16ToBytes(Utils.FloatToUnitUInt16(Z * a), dest + 4);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1322,7 +1282,7 @@ namespace OpenMetaverse
                     result = Sse.Add(result, Sse.Multiply(Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentRot.M21)), Vector128.Create(Y)));
                     result = Sse.Add(result, Sse.Multiply(Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentRot.M31)), Vector128.Create(Z)));
                     result = Sse.Add(result, Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentPos)));
-                    return new Vector3(result);
+                    return new Vector3(ref result);
                 }
             }
 
@@ -1377,7 +1337,7 @@ namespace OpenMetaverse
                     result = Sse.Add(result, Sse.Multiply(Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentRot.M21)), Vector128.Create(Partoffset.Y)));
                     result = Sse.Add(result, Sse.Multiply(Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentRot.M31)), Vector128.Create(Partoffset.Z)));
                     result = Sse.Add(result, Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentPos)));
-                    return new Vector3(result);
+                    return new Vector3(ref result);
                 }
             }
 
@@ -1398,7 +1358,7 @@ namespace OpenMetaverse
                     result = Sse.Add(result, Sse.Multiply(Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentRot.M21)), Vector128.Create(Partoffset.Y)));
                     result = Sse.Add(result, Sse.Multiply(Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentRot.M31)), Vector128.Create(Partoffset.Z)));
                     result = Sse.Add(result, Sse.LoadVector128((float*)Unsafe.AsPointer(ref ParentPos)));
-                    return new Vector3(result);
+                    return new Vector3(ref result);
                 }
             }
 

@@ -57,22 +57,229 @@ namespace OpenMetaverse
 
         public static readonly byte[] EmptyBytes = Array.Empty<byte>();
 
-        /// <summary>Provide a single instance of the MD5 class to avoid making
-        /// duplicate copies and handle thread safety</summary>
-        private static readonly System.Security.Cryptography.MD5 MD5Builder =
-            new System.Security.Cryptography.MD5CryptoServiceProvider();
+        #region String Arrays
 
-        /// <summary>Provide a single instance of the SHA-1 class to avoid
-        /// making duplicate copies and handle thread safety</summary>
-        private static readonly System.Security.Cryptography.SHA1 SHA1Builder =
-            new System.Security.Cryptography.SHA1CryptoServiceProvider();
+        private static readonly string[] _AssetTypeNames =
+        [
+            "texture",    //  0
+            "sound",      //  1
+            "callcard",   //  2
+            "landmark",   //  3
+            "script",     //  4
+            "clothing",   //  5
+            "object",     //  6
+            "notecard",   //  7
+            "category",   //  8
+            string.Empty, //  9
+            "lsltext",    // 10
+            "lslbyte",    // 11
+            "txtr_tga",   // 12
+            "bodypart",   // 13
+            string.Empty, // 14
+            string.Empty, // 15
+            string.Empty, // 16
+            "snd_wav",    // 17
+            "img_tga",    // 18
+            "jpeg",       // 19
+            "animatn",    // 20
+            "gesture",    // 21
+            "simstate",   // 22
+            string.Empty, // 23
+            "link",       // 24
+            "link_f",     // 25
+            string.Empty, // 26
+            string.Empty, // 27
+            string.Empty, // 28
+            string.Empty, // 29
+            string.Empty, // 30
+            string.Empty, // 31
+            string.Empty, // 32
+            string.Empty, // 33
+            string.Empty, // 34
+            string.Empty, // 35
+            string.Empty, // 36
+            string.Empty, // 37
+            string.Empty, // 38
+            string.Empty, // 39
+            string.Empty, // 40
+            string.Empty, // 41
+            string.Empty, // 42
+            string.Empty, // 43
+            string.Empty, // 44
+            string.Empty, // 45
+            string.Empty, // 46
+            string.Empty, // 47
+            string.Empty, // 48
+            "mesh",       // 49
+            string.Empty, // 50
+            string.Empty, // 51
+            string.Empty, // 52
+            string.Empty, // 53
+            string.Empty, // 54
+            string.Empty, // 55
+            "settings",   // 56
+            "material"    // 57
+        ];
 
-        private static readonly System.Security.Cryptography.SHA256 SHA256Builder =
-            new System.Security.Cryptography.SHA256Managed();
+        private static readonly string[] _FolderTypeNames =
+        [
+            "texture",    //  0
+            "sound",      //  1
+            "callcard",   //  2
+            "landmark",   //  3
+            string.Empty, //  4
+            "clothing",   //  5
+            "object",     //  6
+            "notecard",   //  7
+            "root_inv",   //  8
+            string.Empty, //  9
+            "lsltext",    // 10
+            string.Empty, // 11
+            string.Empty, // 12
+            "bodypart",   // 13
+            "trash",      // 14
+            "snapshot",   // 15
+            "lstndfnd",   // 16
+            string.Empty, // 17
+            string.Empty, // 18
+            string.Empty, // 19
+            "animatn",    // 20
+            "gesture",    // 21
+            string.Empty, // 22
+            "favorite",   // 23
+            string.Empty, // 24
+            "settings",   // 25
+            "material",   // 26
+            "ensemble",   // 27
+            "ensemble",   // 28
+            "ensemble",   // 29
+            "ensemble",   // 30
+            "ensemble",   // 31
+            "ensemble",   // 32
+            "ensemble",   // 33
+            "ensemble",   // 34
+            "ensemble",   // 35
+            "ensemble",   // 36
+            "ensemble",   // 37
+            "ensemble",   // 38
+            "ensemble",   // 39
+            "ensemble",   // 40
+            "ensemble",   // 41
+            "ensemble",   // 42
+            "ensemble",   // 43
+            "ensemble",   // 44
+            "ensemble",   // 45
+            "current",    // 46
+            "outfit",     // 47
+            "my_otfts",   // 48
+            "mesh",       // 49
+            "inbox",      // 50
+            "outbox",     // 51
+            "basic_rt",   // 52
+            "merchant",   // 53
+            "stock",      // 54
+        ];
 
-        /// <summary>Provide a single instance of a random number generator
-        /// to avoid making duplicate copies and handle thread safety</summary>
-        private static readonly Random RNG = new Random();
+        private static readonly string[] _InventoryTypeNames =
+        [
+            "texture",    //  0
+            "sound",      //  1
+            "callcard",   //  2
+            "landmark",   //  3
+            string.Empty, //  4
+            string.Empty, //  5
+            "object",     //  6
+            "notecard",   //  7
+            "category",   //  8
+            "root",       //  9
+            "script",     // 10
+            string.Empty, // 11
+            string.Empty, // 12
+            string.Empty, // 13
+            string.Empty, // 14
+            "snapshot",   // 15
+            string.Empty, // 16
+            "attach",     // 17
+            "wearable",   // 18
+            "animation",  // 19
+            "gesture",    // 20
+            string.Empty, // 21
+            "mesh",       // 22
+            string.Empty, // 23
+            string.Empty, // 24
+            "settings",   // 25
+            "material", // 26
+        ];
+
+        private static readonly string[] _SaleTypeNames =
+        [
+            "not",
+            "orig",
+            "copy",
+            "cntn"
+        ];
+
+        private static readonly string[] _AttachmentPointNames =
+        [
+            string.Empty,
+            "ATTACH_CHEST",
+            "ATTACH_HEAD",
+            "ATTACH_LSHOULDER",
+            "ATTACH_RSHOULDER",
+            "ATTACH_LHAND",
+            "ATTACH_RHAND",
+            "ATTACH_LFOOT",
+            "ATTACH_RFOOT",
+            "ATTACH_BACK",
+            "ATTACH_PELVIS",
+            "ATTACH_MOUTH",
+            "ATTACH_CHIN",
+            "ATTACH_LEAR",
+            "ATTACH_REAR",
+            "ATTACH_LEYE",
+            "ATTACH_REYE",
+            "ATTACH_NOSE",
+            "ATTACH_RUARM",
+            "ATTACH_RLARM",
+            "ATTACH_LUARM",
+            "ATTACH_LLARM",
+            "ATTACH_RHIP",
+            "ATTACH_RULEG",
+            "ATTACH_RLLEG",
+            "ATTACH_LHIP",
+            "ATTACH_LULEG",
+            "ATTACH_LLLEG",
+            "ATTACH_BELLY",
+            "ATTACH_LPEC",
+            "ATTACH_RPEC",
+            "ATTACH_HUD_CENTER_2",
+            "ATTACH_HUD_TOP_RIGHT",
+            "ATTACH_HUD_TOP_CENTER",
+            "ATTACH_HUD_TOP_LEFT",
+            "ATTACH_HUD_CENTER_1",
+            "ATTACH_HUD_BOTTOM_LEFT",
+            "ATTACH_HUD_BOTTOM",
+            "ATTACH_HUD_BOTTOM_RIGHT",
+            "ATTACH_NECK",
+            "ATTACH_AVATAR_CENTER",
+            "ATTACH_LHAND_RING1",
+            "ATTACH_RHAND_RING1",
+            "ATTACH_TAIL_BASE",
+            "ATTACH_TAIL_TIP",
+            "ATTACH_LWING",
+            "ATTACH_RWING",
+            "ATTACH_FACE_JAW",
+            "ATTACH_FACE_LEAR",
+            "ATTACH_FACE_REAR",
+            "ATTACH_FACE_LEYE",
+            "ATTACH_FACE_REYE",
+            "ATTACH_FACE_TONGUE",
+            "ATTACH_GROIN",
+            "ATTACH_HIND_LFOOT",
+            "ATTACH_HIND_RFOOT"
+    ];
+
+        #endregion String Arrays
 
         #region Math
 
@@ -215,20 +422,92 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float ToDegrees(float radians)
         {
-            // This method uses double precission internally,
-            // though it returns single float
             // Factor = 180 / pi
-            return (float)(radians * 57.295779513082320876798154814105);
+            return radians * RAD_TO_DEG;
         }
-
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float ToRadians(float degrees)
         {
-            // This method uses double precission internally,
-            // though it returns single float
             // Factor = pi / 180
-            return (float)(degrees * 0.017453292519943295769236907684886);
+            return degrees * DEG_TO_RAD;
+        }
+
+
+        /// <summary>
+        /// Generate a random double precision floating point value
+        /// </summary>
+        /// <returns>Random value of type double</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double RandomDouble()
+        {
+            return Random.Shared.NextDouble();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool ApproxEqual(float a, float b, float tolerance, float reltolerance = float.Epsilon)
+        {
+            float dif = MathF.Abs(a - b);
+            if (dif <= tolerance)
+                return true;
+
+            a = MathF.Abs(a);
+            b = MathF.Abs(b);
+            if (b > a)
+                a = b;
+            return dif <= a * reltolerance;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool ApproxZero(float a, float tolerance)
+        {
+            return MathF.Abs(a) <= tolerance;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool ApproxZero(float a)
+        {
+            return MathF.Abs(a) <= 1e-6;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool ApproxEqual(float a, float b)
+        {
+            float dif = MathF.Abs(a - b);
+            if (dif <= 1e-6f)
+                return true;
+
+            a = MathF.Abs(a);
+            b = MathF.Abs(b);
+            if (b > a)
+                a = b;
+            return dif <= a * float.Epsilon;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int CombineHash(int a, int b)
+        {
+            //return ((a << 5) + a) ^ b;
+            return 65599 * a + b;
+        }
+
+        #endregion Math
+
+        /// <summary>
+        /// Calculate the MD5 hash of a given string
+        /// </summary>
+        /// <param name="value">The string to hash</param>
+        /// <returns>The MD5 hash as a string</returns>
+        public static string MD5String(string value)
+        {
+            byte[] hash = MD5(Encoding.UTF8.GetBytes(value));
+
+            // Convert the hash to a hex string
+            StringBuilder digest = osStringBuilderCache.Acquire();
+            foreach (byte b in hash)
+                digest.AppendFormat(Utils.EnUsCulture, "{0:x2}", b);
+
+            return osStringBuilderCache.GetStringAndRelease(digest);
         }
 
         /// <summary>
@@ -239,8 +518,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] MD5(byte[] data)
         {
-            lock (MD5Builder)
-                return MD5Builder.ComputeHash(data);
+            return System.Security.Cryptography.MD5.HashData(data);
         }
 
         /// <summary>
@@ -251,8 +529,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] SHA1(byte[] data)
         {
-            lock (SHA1Builder)
-                return SHA1Builder.ComputeHash(data);
+            return System.Security.Cryptography.SHA1.HashData(data);
         }
 
         /// <summary>
@@ -263,14 +540,14 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string SHA1String(string value)
         {
-            StringBuilder digest = new StringBuilder(40);
             byte[] hash = SHA1(Encoding.UTF8.GetBytes(value));
 
             // Convert the hash to a hex string
+            StringBuilder digest = osStringBuilderCache.Acquire();
             foreach (byte b in hash)
                 digest.AppendFormat(Utils.EnUsCulture, "{0:x2}", b);
 
-            return digest.ToString();
+            return osStringBuilderCache.GetStringAndRelease(digest);
         }
 
         /// <summary>
@@ -281,8 +558,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] SHA256(byte[] data)
         {
-            lock (SHA256Builder)
-                return SHA256Builder.ComputeHash(data);
+            return System.Security.Cryptography.SHA1.HashData(data);
         }
 
         /// <summary>
@@ -293,14 +569,14 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string SHA256String(string value)
         {
-            StringBuilder digest = new StringBuilder(64);
             byte[] hash = SHA256(Encoding.UTF8.GetBytes(value));
 
             // Convert the hash to a hex string
+            StringBuilder digest = osStringBuilderCache.Acquire();
             foreach (byte b in hash)
                 digest.AppendFormat(Utils.EnUsCulture, "{0:x2}", b);
 
-            return digest.ToString();
+            return osStringBuilderCache.GetStringAndRelease(digest);
         }
 
         /// <summary>
@@ -309,45 +585,19 @@ namespace OpenMetaverse
         /// <param name="password">The password to hash</param>
         /// <returns>An MD5 hash in string format, with $1$ prepended</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string MD5(string password)
+        public static string MD5llPassword(string password)
         {
-            StringBuilder digest = new StringBuilder(32);
             byte[] hash = MD5(ASCIIEncoding.Default.GetBytes(password));
 
+            StringBuilder digest = osStringBuilderCache.Acquire();
             // Convert the hash to a hex string
+            digest.Append("$1$");
             foreach (byte b in hash)
                 digest.AppendFormat(Utils.EnUsCulture, "{0:x2}", b);
 
-            return "$1$" + digest.ToString();
+            return osStringBuilderCache.GetStringAndRelease(digest);
+
         }
 
-        /// <summary>
-        /// Calculate the MD5 hash of a given string
-        /// </summary>
-        /// <param name="value">The string to hash</param>
-        /// <returns>The MD5 hash as a string</returns>
-        public static string MD5String(string value)
-        {
-            StringBuilder digest = new StringBuilder(32);
-            byte[] hash = MD5(Encoding.UTF8.GetBytes(value));
-
-            // Convert the hash to a hex string
-            foreach (byte b in hash)
-                digest.AppendFormat(Utils.EnUsCulture, "{0:x2}", b);
-
-            return digest.ToString();
-        }
-
-        /// <summary>
-        /// Generate a random double precision floating point value
-        /// </summary>
-        /// <returns>Random value of type double</returns>
-        public static double RandomDouble()
-        {
-            lock (RNG)
-                return RNG.NextDouble();
-        }
-
-        #endregion Math
     }
 }

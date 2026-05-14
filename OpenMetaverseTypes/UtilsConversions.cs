@@ -27,32 +27,21 @@
  */
 
 using System;
-using System.Net;
-using System.Text;
-using System.Reflection;
+using System.Buffers.Binary;
 using System.IO;
+using System.Net;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Intrinsics.X86;
 using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+using System.Text;
 
 namespace OpenMetaverse
 {
     public static partial class Utils
     {
         public static readonly bool CanDirectCopyLE = CheckNeedAlignment();
-
-        [StructLayout(LayoutKind.Sequential, Size = 16, Pack = 1)]
-        public struct Bytes16 { }
-
-        [StructLayout(LayoutKind.Sequential, Size = 12, Pack = 1)]
-        public struct Bytes12 { }
-
-        [StructLayout(LayoutKind.Sequential, Size = 8, Pack = 1)]
-        public struct Bytes8 { }
-
-        [StructLayout(LayoutKind.Sequential, Size = 6, Pack = 1)]
-        public struct Bytes6 { }
 
         public unsafe static bool CheckNeedAlignment()
         {
@@ -99,299 +88,77 @@ namespace OpenMetaverse
 
         }
 
-        #region String Arrays
-
-        private static readonly string[] _AssetTypeNames = new string[]
-        {
-            "texture",    //  0
-            "sound",      //  1
-            "callcard",   //  2
-            "landmark",   //  3
-            "script",     //  4
-            "clothing",   //  5
-            "object",     //  6
-            "notecard",   //  7
-            "category",   //  8
-            string.Empty, //  9
-            "lsltext",    // 10
-            "lslbyte",    // 11
-            "txtr_tga",   // 12
-            "bodypart",   // 13
-            string.Empty, // 14
-            string.Empty, // 15
-            string.Empty, // 16
-            "snd_wav",    // 17
-            "img_tga",    // 18
-            "jpeg",       // 19
-            "animatn",    // 20
-            "gesture",    // 21
-            "simstate",   // 22
-            string.Empty, // 23
-            "link",       // 24
-            "link_f",     // 25
-            string.Empty, // 26
-            string.Empty, // 27
-            string.Empty, // 28
-            string.Empty, // 29
-            string.Empty, // 30
-            string.Empty, // 31
-            string.Empty, // 32
-            string.Empty, // 33
-            string.Empty, // 34
-            string.Empty, // 35
-            string.Empty, // 36
-            string.Empty, // 37
-            string.Empty, // 38
-            string.Empty, // 39
-            string.Empty, // 40
-            string.Empty, // 41
-            string.Empty, // 42
-            string.Empty, // 43
-            string.Empty, // 44
-            string.Empty, // 45
-            string.Empty, // 46
-            string.Empty, // 47
-            string.Empty, // 48
-            "mesh",       // 49
-            string.Empty, // 50
-            string.Empty, // 51
-            string.Empty, // 52
-            string.Empty, // 53
-            string.Empty, // 54
-            string.Empty, // 55
-            "settings",   // 56
-            "material"    // 57
-        };
-
-        private static readonly string[] _FolderTypeNames = new string[]
-        {
-            "texture",    //  0
-            "sound",      //  1
-            "callcard",   //  2
-            "landmark",   //  3
-            string.Empty, //  4
-            "clothing",   //  5
-            "object",     //  6
-            "notecard",   //  7
-            "root_inv",   //  8
-            string.Empty, //  9
-            "lsltext",    // 10
-            string.Empty, // 11
-            string.Empty, // 12
-            "bodypart",   // 13
-            "trash",      // 14
-            "snapshot",   // 15
-            "lstndfnd",   // 16
-            string.Empty, // 17
-            string.Empty, // 18
-            string.Empty, // 19
-            "animatn",    // 20
-            "gesture",    // 21
-            string.Empty, // 22
-            "favorite",   // 23
-            string.Empty, // 24
-            "settings",   // 25
-            "material",   // 26
-            "ensemble",   // 27
-            "ensemble",   // 28
-            "ensemble",   // 29
-            "ensemble",   // 30
-            "ensemble",   // 31
-            "ensemble",   // 32
-            "ensemble",   // 33
-            "ensemble",   // 34
-            "ensemble",   // 35
-            "ensemble",   // 36
-            "ensemble",   // 37
-            "ensemble",   // 38
-            "ensemble",   // 39
-            "ensemble",   // 40
-            "ensemble",   // 41
-            "ensemble",   // 42
-            "ensemble",   // 43
-            "ensemble",   // 44
-            "ensemble",   // 45
-            "current",    // 46
-            "outfit",     // 47
-            "my_otfts",   // 48
-            "mesh",       // 49
-            "inbox",      // 50
-            "outbox",     // 51
-            "basic_rt",   // 52
-            "merchant",   // 53
-            "stock",      // 54
-        };
-
-        private static readonly string[] _InventoryTypeNames = new string[]
-        {
-            "texture",    //  0
-            "sound",      //  1
-            "callcard",   //  2
-            "landmark",   //  3
-            string.Empty, //  4
-            string.Empty, //  5
-            "object",     //  6
-            "notecard",   //  7
-            "category",   //  8
-            "root",       //  9
-            "script",     // 10
-            string.Empty, // 11
-            string.Empty, // 12
-            string.Empty, // 13
-            string.Empty, // 14
-            "snapshot",   // 15
-            string.Empty, // 16
-            "attach",     // 17
-            "wearable",   // 18
-            "animation",  // 19
-            "gesture",    // 20
-            string.Empty, // 21
-            "mesh",       // 22
-            string.Empty, // 23
-            string.Empty, // 24
-            "settings",   // 25
-            "material", // 26
-        };
-
-        private static readonly string[] _SaleTypeNames = new string[]
-        {
-            "not",
-            "orig",
-            "copy",
-            "cntn"
-        };
-
-        private static readonly string[] _AttachmentPointNames = new string[]
-        {
-            string.Empty,
-            "ATTACH_CHEST",
-            "ATTACH_HEAD",
-            "ATTACH_LSHOULDER",
-            "ATTACH_RSHOULDER",
-            "ATTACH_LHAND",
-            "ATTACH_RHAND",
-            "ATTACH_LFOOT",
-            "ATTACH_RFOOT",
-            "ATTACH_BACK",
-            "ATTACH_PELVIS",
-            "ATTACH_MOUTH",
-            "ATTACH_CHIN",
-            "ATTACH_LEAR",
-            "ATTACH_REAR",
-            "ATTACH_LEYE",
-            "ATTACH_REYE",
-            "ATTACH_NOSE",
-            "ATTACH_RUARM",
-            "ATTACH_RLARM",
-            "ATTACH_LUARM",
-            "ATTACH_LLARM",
-            "ATTACH_RHIP",
-            "ATTACH_RULEG",
-            "ATTACH_RLLEG",
-            "ATTACH_LHIP",
-            "ATTACH_LULEG",
-            "ATTACH_LLLEG",
-            "ATTACH_BELLY",
-            "ATTACH_LPEC",
-            "ATTACH_RPEC",
-            "ATTACH_HUD_CENTER_2",
-            "ATTACH_HUD_TOP_RIGHT",
-            "ATTACH_HUD_TOP_CENTER",
-            "ATTACH_HUD_TOP_LEFT",
-            "ATTACH_HUD_CENTER_1",
-            "ATTACH_HUD_BOTTOM_LEFT",
-            "ATTACH_HUD_BOTTOM",
-            "ATTACH_HUD_BOTTOM_RIGHT",
-            "ATTACH_NECK",
-            "ATTACH_AVATAR_CENTER",
-            "ATTACH_LHAND_RING1",
-            "ATTACH_RHAND_RING1",
-            "ATTACH_TAIL_BASE",
-            "ATTACH_TAIL_TIP",
-            "ATTACH_LWING",
-            "ATTACH_RWING",
-            "ATTACH_FACE_JAW",
-            "ATTACH_FACE_LEAR",
-            "ATTACH_FACE_REAR",
-            "ATTACH_FACE_LEYE",
-            "ATTACH_FACE_REYE",
-            "ATTACH_FACE_TONGUE",
-            "ATTACH_GROIN",
-            "ATTACH_HIND_LFOOT",
-            "ATTACH_HIND_RFOOT"
-    };
-
-        public static bool InternStrings = false;
-
-        #endregion String Arrays
-
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool ApproxEqual(float a, float b, float tolerance, float reltolerance = float.Epsilon)
+        public static T UnsafeGetArrayValue<T>(T[] data)
         {
-            float dif = MathF.Abs(a - b);
-            if (dif <= tolerance)
-                return true;
-
-            a = MathF.Abs(a);
-            b = MathF.Abs(b);
-            if (b > a)
-                a = b;
-            return dif <= a * reltolerance;
+            return Unsafe.ReadUnaligned<T>(ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(data)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool ApproxZero(float a, float tolerance)
+        public static T UnsafeGetArrayValue<T>(T[] data, int pos)
         {
-            return MathF.Abs(a) <= tolerance;
+            return Unsafe.ReadUnaligned<T>(ref Unsafe.As<T, byte>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(data), pos)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool ApproxZero(float a)
+        public static T UnsafeGetArrayValue<T>(ReadOnlySpan<T> data, int pos)
         {
-            return MathF.Abs(a) <= 1e-6;
+            return Unsafe.ReadUnaligned<T>(ref Unsafe.As<T, byte>(ref Unsafe.Add(ref MemoryMarshal.GetReference(data), pos)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool ApproxEqual(float a, float b)
+        public static T UnsafeGetArrayValue<T>(ReadOnlySpan<T> data)
         {
-            float dif = MathF.Abs(a - b);
-            if (dif <= 1e-6f)
-                return true;
-
-            a = MathF.Abs(a);
-            b = MathF.Abs(b);
-            if (b > a)
-                a = b;
-            return dif <= a * float.Epsilon;
+            return Unsafe.ReadUnaligned<T>(ref Unsafe.As<T, byte>(ref MemoryMarshal.GetReference(data)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int CombineHash(int a, int b)
+        public static void UnsafeSetArrayValue<T>(T[] data, T value)
         {
-            //return ((a << 5) + a) ^ b;
-            return 65599 * a + b;
+            Unsafe.WriteUnaligned(ref Unsafe.As<T, byte>(ref MemoryMarshal.GetArrayDataReference(data)), value);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void UnsafeSetArrayValue<T>(T[] data, int pos, T value)
+        {
+            Unsafe.WriteUnaligned(ref Unsafe.As<T, byte>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(data), pos)), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void UnsafeSetArrayValue<T>(ReadOnlySpan<T> data, T value)
+        {
+            Unsafe.WriteUnaligned(ref Unsafe.As<T, byte>(ref MemoryMarshal.GetReference(data)), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void UnsafeSetArrayValue<T>(ReadOnlySpan<T> data, int pos, T value)
+        {
+            Unsafe.WriteUnaligned(ref Unsafe.As<T, byte>(ref Unsafe.Add(ref MemoryMarshal.GetReference(data), pos)), value);
+        }
+
 
         #region BytesTo
 
         /// <summary>
-        /// Convert the first two bytes starting in the byte array in native endian ordeing
-        /// to signed short integer
+        /// Get a byte from location without bounds check
         /// </summary>
-        /// <param name="bytes">An array two bytes or longer</param>
-        /// <returns>A signed short integer, will be zero if a short can't be
-        /// read at the given position</returns>
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static short BytesToInt16(byte[] bytes)
+        public static byte BytesToByte(byte[] bytes)
         {
-            return Unsafe.ReadUnaligned<short>(ref MemoryMarshal.GetArrayDataReference(bytes));
+            return Unsafe.ReadUnaligned<byte>(ref MemoryMarshal.GetArrayDataReference(bytes));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static short BytesToInt16(ref byte bytes)
+        public static byte BytesToByte(ref byte bytes)
         {
-            return Unsafe.ReadUnaligned<short>(ref bytes);
+            return Unsafe.ReadUnaligned<byte>(ref bytes);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte BytesToByte(ReadOnlySpan<byte> bytes)
+        {
+            return Unsafe.ReadUnaligned<byte>(ref MemoryMarshal.GetReference(bytes));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -401,9 +168,75 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte BytesToByte(ref byte bytes, int pos)
+        {
+            return Unsafe.ReadUnaligned<byte>(ref Unsafe.Add(ref bytes, pos));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte BytesToByte(ReadOnlySpan<byte> bytes, int pos)
+        {
+            return Unsafe.ReadUnaligned<byte>(ref Unsafe.Add(ref MemoryMarshal.GetReference(bytes), pos));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte BytesToByte(byte[] bytes, ref int pos)
         {
             return Unsafe.ReadUnaligned<byte>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos++));
+        }
+
+        /// <summary>
+        /// Convert the first two bytes starting in the byte array in native endian ordeing
+        /// to signed short integer
+        /// </summary>
+        /// <param name="bytes">An array two bytes or longer</param>
+        /// <returns>A signed short integer</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static short BytesToInt16(byte[] bytes)
+        {
+            return BitConverter.IsLittleEndian ?
+                Unsafe.ReadUnaligned<short>(ref MemoryMarshal.GetArrayDataReference(bytes)) :
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<short>(ref MemoryMarshal.GetArrayDataReference(bytes)));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static short BytesToInt16Big(byte[] bytes)
+        {
+            return BitConverter.IsLittleEndian ?
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<short>(ref MemoryMarshal.GetArrayDataReference(bytes))) :
+                Unsafe.ReadUnaligned<short>(ref MemoryMarshal.GetArrayDataReference(bytes));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static short BytesToInt16(ref byte bytes)
+        {
+            return BitConverter.IsLittleEndian ?
+                Unsafe.ReadUnaligned<short>(ref bytes) :
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<short>(ref bytes));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static short BytesToInt16Big(ref byte bytes)
+        {
+            return BitConverter.IsLittleEndian ?
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<short>(ref bytes)) : 
+                Unsafe.ReadUnaligned<short>(ref bytes);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static short BytesToInt16(ReadOnlySpan<byte> bytes)
+        {
+            return BitConverter.IsLittleEndian ?
+                Unsafe.ReadUnaligned<short>(ref MemoryMarshal.GetReference(bytes)) :
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<short>(ref MemoryMarshal.GetReference(bytes)));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static short BytesToInt16Big(ReadOnlySpan<byte> bytes)
+        {
+            return BitConverter.IsLittleEndian ?
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<short>(ref MemoryMarshal.GetReference(bytes))) :
+                Unsafe.ReadUnaligned<short>(ref MemoryMarshal.GetReference(bytes));
         }
 
         /// <summary>
@@ -412,113 +245,158 @@ namespace OpenMetaverse
         /// </summary>
         /// <param name="bytes">An array two bytes or longer</param>
         /// <param name="pos">Position in the array to start reading</param>
-        /// <returns>A signed short integer, will be zero if a short can't be
-        /// read at the given position</returns>
+        /// <returns>A signed short integer</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static short BytesToInt16(byte[] bytes, int pos)
         {
-            return Unsafe.ReadUnaligned<short>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+            return BitConverter.IsLittleEndian ?
+                Unsafe.ReadUnaligned<short>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos)) :
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<short>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos)));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static short BytesToInt16Big(byte[] bytes, int pos)
+        {
+            return BitConverter.IsLittleEndian ?
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<short>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos))) :
+                Unsafe.ReadUnaligned<short>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static short BytesToInt16(ref byte bytes, int pos)
         {
-            return Unsafe.ReadUnaligned<short>(ref Unsafe.Add(ref bytes, pos));
+            return BitConverter.IsLittleEndian ?
+                Unsafe.ReadUnaligned<short>(ref Unsafe.Add(ref bytes, pos)) :
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<short>(ref Unsafe.Add(ref bytes, pos)));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static short BytesToInt16Big(ref byte bytes, int pos)
+        {
+            return BitConverter.IsLittleEndian ?
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<short>(ref Unsafe.Add(ref bytes, pos))) :
+                Unsafe.ReadUnaligned<short>(ref Unsafe.Add(ref bytes, pos));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe short BytesToInt16(byte* bytes)
         {
-            if (CanDirectCopyLE)
-            {
-                return *(short*)bytes;
-            }
-            else
-                return (short)(*bytes | (bytes[1] << 8));
+            return CanDirectCopyLE ?
+                *(short*)bytes :
+                (short)(*bytes | (bytes[1] << 8));
         }
 
         /// <summary>
-        /// Convert the first four bytes starting at the given position in native endian order
+        /// Convert the first four bytes of the given array 
         /// to a signed integer
         /// </summary>
         /// <param name="bytes">An array four bytes or longer</param>
-        /// <param name="pos">Position to start reading the int from</param>
-        /// <returns>A signed integer, will be zero if an int can't be read
-        /// at the given position</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int BytesToInt(byte[] bytes, int pos)
-        {
-            //if (bytes.Length < pos + 4) return 0;
-            return Unsafe.As<byte, int>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int BytesToInt(ref byte bytes, int pos)
-        {
-            return Unsafe.ReadUnaligned<int>(ref Unsafe.Add(ref bytes, pos));
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static int BytesToInt(byte* bytes)
-        {
-            if (CanDirectCopyLE)
-            {
-                return *(int*)bytes;
-            }
-
-            return *bytes |
-                    (bytes[1] << 8) |
-                    (bytes[2] << 16) |
-                    (bytes[3] << 24);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int BytesToIntSafepos(byte[] bytes, int pos)
-        {
-            return Unsafe.ReadUnaligned<int>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int BytesToIntSafepos(ref byte bytes, int pos)
-        {
-            return Unsafe.ReadUnaligned<int>(ref Unsafe.Add(ref bytes, pos));
-        }
-
-        /// <summary>
-        /// Convert the first four bytes of the given array in little endian
-        /// ordering to a signed integer
-        /// </summary>
-        /// <param name="bytes">An array four bytes or longer</param>
-        /// <returns>A signed integer, will be zero if the array contains
-        /// less than four bytes</returns>
+        /// <returns>A signed integer</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BytesToInt(byte[] bytes)
         {
-            return Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetArrayDataReference(bytes));
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int BytesToInt(ref byte bytes)
-        {
-            return Unsafe.ReadUnaligned<int>(ref bytes);
+            return BitConverter.IsLittleEndian ?
+                Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetArrayDataReference(bytes)) :
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetArrayDataReference(bytes)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BytesToIntBig(byte[] bytes)
         {
-            return (bytes[0] << 24) |
-                   (bytes[1] << 16) |
-                   (bytes[2] << 8) |
-                   bytes[3];
+            return BitConverter.IsLittleEndian ?
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetArrayDataReference(bytes))) :
+                Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetArrayDataReference(bytes));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int BytesToInt(ReadOnlySpan<byte> bytes)
+        {
+            return BitConverter.IsLittleEndian ?
+                Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetReference(bytes)) :
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetReference(bytes)));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int BytesToIntBig(ReadOnlySpan<byte> bytes)
+        {
+            return BitConverter.IsLittleEndian ?
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetReference(bytes))) :
+                Unsafe.ReadUnaligned<int>(ref MemoryMarshal.GetReference(bytes));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int BytesToInt(ref byte bytes)
+        {
+            return BitConverter.IsLittleEndian ?
+                Unsafe.ReadUnaligned<int>(ref bytes) :
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<int>(ref bytes));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int BytesToIntBig(ref byte bytes)
+        {
+            return BitConverter.IsLittleEndian ?
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<int>(ref bytes)) :
+                Unsafe.ReadUnaligned<int>(ref bytes) ;
+        }
+
+        /// <summary>
+        /// Convert the first four bytes starting at the given position 
+        /// to a signed integer
+        /// </summary>
+        /// <param name="bytes">An array four bytes or longer</param>
+        /// <param name="pos">Position to start reading the int from</param>
+        /// <returns>A signed integer</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int BytesToInt(byte[] bytes, int pos)
+        {
+            return BitConverter.IsLittleEndian ?
+                Unsafe.As<byte, int>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos)) :
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<int>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int BytesToIntBig(byte[] bytes, int pos)
         {
-            return (bytes[pos] << 24) |
-                   (bytes[pos + 1] << 16) |
-                   (bytes[pos + 2] << 8) |
-                   bytes[pos + 3];
+            return BitConverter.IsLittleEndian ?
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<int>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos))) :
+                Unsafe.As<byte, int>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int BytesToInt(ref byte bytes, int pos)
+        {
+            return BitConverter.IsLittleEndian ?
+                Unsafe.ReadUnaligned<int>(ref Unsafe.Add(ref bytes, pos)) :
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<int>(ref Unsafe.Add(ref bytes, pos)));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int BytesToIntBig(ref byte bytes, int pos)
+        {
+            return BitConverter.IsLittleEndian ?
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<int>(ref Unsafe.Add(ref bytes, pos))) :
+                Unsafe.ReadUnaligned<int>(ref Unsafe.Add(ref bytes, pos));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static int BytesToInt(byte* bytes)
+        {
+            return CanDirectCopyLE ?
+                *(int*)bytes :
+                *bytes | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int BytesToIntSafepos(byte[] bytes, int pos)
+        {
+            return BytesToInt(bytes, pos);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int BytesToIntSafepos(ref byte bytes, int pos)
+        {
+            return BytesToInt(ref bytes, pos);
         }
 
         /// <summary>
@@ -531,27 +409,49 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long BytesToInt64(byte[] bytes)
         {
-            return Unsafe.ReadUnaligned<long>(ref MemoryMarshal.GetArrayDataReference(bytes));
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static long BytesToInt64(ref byte bytes)
-        {
-            return Unsafe.ReadUnaligned<long>(ref bytes);
+            return BitConverter.IsLittleEndian ?
+                Unsafe.ReadUnaligned<long>(ref MemoryMarshal.GetArrayDataReference(bytes)) :
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<long>(ref MemoryMarshal.GetArrayDataReference(bytes)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long BytesToInt64Big(byte[] bytes)
         {
-            return
-                ((long)bytes[0] << 56) |
-                ((long)bytes[1] << 48) |
-                ((long)bytes[2] << 40) |
-                ((long)bytes[3] << 32) |
-                ((long)bytes[4] << 24) |
-                ((long)bytes[5] << 16) |
-                ((long)bytes[6] << 8) |
-                ((long)bytes[7]);
+            return BitConverter.IsLittleEndian ?
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<long>(ref MemoryMarshal.GetArrayDataReference(bytes))) :
+                Unsafe.ReadUnaligned<long>(ref MemoryMarshal.GetArrayDataReference(bytes));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long BytesToInt64(ReadOnlySpan<byte> bytes)
+        {
+            return BitConverter.IsLittleEndian ?
+                Unsafe.ReadUnaligned<long>(ref MemoryMarshal.GetReference(bytes)) :
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<long>(ref MemoryMarshal.GetReference(bytes)));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long BytesToInt64Big(ReadOnlySpan<byte> bytes)
+        {
+            return BitConverter.IsLittleEndian ?
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<long>(ref MemoryMarshal.GetReference(bytes))) :
+                Unsafe.ReadUnaligned<long>(ref MemoryMarshal.GetReference(bytes));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long BytesToInt64(ref byte bytes)
+        {
+            return BitConverter.IsLittleEndian ?
+                Unsafe.ReadUnaligned<long>(ref bytes) :
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<long>(ref bytes));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long BytesToInt64Big(ref byte bytes)
+        {
+            return BitConverter.IsLittleEndian ?
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<long>(ref bytes)) :
+                Unsafe.ReadUnaligned<long>(ref bytes);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -584,26 +484,51 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long BytesToInt64(byte[] bytes, int pos)
         {
-            if (bytes.Length < pos + 8) return 0;
-            return Unsafe.ReadUnaligned<long>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+            //if (bytes.Length < pos + 8) return 0;
+            return BitConverter.IsLittleEndian ?
+                Unsafe.ReadUnaligned<long>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos)) :
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<long>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos)));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long BytesToInt64Big(byte[] bytes, int pos)
+        {
+            //if (bytes.Length < pos + 8) return 0;
+            return BitConverter.IsLittleEndian ?
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<long>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos))) :
+                Unsafe.ReadUnaligned<long>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long BytesToInt64(ref byte bytes, int pos)
         {
-            return Unsafe.ReadUnaligned<long>(ref Unsafe.Add(ref bytes, pos));
+            return BitConverter.IsLittleEndian ?
+                Unsafe.ReadUnaligned<long>(ref Unsafe.Add(ref bytes, pos)) :
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<long>(ref Unsafe.Add(ref bytes, pos)));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long BytesToInt64Big(ref byte bytes, int pos)
+        {
+            return BitConverter.IsLittleEndian ?
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<long>(ref Unsafe.Add(ref bytes, pos))) :
+                Unsafe.ReadUnaligned<long>(ref Unsafe.Add(ref bytes, pos));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long BytesToInt64Safepos(byte[] bytes, int pos)
         {
-            return Unsafe.ReadUnaligned<long>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+            return BitConverter.IsLittleEndian ?
+                Unsafe.ReadUnaligned<long>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos)) :
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<long>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos))) ;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long BytesToInt64Safepos(ref byte bytes, int pos)
         {
-            return Unsafe.ReadUnaligned<long>(ref Unsafe.Add(ref bytes, pos));
+            return BitConverter.IsLittleEndian ?
+                Unsafe.ReadUnaligned<long>(ref Unsafe.Add(ref bytes, pos)) :
+                BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<long>(ref Unsafe.Add(ref bytes, pos))) ;
         }
 
         /// <summary>
@@ -617,13 +542,25 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort BytesToUInt16(byte[] bytes, int pos)
         {
-            return Unsafe.ReadUnaligned<ushort>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+            return (ushort)BytesToInt16(bytes, pos);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort BytesToUInt16Big(byte[] bytes, int pos)
+        {
+            return (ushort)BytesToInt16Big(bytes, pos);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort BytesToUInt16(ref byte bytes, int pos)
         {
-            return Unsafe.ReadUnaligned<ushort>(ref Unsafe.Add(ref bytes, pos));
+            return (ushort)BytesToInt16(ref bytes, pos);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort BytesToUInt16Big(ref byte bytes, int pos)
+        {
+            return (ushort)BytesToInt16Big(ref bytes, pos);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -644,14 +581,37 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort BytesToUInt16(byte[] bytes)
         {
-            //if (bytes.Length < 2) return 0;
-            return Unsafe.ReadUnaligned<ushort>(ref MemoryMarshal.GetArrayDataReference(bytes));
+            return (ushort)BytesToInt16(bytes);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort BytesToUInt16Big(byte[] bytes)
+        {
+            return (ushort)BytesToInt16Big(bytes);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort BytesToUInt16(ref byte bytes)
         {
-            return Unsafe.ReadUnaligned<ushort>(ref bytes);
+            return (ushort)BytesToInt16(ref bytes);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort BytesToUInt16Big(ref byte bytes)
+        {
+            return (ushort)BytesToInt16Big(ref bytes);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort BytesToUInt16(ReadOnlySpan<byte> bytes)
+        {
+            return (ushort)BytesToInt16(bytes);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort BytesToUInt16Big(ReadOnlySpan<byte> bytes)
+        {
+            return (ushort)BytesToInt16Big(bytes);
         }
 
         /// <summary>
@@ -665,20 +625,25 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint BytesToUInt(byte[] bytes, int pos)
         {
-            if (bytes.Length < pos + 4) return 0;
-            return Unsafe.ReadUnaligned<uint>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+            return (uint)BytesToInt(bytes, pos);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint BytesToUIntBig(byte[] bytes, int pos)
+        {
+            return (uint)BytesToIntBig( bytes, pos);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint BytesToUIntSafepos(byte[] bytes, int pos)
         {
-            return Unsafe.ReadUnaligned<uint>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+            return (uint)BytesToIntSafepos(bytes, pos);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint BytesToUIntSafepos(ref byte bytes, int pos)
         {
-            return Unsafe.ReadUnaligned<uint>(ref Unsafe.Add(ref bytes, pos));
+            return (uint)BytesToIntSafepos(ref bytes, pos);
         }
 
         /// <summary>
@@ -691,13 +656,37 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint BytesToUInt(byte[] bytes)
         {
-            return Unsafe.ReadUnaligned<uint>(ref MemoryMarshal.GetArrayDataReference(bytes));
+            return (uint)BytesToInt(bytes);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint BytesToUIntBig(byte[] bytes)
+        {
+            return (uint)BytesToUIntBig(bytes);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint BytesToUInt(ReadOnlySpan<byte> bytes)
+        {
+            return (uint)BytesToInt(bytes);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint BytesToUIntBig(ReadOnlySpan<byte> bytes)
+        {
+            return (uint)BytesToIntBig(bytes);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint BytesToUInt(ref byte bytes)
         {
-            return Unsafe.ReadUnaligned<uint>(ref bytes);
+            return (uint)BytesToInt(ref bytes);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint BytesToUIntBig(ref byte bytes)
+        {
+            return (uint)BytesToIntBig(ref bytes);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -725,26 +714,37 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong BytesToUInt64(byte[] bytes, int pos)
         {
-            if (bytes.Length < pos + 8) return 0;
-            return Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+            return (ulong)BytesToInt64(bytes, pos);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong BytesToUInt64Big(byte[] bytes, int pos)
+        {
+            return (ulong)BytesToInt64Big(bytes, pos);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong BytesToUInt64(ref byte bytes, int pos)
         {
-            return Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref bytes, pos));
+            return (ulong)BytesToInt64(ref bytes, pos);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong BytesToUInt64Big(ref byte bytes, int pos)
+        {
+            return (ulong)BytesToInt64Big(ref bytes, pos);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong BytesToUInt64Safepos(byte[] bytes, int pos)
         {
-            return Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+            return (ulong)BytesToInt64Safepos(bytes, pos);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong BytesToUInt64Safepos(ref byte bytes, int pos)
         {
-            return Unsafe.ReadUnaligned<ulong>(ref Unsafe.Add(ref bytes, pos));
+            return (ulong)BytesToInt64Safepos(ref bytes, pos);
         }
 
         /// <summary>
@@ -757,13 +757,37 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong BytesToUInt64(byte[] bytes)
         {
-            return Unsafe.ReadUnaligned<ulong>(ref MemoryMarshal.GetArrayDataReference(bytes));
+            return (ulong)BytesToInt64(bytes);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong BytesToUInt64Big(byte[] bytes)
+        {
+            return (ulong)BytesToUInt64Big(bytes);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong BytesToUInt64(ReadOnlySpan<byte> bytes)
+        {
+            return (ulong)BytesToInt64(bytes);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong BytesToUInt64Big(ReadOnlySpan<byte> bytes)
+        {
+            return (ulong)BytesToInt64Big(bytes);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static ulong BytesToUInt64(ref byte bytes)
         {
-            return Unsafe.ReadUnaligned<ulong>(ref bytes);
+            return (ulong)BytesToInt64(ref bytes);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static ulong BytesToUInt64Big(ref byte bytes)
+        {
+            return (ulong)BytesToInt64Big(ref bytes);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1074,13 +1098,13 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float BytesToFloat(byte[] bytes)
         {
-            return Unsafe.ReadUnaligned<float>(ref MemoryMarshal.GetArrayDataReference(bytes));
+            return Unsafe.BitCast<int,float>(BytesToInt(bytes));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float BytesToFloat(ref byte bytes)
         {
-            return Unsafe.ReadUnaligned<float>(ref bytes);
+            return Unsafe.BitCast<int,float>(BytesToInt(ref bytes));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1093,44 +1117,43 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float BytesToFloat(byte[] bytes, int pos)
         {
-            return Unsafe.ReadUnaligned<float>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+            return Unsafe.BitCast<int,float>(BytesToInt(bytes, pos));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float BytesToFloat(ref byte bytes, int pos)
         {
-            return Unsafe.ReadUnaligned<float>(ref Unsafe.Add(ref bytes, pos));
+            return Unsafe.BitCast<int,float>(BytesToInt(ref bytes, pos));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float BytesToFloatSafepos(byte[] bytes, int pos)
         {
-            return Unsafe.ReadUnaligned<float>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+            return Unsafe.BitCast<int,float>(BytesToIntSafepos(bytes, pos));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float BytesToFloatSafepos(ref byte bytes, int pos)
         {
-            return Unsafe.ReadUnaligned<float>(ref Unsafe.Add(ref bytes, pos));
+            return Unsafe.BitCast<int,float>(BytesToIntSafepos(ref bytes, pos));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double BytesToDouble(byte[] bytes)
         {
-            return Unsafe.ReadUnaligned<double>(ref MemoryMarshal.GetArrayDataReference(bytes));
+            return Unsafe.BitCast<long,double>(BytesToInt64(bytes));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double BytesToDouble(ref byte bytes)
         {
-            return Unsafe.ReadUnaligned<double>(ref bytes);
+            return Unsafe.BitCast<long,double>(BytesToInt64(ref bytes));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static double BytesToDoubleBig(byte[] bytes)
+        public static double BytesToDoubleBig(byte[] bytes)
         {
-            long tmp = BytesToInt64Big(bytes);
-            return *(double*)&tmp;
+            return Unsafe.BitCast<long,double>(BytesToInt64Big(bytes));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1143,25 +1166,25 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double BytesToDouble(byte[] bytes, int pos)
         {
-            return Unsafe.ReadUnaligned<double>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+            return Unsafe.BitCast<long,double>(BytesToInt64(bytes, pos));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double BytesToDouble(ref byte bytes, int pos)
         {
-            return Unsafe.ReadUnaligned<double>(ref Unsafe.Add(ref bytes, pos));
+            return Unsafe.BitCast<long,double>(BytesToInt64(ref bytes, pos));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double BytesToDoubleSafepos(byte[] bytes, int pos)
         {
-            return Unsafe.ReadUnaligned<double>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos));
+            return Unsafe.BitCast<long,double>(BytesToInt64Safepos(bytes, pos));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double BytesToDoubleSafepos(ref byte bytes, int pos)
         {
-            return Unsafe.ReadUnaligned<double>(ref Unsafe.Add(ref bytes, pos));
+            return Unsafe.BitCast<long,double>(BytesToInt64Safepos(ref bytes, pos));
         }
 
         #endregion BytesTo
@@ -1182,7 +1205,12 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] Int16ToBytes(short value)
         {
-            return new byte[] {(byte)value, (byte)(value >> 8)};
+            byte[] ret = new byte[2];
+            if (BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(ret), value);
+            else
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(ret), BinaryPrimitives.ReverseEndianness(value));
+            return ret;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1195,96 +1223,148 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Int16ToBytes(short value, byte[] dest, int pos)
         {
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+            if (BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+            else
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), BinaryPrimitives.ReverseEndianness(value));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Int16ToBytesBig(short value, byte[] dest, int pos)
+        {
+            if (BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), BinaryPrimitives.ReverseEndianness(value));
+            else
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Int16ToBytes(short value, ref byte dest, int pos)
         {
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
+            if (BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
+            else
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), BinaryPrimitives.ReverseEndianness(value));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Int16ToBytesBig(short value, ref byte dest, int pos)
+        {
+            if (BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), BinaryPrimitives.ReverseEndianness(value));
+            else
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Int16ToBytes(short value, ref byte dest)
         {
-            Unsafe.WriteUnaligned(ref dest, value);
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref dest, value);
+            else
+                Unsafe.WriteUnaligned(ref dest, BinaryPrimitives.ReverseEndianness(value));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Int16ToBytesBig(short value, ref byte dest)
+        {
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref dest, BinaryPrimitives.ReverseEndianness(value));
+            else
+                Unsafe.WriteUnaligned(ref dest, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void Int16ToBytes(short value, byte* dest)
         {
-            *(short*)dest = value;
+            if(BitConverter.IsLittleEndian)
+                *(short*)dest = value;
+            else
+                *(short*)dest = BinaryPrimitives.ReverseEndianness(value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe void Int16ToBytesBig(short value, byte* dest)
+        {
+            if(BitConverter.IsLittleEndian)
+                *(short*)dest = BinaryPrimitives.ReverseEndianness(value);
+            else
+                *(short*)dest = value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void Int16ToBytes(short value, byte* dest, int pos)
         {
-            *(short*)dest[pos] = value;
+            if(BitConverter.IsLittleEndian)
+                *(short*)dest[pos] = value;
+            else
+                *(short*)dest[pos] = BinaryPrimitives.ReverseEndianness(value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe void Int16ToBytesBig(short value, byte* dest, int pos)
+        {
+            if(BitConverter.IsLittleEndian)
+                *(short*)dest[pos] = BinaryPrimitives.ReverseEndianness(value);
+            else
+                *(short*)dest[pos] = value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] UInt16ToBytes(ushort value)
         {
-            return new byte[] { (byte)value, (byte)(value >> 8) };
+            return Int16ToBytes((short)value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void UInt16ToBytes(ushort value, byte[] dest, int pos)
         {
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void UInt16ToBytes(ushort value, ref byte dest, int pos)
-        {
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void UInt16ToBytes(ushort value, ref byte dest)
-        {
-            Unsafe.WriteUnaligned(ref dest, value);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe void UInt16ToBytes(ushort value, byte* dest, int pos)
-        {
-            *(ushort*)dest[pos] = value;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe void UInt16ToBytes(ushort value, byte* dest)
-        {
-            *(ushort*)dest = value;
+            Int16ToBytes((short)value, dest, pos);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void UInt16ToBytesBig(ushort value, byte[] dest, int pos)
         {
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), (byte)(value >> 8));
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos + 1), (byte)(value));
+            Int16ToBytesBig((short)value, dest, pos);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void UInt16ToBytesBig(ushort value, byte[] dest, ref int pos)
+        public static void UInt16ToBytes(ushort value, ref byte dest, int pos)
         {
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), (byte)(value >> 8));
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos + 1), (byte)(value));
-            pos += 2;
+            Int16ToBytes((short)value, ref dest, pos);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void UInt16ToBytes(ushort value, ref byte dest)
+        {
+            Int16ToBytes((short)value, ref dest);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe void UInt16ToBytes(ushort value, byte* dest, int pos)
+        {
+            Int16ToBytes((short)value, dest, pos);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static void UInt16ToBytesBig(ushort value, byte* dest, int pos)
         {
-            dest[pos] = (byte)(value >> 8);
-            dest[pos + 1] = (byte)value;
+            Int16ToBytesBig((short)value,dest,pos);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe void UInt16ToBytes(ushort value, byte* dest)
+        {
+            Int16ToBytes((short)value, dest);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void UInt16ToBytesBig(ushort value, byte* dest)
         {
-            *dest = (byte)(value >> 8);
-            dest[1] = (byte)value;
+            if(BitConverter.IsLittleEndian)
+                *(ushort*)dest = BinaryPrimitives.ReverseEndianness(value);
+            else
+                *(ushort*)dest = value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1305,85 +1385,12 @@ namespace OpenMetaverse
         public static byte[] IntToBytes(int value)
         {
             byte[] bytes = new byte[4];
-            Unsafe.As<byte, int>(ref MemoryMarshal.GetArrayDataReference(bytes)) = value;
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(bytes), value);
+            else
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(bytes), BinaryPrimitives.ReverseEndianness(value));
             return bytes;
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static void IntToBytes(int value, byte[] dest, int pos)
-        {
-            if (dest.Length < pos + 4) return;
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static void IntToBytes(int value, ref byte dest, int pos)
-        {
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static void IntToBytes(int value, ref byte dest)
-        {
-            Unsafe.WriteUnaligned(ref dest, value);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static void IntToBytes(int value, byte* dest, int pos)
-        {
-            if (CanDirectCopyLE)
-            {
-                *(int*)dest[pos] = value;
-            }
-            else
-            {
-                dest[pos] = (byte)(value);
-                dest[pos + 1] = (byte)((value >> 8));
-                dest[pos + 2] = (byte)((value >> 16));
-                dest[pos + 3] = (byte)((value >> 24));
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static void IntToBytes(int value, byte* dest)
-        {
-            if (CanDirectCopyLE)
-            {
-                *(int*)dest = value;
-            }
-            else
-            {
-                *dest = (byte)(value);
-                dest[1] = (byte)((value >> 8));
-                dest[2] = (byte)((value >> 16));
-                dest[3] = (byte)((value >> 24));
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static void IntToBytesSafepos(int value, byte[] dest, int pos)
-        {
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static void IntToBytesSafepos(int value, byte[] dest)
-        {
-            Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), value);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static void IntToBytesSafepos(int value, ref byte dest, int pos)
-        {
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static void IntToBytesSafepos(int value, ref byte dest)
-        {
-            Unsafe.WriteUnaligned(ref dest, value);
-        }
-
         /// <summary>
         /// Convert an integer to a byte array in big endian format
         /// </summary>
@@ -1392,42 +1399,143 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] IntToBytesBig(int value)
         {
-            return new byte[]
-            {
-                (byte)(value >> 24),
-                (byte)(value >> 16),
-                (byte)(value >> 8),
-                (byte)value
-            };
+            byte[] bytes = new byte[4];
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(bytes), BinaryPrimitives.ReverseEndianness(value));
+            else
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(bytes), value);
+            return bytes;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void IntToBytes(int value, byte[] dest, int pos)
+        {
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+            else
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), BinaryPrimitives.ReverseEndianness(value));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void IntToBytesBig(int value, byte[] bytes, int pos)
         {
-            if (bytes.Length < pos + 4) return;
-            bytes[pos] = (byte)(value >> 24);
-            bytes[pos + 1] = (byte)(value >> 16);
-            bytes[pos + 2] = (byte)(value >> 8);
-            bytes[pos + 3] = (byte)value;
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos), BinaryPrimitives.ReverseEndianness(value));
+            else
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos), value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static void IntToBytesBig(int value, byte* bytes, int pos)
+        public static void IntZeroToBytes(byte[] bytes, int pos)
         {
-            bytes[pos] = (byte)(value >> 24);
-            bytes[pos + 1] = (byte)(value >> 16);
-            bytes[pos + 2] = (byte)(value >> 8);
-            bytes[pos + 3] = (byte)value;
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(bytes), pos), (int)0);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe void IntToBytesBig(int value, byte* bytes)
+        public unsafe static void IntToBytes(int value, ref byte dest, int pos)
         {
-            *bytes = (byte)(value >> 24);
-            bytes[1] = (byte)(value >> 16);
-            bytes[2] = (byte)(value >> 8);
-            bytes[3] = (byte)value;
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
+            else
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), BinaryPrimitives.ReverseEndianness(value));
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void IntToBytesBig(int value, ref byte dest, int pos)
+        {
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), BinaryPrimitives.ReverseEndianness(value));
+            else
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void IntToBytes(int value, ref byte dest)
+        {
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref dest, value);
+            else
+                Unsafe.WriteUnaligned(ref dest, BinaryPrimitives.ReverseEndianness(value));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void IntToBytes(int value, byte* dest, int pos)
+        {
+            if (BitConverter.IsLittleEndian)
+                *(int*)dest[pos] = value;
+            else
+                *(int*)dest[pos] = BinaryPrimitives.ReverseEndianness(value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void IntToBytesBig(int value, byte* dest, int pos)
+        {
+            if (BitConverter.IsLittleEndian)
+                *(int*)dest[pos] = BinaryPrimitives.ReverseEndianness(value);
+            else
+                *(int*)dest[pos] = value;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void IntToBytes(int value, byte* dest)
+        {
+            if(BitConverter.IsLittleEndian)
+                *(int*)dest = value;
+            else
+                *(int*)dest = BinaryPrimitives.ReverseEndianness(value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe void IntToBytesBig(int value, byte* dest)
+        {
+            if(BitConverter.IsLittleEndian)
+                *(int*)dest = BinaryPrimitives.ReverseEndianness(value);
+            else
+                *(int*)dest = value;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe void IntZeroToBytes(byte* dest)
+        {
+            *(int*)dest = (int)0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void IntToBytesSafepos(int value, byte[] dest, int pos)
+        {
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+            else
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), BinaryPrimitives.ReverseEndianness(value));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void IntToBytesSafepos(int value, byte[] dest)
+        {
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), value);
+            else
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), BinaryPrimitives.ReverseEndianness(value));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void IntToBytesSafepos(int value, ref byte dest, int pos)
+        {
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
+            else
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), BinaryPrimitives.ReverseEndianness(value));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void IntToBytesSafepos(int value, ref byte dest)
+        {
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref dest, value);
+            else
+                Unsafe.WriteUnaligned(ref dest, BinaryPrimitives.ReverseEndianness(value));
+        }
+
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static byte[] UIntToBytes(uint value)
@@ -1442,10 +1550,21 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void UIntToBytesBig(uint value, byte* dest)
+        {
+            IntToBytesBig((int)value, dest);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static void UIntToBytes(uint value, byte[] dest, int pos)
         {
-            if (dest.Length < pos + 4) return;
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+            IntToBytes((int)value, dest, pos);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void UIntToBytesBig(uint value, byte[] dest, int pos)
+        {
+           IntToBytesBig((int)(value), dest, pos);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1455,34 +1574,35 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void UIntToBytesBig(uint value, byte* dest, int pos)
+        {
+            IntToBytesBig((int)value, dest, pos);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static void UIntToBytesSafepos(uint value, byte[] dest, int pos)
         {
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+            IntToBytesSafepos((int) value, dest, pos);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static void UIntToBytesSafepos(uint value, byte[] dest)
         {
-            Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), value);
+            IntToBytesSafepos((int)value, dest);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static void UIntToBytesSafepos(uint value, ref byte dest, int pos)
         {
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
+            IntToBytesSafepos((int)value, ref dest, pos);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static void UIntToBytesSafepos(uint value, ref byte dest)
         {
-            Unsafe.WriteUnaligned(ref dest, value);
+            IntToBytesSafepos((int)value, ref dest);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void UIntToBytesBig(uint value, byte[] dest, int pos)
-        {
-           IntToBytesBig((int)value, dest, pos);
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void UIntToVarBytes(Stream ms, uint value)
@@ -1500,58 +1620,91 @@ namespace OpenMetaverse
         /// <param name="value">The value to convert</param>
         /// <returns>An 8 byte little endian array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static byte[] Int64ToBytes(long value)
+        public static byte[] Int64ToBytes(long value)
         {
             byte[] bytes = new byte[8];
-            Unsafe.As<byte, long>(ref MemoryMarshal.GetArrayDataReference(bytes)) = value;
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(bytes), value);
+            else
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(bytes), BinaryPrimitives.ReverseEndianness(value));
             return bytes;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static void Int64ToBytes(long value, byte[] dest, int pos)
+        public static byte[] Int64ToBytesBig(long value)
         {
-                if (dest.Length < pos + 8) return;
+            byte[] bytes = new byte[8];
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(bytes), BinaryPrimitives.ReverseEndianness(value));
+            else
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(bytes), value);
+            return bytes;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Int64ToBytes(long value, byte[] dest, int pos)
+        {
+            if(BitConverter.IsLittleEndian)
                 Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+            else
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), BinaryPrimitives.ReverseEndianness(value));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void Int64ToBytesBig(long value, byte[] dest, int pos)
+        {
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), BinaryPrimitives.ReverseEndianness(value));
+            else
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Int64ZeroToBytes(byte[] dest, int pos)
+        {
+            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), (long)0);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static void Int64ToBytes(long value, byte* dest, int pos)
         {
-            if (CanDirectCopyLE)
-            {
+            if(BitConverter.IsLittleEndian)
                 *(long*)dest[pos] = value;
-            }
             else
-            {
-                dest[pos] = (byte)value;
-                dest[pos + 1] = (byte)(value >> 8);
-                dest[pos + 2] = (byte)(value >> 16);
-                dest[pos + 3] = (byte)(value >> 24);
-                dest[pos + 4] = (byte)(value >> 32);
-                dest[pos + 5] = (byte)(value >> 40);
-                dest[pos + 6] = (byte)(value >> 48);
-                dest[pos + 7] = (byte)(value >> 56);
-            }
+                *(long*)dest[pos] = BinaryPrimitives.ReverseEndianness(value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void Int64ToBytesBig(long value, byte* dest, int pos)
+        {
+            if(BitConverter.IsLittleEndian)
+                *(long*)dest[pos] = BinaryPrimitives.ReverseEndianness(value);
+            else
+                *(long*)dest[pos] = value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static void Int64ToBytes(long value, byte* dest)
         {
-            if (CanDirectCopyLE)
-            {
+            if(BitConverter.IsLittleEndian)
                 *(long*)dest = value;
-            }
             else
-            {
-                *dest = (byte)value;
-                dest[1] = (byte)(value >> 8);
-                dest[2] = (byte)(value >> 16);
-                dest[3] = (byte)(value >> 24);
-                dest[4] = (byte)(value >> 32);
-                dest[5] = (byte)(value >> 40);
-                dest[6] = (byte)(value >> 48);
-                dest[7] = (byte)(value >> 56);
-            }
+                *(long*)dest = BinaryPrimitives.ReverseEndianness(value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe void Int64ToBytesBig(long value, byte* dest)
+        {
+            if(BitConverter.IsLittleEndian)
+                *(long*)dest = BinaryPrimitives.ReverseEndianness(value);
+            else
+                *(long*)dest = value;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe void Int64ZeroToBytes(byte* dest)
+        {
+            *(long*)dest = 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1591,60 +1744,6 @@ namespace OpenMetaverse
             ms.WriteByte((byte)(value >> 56));
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte[] Int64ToBytesBig(long value)
-        {
-            byte[] bytes = new byte[8];
-            bytes[0] = (byte)((value >> 56));
-            bytes[1] = (byte)((value >> 48));
-            bytes[2] = (byte)((value >> 40));
-            bytes[3] = (byte)((value >> 32));
-            bytes[4] = (byte)((value >> 24));
-            bytes[5] = (byte)((value >> 16));
-            bytes[6] = (byte)((value >> 8));
-            bytes[7] = (byte)(value);
-            return bytes;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Int64ToBytesBig(long value, byte[] dest, int pos)
-        {
-            dest[pos] = (byte)(value >> 56);
-            dest[pos + 1] = (byte)(value >> 48);
-            dest[pos + 2] = (byte)(value >> 40);
-            dest[pos + 3] = (byte)(value >> 32);
-            dest[pos + 4] = (byte)(value >> 24);
-            dest[pos + 5] = (byte)(value >> 16);
-            dest[pos + 6] = (byte)(value >> 8);
-            dest[pos + 7] = (byte)value;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static void Int64ToBytesBig(long value, byte* dest, int pos)
-        {
-            dest[pos] = (byte)(value >> 56);
-            dest[pos + 1] = (byte)(value >> 48);
-            dest[pos + 2] = (byte)(value >> 40);
-            dest[pos + 3] = (byte)(value >> 32);
-            dest[pos + 4] = (byte)(value >> 24);
-            dest[pos + 5] = (byte)(value >> 16);
-            dest[pos + 6] = (byte)(value >> 8);
-            dest[pos + 7] = (byte)value;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe void Int64ToBytesBig(long value, byte* dest)
-        {
-            *dest = (byte)(value >> 56);
-            dest[1] = (byte)(value >> 48);
-            dest[2] = (byte)(value >> 40);
-            dest[3] = (byte)(value >> 32);
-            dest[4] = (byte)(value >> 24);
-            dest[5] = (byte)(value >> 16);
-            dest[6] = (byte)(value >> 8);
-            dest[7] = (byte)value;
-        }
-
         /// <summary>
         /// Convert a 64-bit unsigned integer to a byte array in little endian
         /// format
@@ -1670,9 +1769,21 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void UInt64ToBytesBig(ulong value, byte* dest)
+        {
+            Int64ToBytesBig((long)value, dest);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static void UInt64ToBytes(ulong value, byte[] dest, int pos)
         {
             Int64ToBytes((long)value, dest, pos);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void UInt64ToBytesBig(ulong value, byte[] dest, int pos)
+        {
+            Int64ToBytesBig((long)value, dest, pos);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1682,27 +1793,33 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void UInt64ToBytesBig(ulong value, byte* dest, int pos)
+        {
+            Int64ToBytesBig((long)value, dest, pos);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static void UInt64ToBytesSafepos(ulong value, byte[] dest, int pos)
         {
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+            Int64ToBytesSafepos((long) value, dest, pos);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void UInt64ToBytesSafepos(ulong value, byte[] dest)
         {
-            Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), value);
+            Int64ToBytesSafepos((long) value, dest);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void UInt64ToBytesSafepos(ulong value, ref byte dest, int pos)
         {
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
+            Int64ToBytesSafepos((long) value, ref dest, pos);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void UInt64ToBytesSafepos(ulong value, ref byte dest)
         {
-            Unsafe.WriteUnaligned(ref dest, value);
+            Int64ToBytesSafepos((long) value, ref dest);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1775,64 +1892,162 @@ namespace OpenMetaverse
         /// <returns>A four byte array containing the value in little endian
         /// ordering</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static byte[] FloatToBytes(float value)
+        public static byte[] FloatToBytes(float value)
         {
-            return IntToBytes(*(int*)&value);
+            byte[] dest = new byte[4];
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), value);
+            else
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), BinaryPrimitives.ReverseEndianness(Unsafe.BitCast<float,int>(value)));
+            return dest;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static void FloatToBytes(Stream ms, float value)
+        public static byte[] FloatToBytesBig(float value)
         {
-            IntToBytes(ms, *(int*)&value);
+            byte[] dest = new byte[4];
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), BinaryPrimitives.ReverseEndianness(Unsafe.BitCast<float,int>(value)));
+            else
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), value);
+            return dest;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void FloatToBytes(Stream ms, float value)
+        {
+            IntToBytes(ms, Unsafe.BitCast<float,int>(value));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void FloatToBytes(float value, byte[] dest, int pos)
         {
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+            else
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), BinaryPrimitives.ReverseEndianness(Unsafe.BitCast<float,int>(value)));
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void FloatToBytesBig(float value, byte[] dest, int pos)
+        {
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), BinaryPrimitives.ReverseEndianness(Unsafe.BitCast<float,int>(value)));
+            else
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void FloatToBytes(float value, byte[] dest)
+        {
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), value);
+            else
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), BinaryPrimitives.ReverseEndianness(Unsafe.BitCast<float,int>(value)));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void FloatToBytesBig(float value, byte[] dest)
+        {
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), BinaryPrimitives.ReverseEndianness(Unsafe.BitCast<float,int>(value)));
+            else
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), value);
+        }
+
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static void FloatToBytes(float value, byte* dest, int pos)
         {
-            //Unsafe.As<byte, float>(ref dest[pos]) = value;
-            IntToBytes(*(int*)&value, dest, pos);
+            if (BitConverter.IsLittleEndian)
+                *(float*)dest[pos] = value;
+            else
+                *(int*)dest[pos] = BinaryPrimitives.ReverseEndianness(Unsafe.BitCast<float, int>(value));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void FloatToBytesBig(float value, byte* dest, int pos)
+        {
+            if (BitConverter.IsLittleEndian)
+                *(int*)dest[pos] = BinaryPrimitives.ReverseEndianness(Unsafe.BitCast<float, int>(value));
+            else
+                *(float*)dest[pos] = value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public unsafe static void FloatToBytes(float value, byte* dest)
         {
-            IntToBytes(*(int*)&value, dest);
+            if (BitConverter.IsLittleEndian)
+                *(float*)dest = value;
+            else
+                *(int*)dest = BinaryPrimitives.ReverseEndianness(Unsafe.BitCast<float, int>(value));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe static void FloatToBytesBig(float value, byte* dest)
+        {
+            if (BitConverter.IsLittleEndian)
+                *(int*)dest = BinaryPrimitives.ReverseEndianness(Unsafe.BitCast<float, int>(value));
+            else
+                *(float*)dest = value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void FloatToBytesSafepos(float value, byte[] dest, int pos)
         {
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), value);
+            else
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), BinaryPrimitives.ReverseEndianness(Unsafe.BitCast<float,int>(value)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void FloatToBytesSafepos(float value, ref byte dest, int pos)
         {
-            Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), value);
+            else
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref dest, pos), BinaryPrimitives.ReverseEndianness(Unsafe.BitCast<float,int>(value)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void FloatToBytesSafepos(float value, byte[] dest)
         {
-            Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), value);
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), value);
+            else
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), BinaryPrimitives.ReverseEndianness(Unsafe.BitCast<float,int>(value)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void FloatToBytesSafepos(float value, ref byte dest)
         {
-            Unsafe.WriteUnaligned(ref dest, value);
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref dest, value);
+            else
+                Unsafe.WriteUnaligned(ref dest, BinaryPrimitives.ReverseEndianness(Unsafe.BitCast<float,int>(value)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static byte[] DoubleToBytes(double value)
+        public static byte[] DoubleToBytes(double value)
         {
-            return Int64ToBytes(*(long*)&value);
+            byte[] dest = new byte[8];
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), value);
+            else
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), BinaryPrimitives.ReverseEndianness(Unsafe.BitCast<double,long>(value)));
+            return dest;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte[] DoubleToBytesBig(double value)
+        {
+            byte[] dest = new byte[8];
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), BinaryPrimitives.ReverseEndianness(Unsafe.BitCast<double,long>(value)));
+            else
+                Unsafe.WriteUnaligned(ref MemoryMarshal.GetArrayDataReference(dest), value);
+            return dest;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1842,15 +2057,21 @@ namespace OpenMetaverse
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static byte[] DoubleToBytesBig(double value)
+        public unsafe static void DoubleToBytes(double value, byte[] dest, int pos)
         {
-            return Int64ToBytesBig(*(long*)&value);
+            if(BitConverter.IsLittleEndian)
+                Unsafe.As<byte, double>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos)) = value;
+            else
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), BinaryPrimitives.ReverseEndianness(Unsafe.BitCast<double,long>(value)));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe static void DoubleToBytes(double value, byte[] dest, int pos)
+        public unsafe static void DoubleToBytesBig(double value, byte[] dest, int pos)
         {
-            Unsafe.As<byte, double>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos)) = value;
+            if(BitConverter.IsLittleEndian)
+                Unsafe.WriteUnaligned(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos), BinaryPrimitives.ReverseEndianness(Unsafe.BitCast<double,long>(value)));
+            else
+                Unsafe.As<byte, double>(ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(dest), pos)) = value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

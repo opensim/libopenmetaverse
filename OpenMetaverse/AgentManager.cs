@@ -118,12 +118,15 @@ namespace OpenMetaverse
         NewUserDefault = 12,
         /// <summary>Start a session, or add users to a session</summary>
         SessionAdd = 13,
+        SessionInvite = 13, // new name
         /// <summary>Start a session, but don't prune offline users</summary>
-        SessionOfflineAdd = 14,
+        SessionOfflineAdd = 14, // obsolete
+        SessionP2PInvite = 14,
         /// <summary>Start a session with your group</summary>
         SessionGroupStart = 15,
         /// <summary>Start a session without a calling card (finder or objects)</summary>
-        SessionCardlessStart = 16,
+        SessionCardlessStart = 16, //obsolete
+        SessionConferenceStart = 16,
         /// <summary>Send a message to a session</summary>
         SessionSend = 17,
         /// <summary>Leave a session</summary>
