@@ -2135,7 +2135,7 @@ namespace OpenMetaverse.StructuredData
             if (value.Count < 4)
                 return 0;
             byte[] by = new byte[4];
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < by.Length; i++)
                 by[i] = (byte)value[i].AsInteger();
             return Utils.BytesToUIntBig(by);
         }

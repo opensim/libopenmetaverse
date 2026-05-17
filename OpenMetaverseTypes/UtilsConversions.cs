@@ -662,7 +662,7 @@ namespace OpenMetaverse
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint BytesToUIntBig(byte[] bytes)
         {
-            return (uint)BytesToUIntBig(bytes);
+            return (uint)BytesToIntBig(bytes);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
